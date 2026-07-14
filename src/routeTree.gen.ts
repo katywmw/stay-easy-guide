@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OwnerLoginRouteImport } from './routes/owner.login'
 import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
@@ -26,6 +27,11 @@ import { Route as CheckinDemoFaqRouteImport } from './routes/checkin.demo.faq'
 import { Route as CheckinDemoDepositRouteImport } from './routes/checkin.demo.deposit'
 import { Route as CheckinDemoBookingRouteImport } from './routes/checkin.demo.booking'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -109,6 +115,7 @@ const CheckinDemoBookingRoute = CheckinDemoBookingRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
@@ -146,6 +154,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
     | '/checkin/demo/booking'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
     | '/checkin/demo/booking'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
     | '/checkin/demo/booking'
@@ -221,6 +233,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   OwnerDashboardRoute: typeof OwnerDashboardRoute
   OwnerLoginRoute: typeof OwnerLoginRoute
   CheckinDemoBookingRoute: typeof CheckinDemoBookingRoute
@@ -240,6 +253,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -357,6 +377,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   OwnerDashboardRoute: OwnerDashboardRoute,
   OwnerLoginRoute: OwnerLoginRoute,
   CheckinDemoBookingRoute: CheckinDemoBookingRoute,
