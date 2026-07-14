@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as OwnerLoginRouteImport } from './routes/owner.login'
 import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
 import { Route as OwnerSubmissionsIndexRouteImport } from './routes/owner.submissions.index'
+import { Route as OwnerSubmissionsIdRouteImport } from './routes/owner.submissions.$id'
 import { Route as CheckinDemoSubmittedRouteImport } from './routes/checkin.demo.submitted'
 import { Route as CheckinDemoStartRouteImport } from './routes/checkin.demo.start'
 import { Route as CheckinDemoReviewRouteImport } from './routes/checkin.demo.review'
@@ -43,6 +44,11 @@ const OwnerDashboardRoute = OwnerDashboardRouteImport.update({
 const OwnerSubmissionsIndexRoute = OwnerSubmissionsIndexRouteImport.update({
   id: '/owner/submissions/',
   path: '/owner/submissions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerSubmissionsIdRoute = OwnerSubmissionsIdRouteImport.update({
+  id: '/owner/submissions/$id',
+  path: '/owner/submissions/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckinDemoSubmittedRoute = CheckinDemoSubmittedRouteImport.update({
@@ -116,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
   '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
   '/owner/submissions': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRoutesById {
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
   '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRouteTypes {
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/submissions/$id'
     | '/owner/submissions/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/submissions/$id'
     | '/owner/submissions'
   id:
     | '__root__'
@@ -204,6 +215,7 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/submissions/$id'
     | '/owner/submissions/'
   fileRoutesById: FileRoutesById
 }
@@ -222,6 +234,7 @@ export interface RootRouteChildren {
   CheckinDemoReviewRoute: typeof CheckinDemoReviewRoute
   CheckinDemoStartRoute: typeof CheckinDemoStartRoute
   CheckinDemoSubmittedRoute: typeof CheckinDemoSubmittedRoute
+  OwnerSubmissionsIdRoute: typeof OwnerSubmissionsIdRoute
   OwnerSubmissionsIndexRoute: typeof OwnerSubmissionsIndexRoute
 }
 
@@ -253,6 +266,13 @@ declare module '@tanstack/react-router' {
       path: '/owner/submissions'
       fullPath: '/owner/submissions/'
       preLoaderRoute: typeof OwnerSubmissionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/submissions/$id': {
+      id: '/owner/submissions/$id'
+      path: '/owner/submissions/$id'
+      fullPath: '/owner/submissions/$id'
+      preLoaderRoute: typeof OwnerSubmissionsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkin/demo/submitted': {
@@ -350,6 +370,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckinDemoReviewRoute: CheckinDemoReviewRoute,
   CheckinDemoStartRoute: CheckinDemoStartRoute,
   CheckinDemoSubmittedRoute: CheckinDemoSubmittedRoute,
+  OwnerSubmissionsIdRoute: OwnerSubmissionsIdRoute,
   OwnerSubmissionsIndexRoute: OwnerSubmissionsIndexRoute,
 }
 export const routeTree = rootRouteImport

@@ -104,7 +104,7 @@ function SubmissionDetail() {
 
         {/* Booking */}
         <Panel title="訂房資料" icon={<Receipt className="h-4 w-4" />}>
-          <Row k="訂房平台" v={platformLabels[submission.platform]} />
+          <Row k="訂房平台" v={platformLabels[submission.platform as keyof typeof platformLabels]} />
           <Row k="訂房姓名" v={submission.name} />
           <Row k="手機" v={submission.phone} />
           <Row k="Email" v={submission.email} />
