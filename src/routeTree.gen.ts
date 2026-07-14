@@ -9,38 +9,257 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OwnerLoginRouteImport } from './routes/owner.login'
+import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
+import { Route as OwnerSubmissionsIndexRouteImport } from './routes/owner.submissions.index'
+import { Route as OwnerSubmissionsIdRouteImport } from './routes/owner.submissions.$id'
+import { Route as CheckinDemoSubmittedRouteImport } from './routes/checkin.demo.submitted'
+import { Route as CheckinDemoStartRouteImport } from './routes/checkin.demo.start'
+import { Route as CheckinDemoReviewRouteImport } from './routes/checkin.demo.review'
+import { Route as CheckinDemoIdUploadRouteImport } from './routes/checkin.demo.id-upload'
+import { Route as CheckinDemoHouseRulesRouteImport } from './routes/checkin.demo.house-rules'
+import { Route as CheckinDemoHomeRouteImport } from './routes/checkin.demo.home'
+import { Route as CheckinDemoGuideRouteImport } from './routes/checkin.demo.guide'
+import { Route as CheckinDemoGuestInfoRouteImport } from './routes/checkin.demo.guest-info'
+import { Route as CheckinDemoFaqRouteImport } from './routes/checkin.demo.faq'
+import { Route as CheckinDemoDepositRouteImport } from './routes/checkin.demo.deposit'
+import { Route as CheckinDemoBookingRouteImport } from './routes/checkin.demo.booking'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerLoginRoute = OwnerLoginRouteImport.update({
+  id: '/owner/login',
+  path: '/owner/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerDashboardRoute = OwnerDashboardRouteImport.update({
+  id: '/owner/dashboard',
+  path: '/owner/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerSubmissionsIndexRoute = OwnerSubmissionsIndexRouteImport.update({
+  id: '/owner/submissions/',
+  path: '/owner/submissions/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerSubmissionsIdRoute = OwnerSubmissionsIdRouteImport.update({
+  id: '/owner/submissions/$id',
+  path: '/owner/submissions/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoSubmittedRoute = CheckinDemoSubmittedRouteImport.update({
+  id: '/checkin/demo/submitted',
+  path: '/checkin/demo/submitted',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoStartRoute = CheckinDemoStartRouteImport.update({
+  id: '/checkin/demo/start',
+  path: '/checkin/demo/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoReviewRoute = CheckinDemoReviewRouteImport.update({
+  id: '/checkin/demo/review',
+  path: '/checkin/demo/review',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoIdUploadRoute = CheckinDemoIdUploadRouteImport.update({
+  id: '/checkin/demo/id-upload',
+  path: '/checkin/demo/id-upload',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoHouseRulesRoute = CheckinDemoHouseRulesRouteImport.update({
+  id: '/checkin/demo/house-rules',
+  path: '/checkin/demo/house-rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoHomeRoute = CheckinDemoHomeRouteImport.update({
+  id: '/checkin/demo/home',
+  path: '/checkin/demo/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoGuideRoute = CheckinDemoGuideRouteImport.update({
+  id: '/checkin/demo/guide',
+  path: '/checkin/demo/guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoGuestInfoRoute = CheckinDemoGuestInfoRouteImport.update({
+  id: '/checkin/demo/guest-info',
+  path: '/checkin/demo/guest-info',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoFaqRoute = CheckinDemoFaqRouteImport.update({
+  id: '/checkin/demo/faq',
+  path: '/checkin/demo/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoDepositRoute = CheckinDemoDepositRouteImport.update({
+  id: '/checkin/demo/deposit',
+  path: '/checkin/demo/deposit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckinDemoBookingRoute = CheckinDemoBookingRouteImport.update({
+  id: '/checkin/demo/booking',
+  path: '/checkin/demo/booking',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/owner/dashboard': typeof OwnerDashboardRoute
+  '/owner/login': typeof OwnerLoginRoute
+  '/checkin/demo/booking': typeof CheckinDemoBookingRoute
+  '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
+  '/checkin/demo/faq': typeof CheckinDemoFaqRoute
+  '/checkin/demo/guest-info': typeof CheckinDemoGuestInfoRoute
+  '/checkin/demo/guide': typeof CheckinDemoGuideRoute
+  '/checkin/demo/home': typeof CheckinDemoHomeRoute
+  '/checkin/demo/house-rules': typeof CheckinDemoHouseRulesRoute
+  '/checkin/demo/id-upload': typeof CheckinDemoIdUploadRoute
+  '/checkin/demo/review': typeof CheckinDemoReviewRoute
+  '/checkin/demo/start': typeof CheckinDemoStartRoute
+  '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
+  '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/owner/dashboard': typeof OwnerDashboardRoute
+  '/owner/login': typeof OwnerLoginRoute
+  '/checkin/demo/booking': typeof CheckinDemoBookingRoute
+  '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
+  '/checkin/demo/faq': typeof CheckinDemoFaqRoute
+  '/checkin/demo/guest-info': typeof CheckinDemoGuestInfoRoute
+  '/checkin/demo/guide': typeof CheckinDemoGuideRoute
+  '/checkin/demo/home': typeof CheckinDemoHomeRoute
+  '/checkin/demo/house-rules': typeof CheckinDemoHouseRulesRoute
+  '/checkin/demo/id-upload': typeof CheckinDemoIdUploadRoute
+  '/checkin/demo/review': typeof CheckinDemoReviewRoute
+  '/checkin/demo/start': typeof CheckinDemoStartRoute
+  '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
+  '/owner/submissions': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/owner/dashboard': typeof OwnerDashboardRoute
+  '/owner/login': typeof OwnerLoginRoute
+  '/checkin/demo/booking': typeof CheckinDemoBookingRoute
+  '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
+  '/checkin/demo/faq': typeof CheckinDemoFaqRoute
+  '/checkin/demo/guest-info': typeof CheckinDemoGuestInfoRoute
+  '/checkin/demo/guide': typeof CheckinDemoGuideRoute
+  '/checkin/demo/home': typeof CheckinDemoHomeRoute
+  '/checkin/demo/house-rules': typeof CheckinDemoHouseRulesRoute
+  '/checkin/demo/id-upload': typeof CheckinDemoIdUploadRoute
+  '/checkin/demo/review': typeof CheckinDemoReviewRoute
+  '/checkin/demo/start': typeof CheckinDemoStartRoute
+  '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
+  '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/sitemap.xml'
+    | '/owner/dashboard'
+    | '/owner/login'
+    | '/checkin/demo/booking'
+    | '/checkin/demo/deposit'
+    | '/checkin/demo/faq'
+    | '/checkin/demo/guest-info'
+    | '/checkin/demo/guide'
+    | '/checkin/demo/home'
+    | '/checkin/demo/house-rules'
+    | '/checkin/demo/id-upload'
+    | '/checkin/demo/review'
+    | '/checkin/demo/start'
+    | '/checkin/demo/submitted'
+    | '/owner/submissions/$id'
+    | '/owner/submissions/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/sitemap.xml'
+    | '/owner/dashboard'
+    | '/owner/login'
+    | '/checkin/demo/booking'
+    | '/checkin/demo/deposit'
+    | '/checkin/demo/faq'
+    | '/checkin/demo/guest-info'
+    | '/checkin/demo/guide'
+    | '/checkin/demo/home'
+    | '/checkin/demo/house-rules'
+    | '/checkin/demo/id-upload'
+    | '/checkin/demo/review'
+    | '/checkin/demo/start'
+    | '/checkin/demo/submitted'
+    | '/owner/submissions/$id'
+    | '/owner/submissions'
+  id:
+    | '__root__'
+    | '/'
+    | '/sitemap.xml'
+    | '/owner/dashboard'
+    | '/owner/login'
+    | '/checkin/demo/booking'
+    | '/checkin/demo/deposit'
+    | '/checkin/demo/faq'
+    | '/checkin/demo/guest-info'
+    | '/checkin/demo/guide'
+    | '/checkin/demo/home'
+    | '/checkin/demo/house-rules'
+    | '/checkin/demo/id-upload'
+    | '/checkin/demo/review'
+    | '/checkin/demo/start'
+    | '/checkin/demo/submitted'
+    | '/owner/submissions/$id'
+    | '/owner/submissions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  OwnerDashboardRoute: typeof OwnerDashboardRoute
+  OwnerLoginRoute: typeof OwnerLoginRoute
+  CheckinDemoBookingRoute: typeof CheckinDemoBookingRoute
+  CheckinDemoDepositRoute: typeof CheckinDemoDepositRoute
+  CheckinDemoFaqRoute: typeof CheckinDemoFaqRoute
+  CheckinDemoGuestInfoRoute: typeof CheckinDemoGuestInfoRoute
+  CheckinDemoGuideRoute: typeof CheckinDemoGuideRoute
+  CheckinDemoHomeRoute: typeof CheckinDemoHomeRoute
+  CheckinDemoHouseRulesRoute: typeof CheckinDemoHouseRulesRoute
+  CheckinDemoIdUploadRoute: typeof CheckinDemoIdUploadRoute
+  CheckinDemoReviewRoute: typeof CheckinDemoReviewRoute
+  CheckinDemoStartRoute: typeof CheckinDemoStartRoute
+  CheckinDemoSubmittedRoute: typeof CheckinDemoSubmittedRoute
+  OwnerSubmissionsIdRoute: typeof OwnerSubmissionsIdRoute
+  OwnerSubmissionsIndexRoute: typeof OwnerSubmissionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +267,133 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner/login': {
+      id: '/owner/login'
+      path: '/owner/login'
+      fullPath: '/owner/login'
+      preLoaderRoute: typeof OwnerLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/dashboard': {
+      id: '/owner/dashboard'
+      path: '/owner/dashboard'
+      fullPath: '/owner/dashboard'
+      preLoaderRoute: typeof OwnerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/submissions/': {
+      id: '/owner/submissions/'
+      path: '/owner/submissions'
+      fullPath: '/owner/submissions/'
+      preLoaderRoute: typeof OwnerSubmissionsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/submissions/$id': {
+      id: '/owner/submissions/$id'
+      path: '/owner/submissions/$id'
+      fullPath: '/owner/submissions/$id'
+      preLoaderRoute: typeof OwnerSubmissionsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/submitted': {
+      id: '/checkin/demo/submitted'
+      path: '/checkin/demo/submitted'
+      fullPath: '/checkin/demo/submitted'
+      preLoaderRoute: typeof CheckinDemoSubmittedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/start': {
+      id: '/checkin/demo/start'
+      path: '/checkin/demo/start'
+      fullPath: '/checkin/demo/start'
+      preLoaderRoute: typeof CheckinDemoStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/review': {
+      id: '/checkin/demo/review'
+      path: '/checkin/demo/review'
+      fullPath: '/checkin/demo/review'
+      preLoaderRoute: typeof CheckinDemoReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/id-upload': {
+      id: '/checkin/demo/id-upload'
+      path: '/checkin/demo/id-upload'
+      fullPath: '/checkin/demo/id-upload'
+      preLoaderRoute: typeof CheckinDemoIdUploadRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/house-rules': {
+      id: '/checkin/demo/house-rules'
+      path: '/checkin/demo/house-rules'
+      fullPath: '/checkin/demo/house-rules'
+      preLoaderRoute: typeof CheckinDemoHouseRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/home': {
+      id: '/checkin/demo/home'
+      path: '/checkin/demo/home'
+      fullPath: '/checkin/demo/home'
+      preLoaderRoute: typeof CheckinDemoHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/guide': {
+      id: '/checkin/demo/guide'
+      path: '/checkin/demo/guide'
+      fullPath: '/checkin/demo/guide'
+      preLoaderRoute: typeof CheckinDemoGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/guest-info': {
+      id: '/checkin/demo/guest-info'
+      path: '/checkin/demo/guest-info'
+      fullPath: '/checkin/demo/guest-info'
+      preLoaderRoute: typeof CheckinDemoGuestInfoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/faq': {
+      id: '/checkin/demo/faq'
+      path: '/checkin/demo/faq'
+      fullPath: '/checkin/demo/faq'
+      preLoaderRoute: typeof CheckinDemoFaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/deposit': {
+      id: '/checkin/demo/deposit'
+      path: '/checkin/demo/deposit'
+      fullPath: '/checkin/demo/deposit'
+      preLoaderRoute: typeof CheckinDemoDepositRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checkin/demo/booking': {
+      id: '/checkin/demo/booking'
+      path: '/checkin/demo/booking'
+      fullPath: '/checkin/demo/booking'
+      preLoaderRoute: typeof CheckinDemoBookingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  OwnerDashboardRoute: OwnerDashboardRoute,
+  OwnerLoginRoute: OwnerLoginRoute,
+  CheckinDemoBookingRoute: CheckinDemoBookingRoute,
+  CheckinDemoDepositRoute: CheckinDemoDepositRoute,
+  CheckinDemoFaqRoute: CheckinDemoFaqRoute,
+  CheckinDemoGuestInfoRoute: CheckinDemoGuestInfoRoute,
+  CheckinDemoGuideRoute: CheckinDemoGuideRoute,
+  CheckinDemoHomeRoute: CheckinDemoHomeRoute,
+  CheckinDemoHouseRulesRoute: CheckinDemoHouseRulesRoute,
+  CheckinDemoIdUploadRoute: CheckinDemoIdUploadRoute,
+  CheckinDemoReviewRoute: CheckinDemoReviewRoute,
+  CheckinDemoStartRoute: CheckinDemoStartRoute,
+  CheckinDemoSubmittedRoute: CheckinDemoSubmittedRoute,
+  OwnerSubmissionsIdRoute: OwnerSubmissionsIdRoute,
+  OwnerSubmissionsIndexRoute: OwnerSubmissionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
