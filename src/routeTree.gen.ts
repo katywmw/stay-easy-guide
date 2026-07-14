@@ -10,9 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as OwnerSubmissionsRouteImport } from './routes/owner.submissions'
 import { Route as OwnerLoginRouteImport } from './routes/owner.login'
 import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
+import { Route as OwnerSubmissionsIndexRouteImport } from './routes/owner.submissions.index'
 import { Route as CheckinDemoSubmittedRouteImport } from './routes/checkin.demo.submitted'
 import { Route as CheckinDemoStartRouteImport } from './routes/checkin.demo.start'
 import { Route as CheckinDemoReviewRouteImport } from './routes/checkin.demo.review'
@@ -30,11 +30,6 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const OwnerSubmissionsRoute = OwnerSubmissionsRouteImport.update({
-  id: '/owner/submissions',
-  path: '/owner/submissions',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const OwnerLoginRoute = OwnerLoginRouteImport.update({
   id: '/owner/login',
   path: '/owner/login',
@@ -43,6 +38,11 @@ const OwnerLoginRoute = OwnerLoginRouteImport.update({
 const OwnerDashboardRoute = OwnerDashboardRouteImport.update({
   id: '/owner/dashboard',
   path: '/owner/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerSubmissionsIndexRoute = OwnerSubmissionsIndexRouteImport.update({
+  id: '/owner/submissions/',
+  path: '/owner/submissions/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckinDemoSubmittedRoute = CheckinDemoSubmittedRouteImport.update({
@@ -105,7 +105,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
-  '/owner/submissions': typeof OwnerSubmissionsRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
   '/checkin/demo/faq': typeof CheckinDemoFaqRoute
@@ -117,12 +116,12 @@ export interface FileRoutesByFullPath {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
-  '/owner/submissions': typeof OwnerSubmissionsRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
   '/checkin/demo/faq': typeof CheckinDemoFaqRoute
@@ -134,13 +133,13 @@ export interface FileRoutesByTo {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
-  '/owner/submissions': typeof OwnerSubmissionsRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
   '/checkin/demo/faq': typeof CheckinDemoFaqRoute
@@ -152,6 +151,7 @@ export interface FileRoutesById {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -159,7 +159,6 @@ export interface FileRouteTypes {
     | '/'
     | '/owner/dashboard'
     | '/owner/login'
-    | '/owner/submissions'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
     | '/checkin/demo/faq'
@@ -171,12 +170,12 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/submissions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/owner/dashboard'
     | '/owner/login'
-    | '/owner/submissions'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
     | '/checkin/demo/faq'
@@ -188,12 +187,12 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/submissions'
   id:
     | '__root__'
     | '/'
     | '/owner/dashboard'
     | '/owner/login'
-    | '/owner/submissions'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
     | '/checkin/demo/faq'
@@ -205,13 +204,13 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/submissions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OwnerDashboardRoute: typeof OwnerDashboardRoute
   OwnerLoginRoute: typeof OwnerLoginRoute
-  OwnerSubmissionsRoute: typeof OwnerSubmissionsRoute
   CheckinDemoBookingRoute: typeof CheckinDemoBookingRoute
   CheckinDemoDepositRoute: typeof CheckinDemoDepositRoute
   CheckinDemoFaqRoute: typeof CheckinDemoFaqRoute
@@ -223,6 +222,7 @@ export interface RootRouteChildren {
   CheckinDemoReviewRoute: typeof CheckinDemoReviewRoute
   CheckinDemoStartRoute: typeof CheckinDemoStartRoute
   CheckinDemoSubmittedRoute: typeof CheckinDemoSubmittedRoute
+  OwnerSubmissionsIndexRoute: typeof OwnerSubmissionsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,13 +232,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/owner/submissions': {
-      id: '/owner/submissions'
-      path: '/owner/submissions'
-      fullPath: '/owner/submissions'
-      preLoaderRoute: typeof OwnerSubmissionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/owner/login': {
@@ -253,6 +246,13 @@ declare module '@tanstack/react-router' {
       path: '/owner/dashboard'
       fullPath: '/owner/dashboard'
       preLoaderRoute: typeof OwnerDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/submissions/': {
+      id: '/owner/submissions/'
+      path: '/owner/submissions'
+      fullPath: '/owner/submissions/'
+      preLoaderRoute: typeof OwnerSubmissionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkin/demo/submitted': {
@@ -339,7 +339,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OwnerDashboardRoute: OwnerDashboardRoute,
   OwnerLoginRoute: OwnerLoginRoute,
-  OwnerSubmissionsRoute: OwnerSubmissionsRoute,
   CheckinDemoBookingRoute: CheckinDemoBookingRoute,
   CheckinDemoDepositRoute: CheckinDemoDepositRoute,
   CheckinDemoFaqRoute: CheckinDemoFaqRoute,
@@ -351,6 +350,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckinDemoReviewRoute: CheckinDemoReviewRoute,
   CheckinDemoStartRoute: CheckinDemoStartRoute,
   CheckinDemoSubmittedRoute: CheckinDemoSubmittedRoute,
+  OwnerSubmissionsIndexRoute: OwnerSubmissionsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

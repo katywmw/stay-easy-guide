@@ -10,7 +10,7 @@ import {
   StatusPill,
 } from "@/components/checkin/StatusPill";
 
-export const Route = createFileRoute("/owner/submissions")({
+export const Route = createFileRoute("/owner/submissions/")({
   component: SubmissionsList,
   head: () => ({ meta: [{ title: "入住申請列表 · 胡桃民宿" }] }),
 });
