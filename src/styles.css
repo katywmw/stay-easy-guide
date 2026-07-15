@@ -68,10 +68,12 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.30 0.045 55);
 
-  /* 溫暖黃 (不刺眼) */
-  --primary: oklch(0.83 0.14 88);
-  --primary-foreground: oklch(0.28 0.05 55);
-  --primary-soft: oklch(0.95 0.06 92);
+  /* 溫暖黃 (明亮但不刺眼) */
+  --primary: oklch(0.88 0.19 92);
+  --primary-foreground: oklch(0.26 0.05 55);
+  --primary-soft: oklch(0.96 0.09 95);
+  --primary-glow: oklch(0.92 0.17 85);
+  --primary-deep: oklch(0.78 0.17 72);
 
   /* 淺米色 */
   --secondary: oklch(0.955 0.022 85);
