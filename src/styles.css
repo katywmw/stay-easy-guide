@@ -57,23 +57,23 @@
 :root {
   --radius: 1rem;
 
-  /* 米白 / 奶油背景 */
-  --background: oklch(0.985 0.012 90);
-  --foreground: oklch(0.30 0.045 55);
+  /* 更乾淨的暖白背景，讓黃色跳出來 */
+  --background: oklch(0.99 0.008 92);
+  --foreground: oklch(0.24 0.05 55);
 
   /* 白色卡片 */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.30 0.045 55);
+  --card-foreground: oklch(0.24 0.05 55);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.30 0.045 55);
+  --popover-foreground: oklch(0.24 0.05 55);
 
-  /* 溫暖黃 (明亮但不刺眼) */
-  --primary: oklch(0.88 0.19 92);
-  --primary-foreground: oklch(0.26 0.05 55);
-  --primary-soft: oklch(0.96 0.09 95);
-  --primary-glow: oklch(0.92 0.17 85);
-  --primary-deep: oklch(0.78 0.17 72);
+  /* 明亮活潑的暖黃 */
+  --primary: oklch(0.86 0.22 92);
+  --primary-foreground: oklch(0.22 0.05 55);
+  --primary-soft: oklch(0.95 0.13 95);
+  --primary-glow: oklch(0.90 0.20 88);
+  --primary-deep: oklch(0.74 0.19 68);
 
   /* 淺米色 */
   --secondary: oklch(0.955 0.022 85);

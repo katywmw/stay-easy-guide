@@ -1,13 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ClipboardList,
-  Wallet,
-  HelpCircle,
-  ScrollText,
-  KeyRound,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+import { KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { checkinStatusPill, StatusPill } from "@/components/checkin/StatusPill";
@@ -21,14 +13,6 @@ export const Route = createFileRoute("/checkin/demo/home")({
     ],
   }),
 });
-
-const quick = [
-  { to: "/checkin/demo/start", label: "線上入住", icon: ClipboardList, tint: "bg-primary-soft" },
-  { to: "/checkin/demo/deposit", label: "押金資訊", icon: Wallet, tint: "bg-[oklch(0.94_0.05_145)]" },
-  { to: "/checkin/demo/faq", label: "常見問題", icon: HelpCircle, tint: "bg-[oklch(0.94_0.06_75)]" },
-  { to: "/checkin/demo/house-rules", label: "入住須知", icon: ScrollText, tint: "bg-[oklch(0.94_0.04_35)]" },
-  { to: "/checkin/demo/guide", label: "入住指引", icon: KeyRound, tint: "bg-secondary" },
-] as const;
 
 function HomePage() {
   const status = useCheckinStore((s) => s.status);
@@ -89,21 +73,135 @@ function HomePage() {
           </div>
         )}
 
-        {/* Quick grid */}
-        <h2 className="mb-3 mt-6 text-sm font-bold text-foreground">快速功能</h2>
-        <div className="grid grid-cols-2 gap-3">
-          {quick.map(({ to, label, icon: Icon, tint }) => (
-            <Link
-              key={to}
-              to={to}
-              className="card-soft flex flex-col gap-3 p-4 transition active:scale-[0.98]"
+        {/* Quick grid — bento with distinct visuals */}
+        <div className="mt-6 flex items-baseline justify-between">
+          <h2 className="text-base font-black text-foreground">快速功能</h2>
+          <span className="text-[11px] font-semibold text-muted-foreground">Quick access</span>
+        </div>
+
+        <div className="mt-3 grid grid-cols-6 gap-3">
+          {/* 線上入住 — big feature */}
+          <Link
+            to="/checkin/demo/start"
+            className="group relative col-span-6 overflow-hidden rounded-3xl p-5 text-foreground transition active:scale-[0.98]"
+            style={{
+              background:
+                "linear-gradient(120deg, oklch(0.92 0.20 92) 0%, oklch(0.84 0.22 78) 55%, oklch(0.74 0.20 62) 100%)",
+              boxShadow: "0 18px 40px -18px oklch(0.72 0.20 70 / 0.7)",
+            }}
+          >
+            <div
+              aria-hidden
+              className="absolute -right-6 -top-8 h-32 w-32 rounded-full bg-white/35 blur-2xl"
+            />
+            <div
+              aria-hidden
+              className="absolute right-4 bottom-3 text-6xl leading-none opacity-90 drop-shadow-sm"
             >
-              <div className={`grid h-11 w-11 place-items-center rounded-2xl ${tint}`}>
-                <Icon className="h-5 w-5 text-foreground" strokeWidth={2.2} />
+              📝
+            </div>
+            <div className="relative">
+              <div className="text-[10px] font-bold uppercase tracking-widest opacity-70">
+                Step 1
               </div>
-              <div className="text-sm font-bold text-foreground">{label}</div>
-            </Link>
-          ))}
+              <div className="mt-1 text-xl font-black">線上入住</div>
+              <p className="mt-1 max-w-[60%] text-xs leading-relaxed opacity-80">
+                填寫資料，讓入住更順暢
+              </p>
+              <span className="mt-3 inline-flex items-center gap-1 rounded-full bg-white/85 px-3 py-1 text-[11px] font-bold text-foreground">
+                開始填寫
+                <ArrowRight className="h-3 w-3" strokeWidth={2.8} />
+              </span>
+            </div>
+          </Link>
+
+          {/* 押金 — coins */}
+          <Link
+            to="/checkin/demo/deposit"
+            className="relative col-span-3 overflow-hidden rounded-3xl border border-[oklch(0.85_0.10_145)] p-4 transition active:scale-[0.98]"
+            style={{
+              background:
+                "linear-gradient(160deg, oklch(0.97 0.06 145) 0%, oklch(0.90 0.12 145) 100%)",
+            }}
+          >
+            <div className="flex items-center gap-1">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.90_0.16_140)] text-sm font-black text-[oklch(0.30_0.08_150)] shadow-sm ring-2 ring-white">
+                $
+              </span>
+              <span className="-ml-3 grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.85_0.18_140)] text-sm font-black text-white shadow-sm ring-2 ring-white">
+                $
+              </span>
+              <span className="-ml-3 grid h-8 w-8 place-items-center rounded-full bg-[oklch(0.78_0.19_140)] text-sm font-black text-white shadow-sm ring-2 ring-white">
+                $
+              </span>
+            </div>
+            <div className="mt-3 text-sm font-black text-foreground">押金資訊</div>
+            <div className="mt-0.5 text-[11px] text-[oklch(0.40_0.08_140)]">付款方式與退還</div>
+          </Link>
+
+          {/* FAQ — speech bubble */}
+          <Link
+            to="/checkin/demo/faq"
+            className="relative col-span-3 overflow-hidden rounded-3xl border border-[oklch(0.85_0.10_35)] p-4 transition active:scale-[0.98]"
+            style={{
+              background:
+                "linear-gradient(160deg, oklch(0.97 0.06 35) 0%, oklch(0.92 0.11 40) 100%)",
+            }}
+          >
+            <div className="relative h-10 w-14">
+              <div className="absolute left-0 top-0 grid h-9 w-11 place-items-center rounded-2xl rounded-bl-sm bg-white text-sm font-black text-[oklch(0.55_0.16_35)] shadow-sm">
+                ?
+              </div>
+              <div className="absolute right-0 bottom-0 grid h-6 w-7 place-items-center rounded-xl rounded-tr-sm bg-[oklch(0.70_0.18_35)] text-[10px] font-black text-white shadow-sm">
+                !
+              </div>
+            </div>
+            <div className="mt-2 text-sm font-black text-foreground">常見問題</div>
+            <div className="mt-0.5 text-[11px] text-[oklch(0.45_0.10_35)]">入住 Q&amp;A</div>
+          </Link>
+
+          {/* 入住須知 — scroll paper */}
+          <Link
+            to="/checkin/demo/house-rules"
+            className="relative col-span-3 overflow-hidden rounded-3xl border border-[oklch(0.88_0.04_75)] bg-white p-4 transition active:scale-[0.98]"
+          >
+            <div className="relative">
+              <div className="h-14 w-11 rounded-lg bg-[oklch(0.96_0.04_75)] shadow-sm">
+                <div className="mx-2 mt-2 h-1 rounded-full bg-[oklch(0.80_0.08_60)]" />
+                <div className="mx-2 mt-1.5 h-1 w-6 rounded-full bg-[oklch(0.85_0.06_60)]" />
+                <div className="mx-2 mt-1.5 h-1 rounded-full bg-[oklch(0.85_0.06_60)]" />
+                <div className="mx-2 mt-1.5 h-1 w-5 rounded-full bg-[oklch(0.85_0.06_60)]" />
+              </div>
+              <div className="absolute -right-1 -top-1 grid h-6 w-6 place-items-center rounded-full bg-primary text-[11px] font-black text-primary-foreground shadow ring-2 ring-white">
+                ✓
+              </div>
+            </div>
+            <div className="mt-2 text-sm font-black text-foreground">入住須知</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">請閱讀並同意</div>
+          </Link>
+
+          {/* 入住指引 — key */}
+          <Link
+            to="/checkin/demo/guide"
+            className="relative col-span-3 overflow-hidden rounded-3xl border border-[oklch(0.55_0.06_55)] p-4 text-white transition active:scale-[0.98]"
+            style={{
+              background:
+                "linear-gradient(155deg, oklch(0.42 0.06 55) 0%, oklch(0.30 0.05 55) 100%)",
+            }}
+          >
+            <div
+              aria-hidden
+              className="absolute -right-4 -bottom-6 h-24 w-24 rounded-full bg-primary/20 blur-2xl"
+            />
+            <div className="relative flex items-center gap-2">
+              <KeyRound className="h-8 w-8 text-primary" strokeWidth={2.2} />
+              <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest">
+                Locked
+              </span>
+            </div>
+            <div className="mt-3 text-sm font-black">入住指引</div>
+            <div className="mt-0.5 text-[11px] opacity-70">審核通過後開放</div>
+          </Link>
         </div>
 
         {/* Reminder */}
