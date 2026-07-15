@@ -1,13 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ClipboardList,
-  Wallet,
-  HelpCircle,
-  ScrollText,
-  KeyRound,
-  ArrowRight,
-  Sparkles,
-} from "lucide-react";
+import { KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { checkinStatusPill, StatusPill } from "@/components/checkin/StatusPill";
