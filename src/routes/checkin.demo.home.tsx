@@ -22,13 +22,10 @@ export const Route = createFileRoute("/checkin/demo/home")({
   }),
 });
 
-const quick = [
-  { to: "/checkin/demo/start", label: "線上入住", icon: ClipboardList, tint: "bg-primary-soft" },
-  { to: "/checkin/demo/deposit", label: "押金資訊", icon: Wallet, tint: "bg-[oklch(0.94_0.05_145)]" },
-  { to: "/checkin/demo/faq", label: "常見問題", icon: HelpCircle, tint: "bg-[oklch(0.94_0.06_75)]" },
-  { to: "/checkin/demo/house-rules", label: "入住須知", icon: ScrollText, tint: "bg-[oklch(0.94_0.04_35)]" },
-  { to: "/checkin/demo/guide", label: "入住指引", icon: KeyRound, tint: "bg-secondary" },
-] as const;
+function HomePage() {
+  const status = useCheckinStore((s) => s.status);
+  const checkIn = useCheckinStore((s) => s.checkInDate);
+  const pill = checkinStatusPill(status);
 
 function HomePage() {
   const status = useCheckinStore((s) => s.status);
