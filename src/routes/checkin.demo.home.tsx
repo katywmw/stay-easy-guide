@@ -27,11 +27,6 @@ function HomePage() {
   const checkIn = useCheckinStore((s) => s.checkInDate);
   const pill = checkinStatusPill(status);
 
-function HomePage() {
-  const status = useCheckinStore((s) => s.status);
-  const checkIn = useCheckinStore((s) => s.checkInDate);
-  const pill = checkinStatusPill(status);
-
   return (
     <PhoneShell showBack={false} bare>
       <div className="px-4 pt-[max(env(safe-area-inset-top),1.25rem)]">
