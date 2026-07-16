@@ -9,8 +9,9 @@ import {
   ChevronRight,
   ClipboardList,
 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useOwnerAuth } from "@/lib/owner-auth";
+import { usePropertySettings } from "@/lib/property-settings";
 import { demoSubmissions, ownerStats } from "@/lib/owner-demo";
 import { platformLabels } from "@/lib/checkin-store";
 import {
