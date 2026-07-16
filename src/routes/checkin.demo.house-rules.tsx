@@ -3,6 +3,8 @@ import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton } from "@/components/checkin/Fields";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { houseRulesText } from "@/lib/checkin-content";
+import { usePropertyConfig } from "@/lib/property-config";
+import { sanitizeHtml, looksLikeHtml } from "@/lib/sanitize-html";
 
 export const Route = createFileRoute("/checkin/demo/house-rules")({
   component: HouseRulesPage,
@@ -12,8 +14,10 @@ export const Route = createFileRoute("/checkin/demo/house-rules")({
 function HouseRulesPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
-
-  const blocks = parseMd(houseRulesText);
+  const { houseRules } = usePropertyConfig();
+  const raw = houseRules || houseRulesText;
+  const isHtml = looksLikeHtml(raw);
+  const blocks = isHtml ? [] : parseMd(raw);
 
   return (
     <PhoneShell title="入住須知" backTo="/checkin/demo/faq">
