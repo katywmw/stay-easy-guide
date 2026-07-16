@@ -18,6 +18,7 @@ import { usePropertyConfig } from "@/lib/property-config";
 const navItems = [
   { to: "/owner/dashboard", label: "儀表板", icon: LayoutDashboard },
   { to: "/owner/submissions", label: "入住申請", icon: ClipboardList },
+  { to: "/owner/settings/passwords", label: "密碼設定", icon: KeyRound },
   { to: "/owner/settings/property", label: "民宿設定", icon: Settings, matchPrefix: "/owner/settings" },
 ] as const;
 
