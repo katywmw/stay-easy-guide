@@ -2,6 +2,7 @@ import type { BookingPlatform, CheckinStatus, DepositStatus } from "./checkin-st
 
 export interface OwnerSubmission {
   id: string;
+  propertyId: string;
   name: string;
   platform: BookingPlatform;
   checkIn: string;
