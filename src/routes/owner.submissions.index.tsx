@@ -193,6 +193,8 @@ function SubmissionsList() {
         {list.map((r) => {
           const st = checkinStatusPill(r.status);
           const dp = depositPill(r.deposit);
+          const c = propertyColors(r.propertyId);
+          const propName = properties.find((p) => p.id === r.propertyId)?.name ?? "";
           return (
             <li key={r.id}>
               <Link
@@ -209,6 +211,13 @@ function SubmissionsList() {
                     <p className="truncate text-base font-bold text-foreground">
                       {r.name}
                     </p>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${c.chipBg} ${c.chipFg}`}
+                      title={propName}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                      {propName}
+                    </span>
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                       {platformLabels[r.platform]}
                     </span>
