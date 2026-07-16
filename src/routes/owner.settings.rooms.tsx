@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock, Pencil, Check } from "lucide-react";
+import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock, Pencil, Check, ImagePlus, Play } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
@@ -10,6 +10,7 @@ import {
   type RoomTypeGroup,
   type AccessMode,
 } from "@/lib/property-config";
+import { fileToMediaDataUrl } from "@/lib/media-upload";
 import { toast, Toaster } from "sonner";
 
 export const Route = createFileRoute("/owner/settings/rooms")({
