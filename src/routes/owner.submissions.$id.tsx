@@ -80,8 +80,8 @@ function NotFound() {
   );
 }
 
-// Simulated: which rooms this booking covers
-function roomsFor(submissionId: string, currentPropertyId: string, allRoomIds: string[]) {
+// Default suggested rooms per booking (used to seed the assignment card)
+function defaultRoomsFor(submissionId: string, allRoomIds: string[]) {
   if (submissionId === "demo") return allRoomIds.slice(0, 2);
   if (submissionId === "s5") return allRoomIds.slice(0, Math.min(3, allRoomIds.length));
   return allRoomIds.slice(0, 1);
@@ -89,12 +89,19 @@ function roomsFor(submissionId: string, currentPropertyId: string, allRoomIds: s
 
 function SubmissionDetail() {
   const { submission } = Route.useLoaderData();
-  const { rooms, properties, extraFeeCatalog, payment } = usePropertyConfig();
+  const { rooms, roomGroups, properties, extraFeeCatalog, payment, updateRoom, updateProperty } = usePropertyConfig();
   const submissionPropertyId = submission.propertyId;
   const submissionProperty = properties.find((p) => p.id === submissionPropertyId);
   const propertyRooms = rooms.filter((r) => r.propertyId === submissionPropertyId);
-  const bookedRoomIds = roomsFor(submission.id, submissionPropertyId, propertyRooms.map((r) => r.id));
-  const bookedRooms = propertyRooms.filter((r) => bookedRoomIds.includes(r.id));
+  const propertyGroups = roomGroups.filter((g) => g.propertyId === submissionPropertyId);
+  const colors = propertyColors(submissionPropertyId);
+
+  // Room assignment (manual, owner-controlled). Falls back to a suggested default.
+  const assignments = useRoomAssignments();
+  const storedAssignment = assignments.assignments[submission.id];
+  const assignedRoomIds = storedAssignment ?? defaultRoomsFor(submission.id, propertyRooms.map((r) => r.id));
+  const isAutoAssigned = !storedAssignment;
+  const bookedRooms = propertyRooms.filter((r) => assignedRoomIds.includes(r.id));
 
   // Current snapshot of the room info owners would send to the guest
   const currentSnapshot: SentRoomSnapshot[] = useMemo(
