@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, Clock, MessageCircle } from "lucide-react";
+import { useEffect } from "react";
+import { CheckCircle2, Clock, MessageCircle, BellRing } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
 import { usePropertyConfig } from "@/lib/property-config";
+import { useSubmissionUpdates } from "@/lib/submission-updates";
 import { channelIcon, channelHref } from "./owner.settings.contact";
 
 export const Route = createFileRoute("/checkin/demo/submitted")({
@@ -21,6 +23,17 @@ const nextSteps = [
 function SubmittedPage() {
   const { contactChannels } = usePropertyConfig();
   const active = contactChannels.filter((c) => c.enabled && c.value.trim());
+  const record = useSubmissionUpdates((s) => s.updates["demo"]);
+  const acknowledge = useSubmissionUpdates((s) => s.acknowledge);
+
+  // Auto-acknowledge when guest visits after an update
+  useEffect(() => {
+    if (record && !record.guestAcknowledgedAt) {
+      const t = setTimeout(() => acknowledge("demo"), 800);
+      return () => clearTimeout(t);
+    }
+  }, [record, acknowledge]);
+
 
   return (
     <PhoneShell showBack={false} bare>
