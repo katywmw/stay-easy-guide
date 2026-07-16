@@ -11,6 +11,8 @@ export interface Property {
   email: string;
   checkInTime: string;
   checkOutTime: string;
+  /** Gate password shared across the whole property (used when a group's gatePasswordMode = 'sharedProperty'). */
+  gatePassword?: string;
 }
 
 /** Legacy — used by existing UI for backward compat while UI migrates to groups. */
