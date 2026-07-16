@@ -76,6 +76,42 @@ function SubmissionsList() {
         }
       >
         <div className="grid gap-3">
+          <div>
+            <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <Building2 className="h-3 w-3" />館別
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {properties.map((p) => {
+                const c = propertyColors(p.id);
+                const active = scope === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setScope(p.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      active
+                        ? `${c.chipBg} ${c.chipFg} border-2 ${c.border}`
+                        : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                    {p.name}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setScope("all")}
+                className={
+                  scope === "all"
+                    ? "rounded-full border-2 border-primary bg-primary-soft px-3 py-1 text-xs font-semibold text-foreground"
+                    : "rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground hover:bg-secondary"
+                }
+              >
+                全部館別
+              </button>
+            </div>
+          </div>
+
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -85,6 +121,7 @@ function SubmissionsList() {
               className="w-full rounded-lg border border-input bg-card py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
             />
           </div>
+
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
