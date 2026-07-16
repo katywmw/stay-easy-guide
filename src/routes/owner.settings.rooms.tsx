@@ -322,6 +322,12 @@ function GroupCard({
             <Input label="房型描述" full value={group.description} onChange={(v) => onUpdate({ description: v })} />
             <Input label="入住指引補充" full value={group.guideNote ?? ""} onChange={(v) => onUpdate({ guideNote: v })} />
           </div>
+          {group.accessMode === "key" && (
+            <KeyPickupMedia
+              media={group.keyPickupMedia ?? []}
+              onChange={(m) => onUpdate({ keyPickupMedia: m })}
+            />
+          )}
           <p className="mt-3 rounded-lg bg-primary-soft/30 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
             大門密碼、房門密碼、取鑰匙位置等敏感資訊請至
             <a href="/owner/settings/passwords" className="mx-1 font-bold text-foreground underline">密碼設定</a>
