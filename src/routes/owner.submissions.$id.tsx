@@ -223,52 +223,92 @@ function SubmissionDetail() {
         </OwnerCard>
       </div>
 
-      <OwnerCard title="訂購房間與密碼釋出" desc="可個別或一次釋出所有房間密碼">
-        <div className="space-y-3">
-          {bookedRooms.map((r) => {
-            const released = releasedRooms.includes(r.id);
-            return (
-              <div
-                key={r.id}
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3"
-              >
-                <DoorOpen className="h-4 w-4 text-[oklch(0.55_0.08_60)]" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-foreground">{r.name}</p>
-                  <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
-                    大門 {r.gatePassword || "—"} · 房門 {r.doorPassword || "—"} · 押金 NT$ {r.depositAmount.toLocaleString()}
-                  </p>
-                </div>
-                {released ? (
-                  <StatusPill label="密碼已釋出" tone="success" />
-                ) : (
-                  <button
-                    onClick={() => {
-                      setReleasedRooms((v) => [...v, r.id]);
-                      toast.success(`已釋出「${r.name}」密碼`);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+      <RoomAssignmentCard
+        submissionId={submission.id}
+        propertyRooms={propertyRooms}
+        groups={propertyGroups}
+        assignedRoomIds={assignedRoomIds}
+        isAutoAssigned={isAutoAssigned}
+        onSave={(ids) => assignments.set(submission.id, ids)}
+        onClear={() => assignments.clear(submission.id)}
+        guestCount={submission.guests}
+      />
+
+      <div className="mt-4">
+        <OwnerCard title="訂購房間與密碼釋出" desc="可個別編輯密碼或一次釋出所有房間">
+          {bookedRooms.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-warning bg-warning-soft/40 p-4 text-center text-xs text-foreground">
+              尚未分配房間，請於上方「分配房間」選擇後才能釋出密碼。
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {bookedRooms.map((r) => {
+                const released = releasedRooms.includes(r.id);
+                const gate = r.gatePassword || submissionProperty?.gatePassword || "";
+                return (
+                  <div
+                    key={r.id}
+                    className="rounded-lg border border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3"
                   >
-                    <KeyRound className="h-3.5 w-3.5" />
-                    釋出密碼
-                  </button>
-                )}
-              </div>
-            );
-          })}
-          {bookedRooms.length > 1 && (
-            <button
-              onClick={() => {
-                setReleasedRooms(bookedRooms.map((r) => r.id));
-                toast.success("已釋出全部房間密碼");
-              }}
-              className="w-full rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
-            >
-              一次釋出所有房間
-            </button>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <DoorOpen className="h-4 w-4 text-[oklch(0.55_0.08_60)]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-foreground">
+                          {r.displayName || r.roomNumber || r.name}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+                          大門 {gate || "—"} · 房門 {r.doorPassword || "—"} · 押金 NT$ {r.depositAmount.toLocaleString()}
+                        </p>
+                      </div>
+                      <InlinePasswordEditor
+                        room={r}
+                        propertyGate={submissionProperty?.gatePassword ?? ""}
+                        onSaveRoom={(patch) => updateRoom(r.id, patch)}
+                        onSaveProperty={(gp) =>
+                          submissionProperty && updateProperty(submissionProperty.id, { gatePassword: gp })
+                        }
+                      />
+                      {released ? (
+                        <StatusPill label="密碼已釋出" tone="success" />
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setReleasedRooms((v) => [...v, r.id]);
+                            toast.success(`已釋出「${r.displayName || r.roomNumber || r.name}」密碼`);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                        >
+                          <KeyRound className="h-3.5 w-3.5" />
+                          釋出密碼
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {bookedRooms.length > 1 && (
+                <button
+                  onClick={() => {
+                    setReleasedRooms(bookedRooms.map((r) => r.id));
+                    toast.success("已釋出全部房間密碼");
+                  }}
+                  className="w-full rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
+                >
+                  一次釋出所有房間
+                </button>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                密碼預設由「
+                <Link to="/owner/settings/passwords" className="font-semibold text-foreground underline">
+                  密碼設定
+                </Link>
+                」頁管理，此處的鉛筆按鈕可就地覆寫並自動同步。
+              </p>
+            </div>
           )}
-        </div>
-      </OwnerCard>
+        </OwnerCard>
+      </div>
+
 
       {/* Info-updated notifier — appears after passwords have been released */}
       <div className="mt-4">
