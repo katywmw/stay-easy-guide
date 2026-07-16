@@ -39,10 +39,20 @@ const iconFor: Record<GuideField, typeof MapPin> = {
 
 function GuidePage() {
   const status = useCheckinStore((s) => s.status);
-  const { guide, guidePhotos } = usePropertyConfig();
+  const { guide, guidePhotos, rooms, roomGroups } = usePropertyConfig();
+  const assignments = useRoomAssignments((s) => s.assignments);
   const locked = status !== "approved" && status !== "completed";
   const pill = checkinStatusPill(status);
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  // Key-pickup groups for this guest's assigned rooms
+  const assignedIds = assignments["demo"] ?? [];
+  const assignedRooms = rooms.filter((r) => assignedIds.includes(r.id));
+  const keyGroups = Array.from(
+    new Set(assignedRooms.map((r) => r.groupId).filter(Boolean)),
+  )
+    .map((gid) => roomGroups.find((g) => g.id === gid))
+    .filter((g): g is NonNullable<typeof g> => !!g && g.accessMode === "key");
 
   return (
     <PhoneShell title="入住指引" backTo="/checkin/demo/home">
