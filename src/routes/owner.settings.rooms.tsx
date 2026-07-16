@@ -388,3 +388,109 @@ function AccessSelect({
     </label>
   );
 }
+
+function RoomRow({
+  room,
+  showDoorPassword,
+  onUpdate,
+  onRemove,
+  onDuplicate,
+}: {
+  room: Room;
+  showDoorPassword: boolean;
+  onUpdate: (patch: Partial<Room>) => void;
+  onRemove: () => void;
+  onDuplicate: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const title = room.displayName?.trim() || room.roomNumber || "未命名";
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-[oklch(0.94_0.02_82)] bg-card">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <p className="truncate text-sm font-bold text-foreground">{title}</p>
+            {room.displayName && room.roomNumber && (
+              <span className="text-[11px] text-muted-foreground">
+                房號 {room.roomNumber}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+            {showDoorPassword && (
+              <span>密碼 {room.doorPassword || "—"}</span>
+            )}
+            {room.note && <span className="truncate">備註 {room.note}</span>}
+          </div>
+        </div>
+        <button
+          onClick={() => setEditing((v) => !v)}
+          className={`grid h-7 w-7 place-items-center rounded ${
+            editing
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-secondary"
+          }`}
+          title={editing ? "完成" : "編輯"}
+        >
+          {editing ? <Check className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+        </button>
+        <button
+          onClick={onDuplicate}
+          className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-secondary"
+          title="複製房間"
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={onRemove}
+          className="grid h-7 w-7 place-items-center rounded text-destructive hover:bg-destructive-soft"
+          title="刪除"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {editing && (
+        <div className="border-t border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="房號"
+              value={room.roomNumber ?? ""}
+              onChange={(v) => onUpdate({ roomNumber: v })}
+              placeholder="101"
+            />
+            <Input
+              label="房間別名（選填）"
+              value={room.displayName ?? ""}
+              onChange={(v) => onUpdate({ displayName: v })}
+              placeholder="Happy 101 / 松風"
+            />
+            {showDoorPassword && (
+              <Input
+                label="房門密碼"
+                value={room.doorPassword ?? ""}
+                onChange={(v) => onUpdate({ doorPassword: v })}
+                placeholder="4-6 位數字"
+              />
+            )}
+            <Input
+              label="備註"
+              full
+              value={room.note ?? ""}
+              onChange={(v) => onUpdate({ note: v })}
+              placeholder="例：非吸菸房 / 附早餐"
+            />
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={() => setEditing(false)}
+              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              完成
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
