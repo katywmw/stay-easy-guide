@@ -101,6 +101,14 @@ export function OwnerShell({
               </h1>
             </div>
             <div className="flex items-center gap-2">
+              <Link
+                to="/owner/settings/passwords"
+                className="inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary-soft/60 px-3 py-1.5 text-[11px] font-bold text-foreground hover:bg-primary-soft"
+                title="密碼設定"
+              >
+                <KeyRound className="h-3 w-3" />
+                密碼
+              </Link>
               <PropertySwitcher />
               {right}
             </div>
