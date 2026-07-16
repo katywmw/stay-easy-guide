@@ -341,6 +341,9 @@ function GroupPasswordCard({
       desc={group.description}
       actions={
         <div className="flex items-center gap-2">
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+            {rooms.length} 間
+          </span>
           {isKey ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
               <Key className="h-3 w-3" /> 鑰匙房型
