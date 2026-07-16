@@ -1,68 +1,86 @@
-# 首頁重新設計 + 訪客/業者入口分流 + 入住流程修正
+# 訂房流程細節優化 + 業者可控欄位 + 動態押金
 
-## 1. 分流訪客與業者入口
+## 1. 修正「黃色按鈕沒有文字」的 Bug（根因）
 
-目前 `/` 同時放旅客 CTA 與「我是業者」按鈕，體驗混亂。改為：
+`src/components/checkin/Fields.tsx` 中的 `PrimaryButton` 與 `GhostButton` 目前把 `children` 解構出來後，卻用自閉合的 `<button {...props} />` 渲染，導致所有步驟按鈕上的文字（例如「下一步：填寫入住人資訊」）全部被丟掉，只剩一條黃色 bar。
 
-- **`/`（訪客入口）**：直接就是「歡迎回家 · 胡桃民宿」的旅客首頁，等同現在的 `/checkin/demo/home` 內容 —— 一進站就開始線上入住流程，不再看到業者按鈕。
-- **`/owner`（業者入口）**：業者專屬入口。若未登入 → 導向 `/owner/login`；若已登入 → 導向 `/owner/dashboard`。業者只需記憶 `/owner` 一個網址，不會看到旅客介面。
-- 舊的 `/checkin/demo/home` 保留為別名 route，指向同一個 component，讓已發出的連結不失效。
-- 旅客介面裡完全移除任何「業者入口」按鈕；業者登入頁保留一個小型「回旅客首頁」連結以備測試。
+修法：改為 `<button {...props}>{children}</button>`，並在文字右側加入黑色箭頭圖示（`ArrowRight`，來自 lucide-react），做為「下一步」視覺提示。所有步驟頁面的按鈕文案已存在，修完 bug 後即可自動顯示。
 
-## 2. 旅客首頁全新設計（採用選定的「暖陳日和民宿」方向）
+## 2. 訂房資料頁 `checkin.demo.booking.tsx`
 
-依先前選定 prototype 重寫，鎖定配色：
-- 主色 `#FFD93D`（檸香日光黃）
-- 淺黃 `#FFEC8A`
-- 奶油背景 `#FFFBE8`
-- 深胡桃棕 `#3A2A1F`
-- 成功綠 `#A8D5A0`
-- 字體：Quicksand（英數）+ Noto Sans TC（中文），於 `__root.tsx` 用 `<link>` 載入
+- **必填標記**：於「訂房姓名」「手機號碼」「入住日期」「退房日期」的 label 尾端加上紅色 `*`；卡片頂端加一行小提示「標示 * 為必填欄位」。
+- **移除即時回饋文字**：刪掉入住/退房日期下方「已選：YYYY/MM/DD」那兩段 `<p>`（原生 date input 已顯示所選日期）。
+- **保留**：日期驗證邏輯（`min={today}`、`min={checkIn + 1}`、自動清空無效退房日）。
 
-頁面結構（由上而下）：
-1. **沉浸式 Hero 圖**（h-72，底部深棕漸層）：疊上 ★★★★★ 4.9、「胡桃民宿 · 日和居」、「南投 · 魚池鄉」。**移除原本的頂部 sticky nav（QrCode/Heart）與訂單編號輸入框**。
-2. **主要 CTA 卡**：黃色虛線框，副標「歡迎回家，請點擊以下按鈕辦理入住」+ 大按鈕「開始線上入住」→ `/checkin/demo/start`。
-3. **入住/退房時間卡**：15:00 | 11:00（**移除下方押金按鈕**）。
-4. **綠色安全提示卡**：智能門鎖說明。
-5. **聯絡按鈕列**：電話 + LINE。
-6. **房內設備 Amenities**（移到最底）：WiFi / 停車 / 咖啡 / 空調。
-7. **底部深棕禁菸提醒條**。
+## 3. Fields.tsx 支援必填標記
 
-同時重新生成 `src/assets/hero-minsu.jpg`（暖木造日式民宿入口、金黃陽光、綠色植栽、木招牌）。
+`TextField` 新增 `required?: boolean` prop（沿用 HTML `required` 也可以），在 label 尾端顯示紅色 `*`。同理套用於未來需要的欄位。
 
-## 3. 訂房日期步驟修正 `checkin.demo.booking.tsx`
+## 4. 業者後台：訂單欄位開關 + 額外收費設定
 
-- **入住日 `min = today`**，退房日 `min = 入住日 + 1 天`，選擇入住日後若舊的退房日早於入住日則自動清空。
-- **選擇日期即顯示**：`<input type="date">` 的 `onChange` 直接寫入 store，並在欄位下方顯示「已選：2026/07/15」即時回饋，不需要按其他確認鈕。
-- **下一步按鈕補文案**：確保按鈕明確標示「下一步：填寫入住人資訊」。同時檢查其他步驟（入住人、證件、押金、須知、送出）按鈕文案齊全。
+在 `src/lib/owner-auth.ts`（或新檔 `src/lib/property-settings.ts`）新增以 zustand persist 儲存的業者設定：
 
-## 4. 常見問題 FAQ 改為 collapse 嵌入
+```ts
+interface PropertySettings {
+  askParking: boolean;              // 是否詢問旅客「需要停車資訊」
+  askPet: boolean;                  // 是否詢問「攜帶寵物」（已存在，保持顯示）
+  petFeeEnabled: boolean;           // 是否加收寵物費
+  petFeePerNight: number;           // 每晚每隻寵物費用，例如 500
+  depositAmount: number;            // 押金金額，預設 1000
+  linePayQrDataUrl: string | null;  // 業者上傳的 LINE Pay 收款 QR（base64 dataURL）
+}
+```
 
-- 為 `src/lib/checkin-content.ts` 的 FAQ 項目加上 `category: "id" | "deposit" | "general"`。
-- `checkin.demo.id-upload.tsx` 底部新增「常見問題（證件相關）」collapse 清單。
-- `checkin.demo.deposit.tsx` 底部新增「常見問題（押金相關）」collapse 清單。
-- 保留 `/checkin/demo/faq` 完整頁面於流程內。
+於 `owner.dashboard.tsx` 底部新增「入住表單設定」卡片：
+- 開關：需要停車資訊 (askParking)
+- 開關：攜帶寵物 (askPet) + 若開啟則顯示「加收寵物費」開關與金額輸入
+- 押金金額輸入
+- LINE Pay 收款 QR：`<input type="file" accept="image/*">`，選擇後轉 dataURL 存入 store；旁邊顯示縮圖與「移除」
 
-## 5. 樣式 token 對齊 `src/styles.css`
+## 5. 入住人資訊 `checkin.demo.guest-info.tsx`
 
-同步更新 token 讓全 app 一致：
-- `--background` → 奶油 `#FFFBE8`
-- `--primary` → 檸香日光黃 `#FFD93D`
-- `--primary-soft` → `#FFEC8A`
-- `--foreground` → 胡桃棕 `#3A2A1F`
-- `--success` → 柔和綠 `#A8D5A0`
-- 加入 `--font-display: "Quicksand"`、`--font-sans: "Noto Sans TC"`
+- 讀取 `PropertySettings`：
+  - `askParking === false` → 不渲染「是否需要停車資訊」ChipGroup，`canNext` 條件也去掉該欄。
+  - `askPet === false` → 不渲染寵物欄。
+- 保留特殊需求備註等其餘欄位。
+
+## 6. 押金頁 `checkin.demo.deposit.tsx`
+
+- 讀取 `PropertySettings` 計算費用：
+  ```
+  deposit = depositAmount
+  petFee  = petFeeEnabled && hasPet === "yes" && petFeePerNight > 0
+            ? petFeePerNight * nights * petCount 
+            : 0
+  total   = deposit + petFee
+  ```
+  夜數用 `checkOutDate - checkInDate`；寵物數量此版本以 1 隻計（可日後擴充）。
+- 金額卡片改為條列：
+  ```
+  押金        NT$ 1,000
+  寵物費       NT$   500
+  ─────────────────
+  合計        NT$ 1,500
+  ```
+  只有金額 > 0 的列才顯示；沒有寵物費時只顯示押金。
+- **LINE Pay 分支**：若業者已上傳 `linePayQrDataUrl` → 顯示該 QR 圖並提示「請以 LINE Pay 掃描付款」；未上傳 → 顯示「業者尚未提供 LINE Pay 收款 QR，請改用其他方式或聯繫民宿」。
+
+## 7. Store 擴充 `checkin-store.ts`
+
+新增 `petCount?: number`（預設 1），寫入 zustand。押金頁需要它以計算寵物費（若之後要支援多隻寵物）。此版本可先固定 1，欄位保留但 UI 不必先開放。
 
 ## 檔案異動清單
 
-- 重寫：`src/routes/index.tsx`（改為旅客首頁本體，不再是選角色頁）
-- 重寫：`src/routes/checkin.demo.home.tsx`（採用新設計，或 re-export index component 內容）
-- 新增：`src/routes/owner.index.tsx`（`/owner` 依登入狀態導向 login 或 dashboard）
-- 修改：`src/routes/owner.login.tsx`（保留小型「回旅客首頁」測試連結）
-- 修改：`src/routes/checkin.demo.booking.tsx`（日期驗證 + 按鈕文案）
-- 修改：`src/routes/checkin.demo.id-upload.tsx`（新增 FAQ collapse）
-- 修改：`src/routes/checkin.demo.deposit.tsx`（新增 FAQ collapse）
-- 修改：`src/lib/checkin-content.ts`（FAQ category 分類）
-- 修改：`src/styles.css`（配色 token）
-- 修改：`src/routes/__root.tsx`（載入 Quicksand + Noto Sans TC）
-- 重新生成：`src/assets/hero-minsu.jpg`
+- 修改：`src/components/checkin/Fields.tsx`（修 children bug、必填 `*`、匯出黑色箭頭按鈕）
+- 修改：`src/routes/checkin.demo.booking.tsx`（必填標記、必填提示、移除「已選：」）
+- 修改：`src/routes/checkin.demo.guest-info.tsx`（按業者設定條件渲染停車/寵物）
+- 修改：`src/routes/checkin.demo.deposit.tsx`（費用明細、動態總額、LINE Pay QR）
+- 修改：`src/routes/owner.dashboard.tsx`（表單設定卡片：開關、金額、QR 上傳）
+- 新增：`src/lib/property-settings.ts`（zustand persist store）
+- 修改：`src/lib/checkin-store.ts`（如需要 `petCount`）
+
+## 技術備註
+
+- LINE Pay QR 使用 `FileReader.readAsDataURL` 存 base64，避免依賴後端；正式版可換成上傳到 Lovable Cloud storage。
+- 業者設定與旅客 store 都用 `zustand/persist` 存 localStorage，Demo 情境下業者端調整後旅客端重新整理即可看到。
+- 所有紅色 `*` 用 `text-destructive` token，不寫死顏色。
