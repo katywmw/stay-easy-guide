@@ -459,6 +459,12 @@ function RoomRow({
               placeholder="101"
             />
             <Input
+              label="房間別名（選填）"
+              value={room.displayName ?? ""}
+              onChange={(v) => onUpdate({ displayName: v })}
+              placeholder="Happy 101 / 松風"
+            />
+            <Input
               label="備註"
               full
               value={room.note ?? ""}
@@ -469,21 +475,6 @@ function RoomRow({
           <p className="mt-2 rounded bg-primary-soft/30 px-2 py-1.5 text-[10px] text-muted-foreground">
             房門密碼請至「密碼設定」頁編輯（密碼改動集中管理，避免遺漏通知旅客）。
           </p>
-
-                label="房門密碼"
-                value={room.doorPassword ?? ""}
-                onChange={(v) => onUpdate({ doorPassword: v })}
-                placeholder="4-6 位數字"
-              />
-            )}
-            <Input
-              label="備註"
-              full
-              value={room.note ?? ""}
-              onChange={(v) => onUpdate({ note: v })}
-              placeholder="例：非吸菸房 / 附早餐"
-            />
-          </div>
           <div className="mt-3 flex justify-end">
             <button
               onClick={() => setEditing(false)}
@@ -497,3 +488,4 @@ function RoomRow({
     </div>
   );
 }
+
