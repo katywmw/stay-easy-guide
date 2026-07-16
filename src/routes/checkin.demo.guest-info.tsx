@@ -8,6 +8,7 @@ import {
   SelectField,
 } from "@/components/checkin/Fields";
 import { useCheckinStore } from "@/lib/checkin-store";
+import { usePropertySettings } from "@/lib/property-settings";
 import { StepBar } from "./checkin.demo.booking";
 
 export const Route = createFileRoute("/checkin/demo/guest-info")({
@@ -18,7 +19,12 @@ export const Route = createFileRoute("/checkin/demo/guest-info")({
 function GuestInfoPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
-  const canNext = s.guestCount && s.arrivalTime && s.hasPet && s.needParking;
+  const { askParking, askPet } = usePropertySettings();
+  const canNext =
+    s.guestCount &&
+    s.arrivalTime &&
+    (!askPet || s.hasPet) &&
+    (!askParking || s.needParking);
 
   return (
     <PhoneShell
@@ -48,25 +54,29 @@ function GuestInfoPage() {
           onChange={(e) => s.update({ arrivalTime: e.target.value })}
         />
 
-        <ChipGroup<"yes" | "no">
-          label="是否攜帶寵物"
-          value={s.hasPet}
-          onChange={(v) => s.update({ hasPet: v })}
-          options={[
-            { value: "yes", label: "是" },
-            { value: "no", label: "否" },
-          ]}
-        />
+        {askPet && (
+          <ChipGroup<"yes" | "no">
+            label="是否攜帶寵物"
+            value={s.hasPet}
+            onChange={(v) => s.update({ hasPet: v })}
+            options={[
+              { value: "yes", label: "是" },
+              { value: "no", label: "否" },
+            ]}
+          />
+        )}
 
-        <ChipGroup<"yes" | "no">
-          label="是否需要停車資訊"
-          value={s.needParking}
-          onChange={(v) => s.update({ needParking: v })}
-          options={[
-            { value: "yes", label: "是" },
-            { value: "no", label: "否" },
-          ]}
-        />
+        {askParking && (
+          <ChipGroup<"yes" | "no">
+            label="是否需要停車資訊"
+            value={s.needParking}
+            onChange={(v) => s.update({ needParking: v })}
+            options={[
+              { value: "yes", label: "是" },
+              { value: "no", label: "否" },
+            ]}
+          />
+        )}
 
         <TextArea
           label="特殊需求備註"
