@@ -850,8 +850,43 @@ function RoomAssignmentCard({
   onClear: () => void;
   guestCount: number;
 }) {
+  // Auto-save on every toggle (debounced) with saving/saved indicator.
   const [draft, setDraft] = useState<string[]>(assignedRoomIds);
-  const dirty = JSON.stringify([...draft].sort()) !== JSON.stringify([...assignedRoomIds].sort());
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [saving, setSaving] = useState(false);
+  const firstRun = useRef(true);
+  const initialKey = useRef(JSON.stringify([...assignedRoomIds].sort()));
+
+  // Re-sync when persisted assignment changes externally (e.g. property switch)
+  useEffect(() => {
+    const key = JSON.stringify([...assignedRoomIds].sort());
+    if (key !== JSON.stringify([...draft].sort())) {
+      // only rehydrate if external truly differs
+      setDraft(assignedRoomIds);
+      initialKey.current = key;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assignedRoomIds.join(",")]);
+
+  // Auto-save
+  useEffect(() => {
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
+    }
+    const key = JSON.stringify([...draft].sort());
+    if (key === initialKey.current) return;
+    setSaving(true);
+    const t = setTimeout(() => {
+      onSave(draft);
+      initialKey.current = key;
+      setSaving(false);
+      setSavedAt(new Date());
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft]);
+
   const toggle = (id: string) =>
     setDraft((d) => (d.includes(id) ? d.filter((x) => x !== id) : [...d, id]));
 
@@ -859,7 +894,7 @@ function RoomAssignmentCard({
     <div className="mt-4">
       <OwnerCard
         title="分配房間"
-        desc="由業者依據入住需求選擇實際入住的房間"
+        desc="可於同一房型選擇多間房；資訊會自動同步至下方「訂購房間與密碼釋出」。"
         actions={
           <div className="flex items-center gap-2">
             {isAutoAssigned && (
@@ -867,20 +902,32 @@ function RoomAssignmentCard({
                 系統建議（尚未確認）
               </span>
             )}
-            <button
-              onClick={() => {
-                onSave(draft);
-                toast.success("已儲存房間分配");
-              }}
-              disabled={!dirty}
-              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
-            >
-              儲存分配
-            </button>
+            <span className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+              {saving ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin text-primary" />
+                  <span>儲存中…</span>
+                </>
+              ) : savedAt ? (
+                <>
+                  <CheckCircle2 className="h-3 w-3 text-success" />
+                  <span>
+                    已儲存 · {savedAt.toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <SaveIcon className="h-3 w-3" />
+                  <span>自動儲存</span>
+                </>
+              )}
+            </span>
             <button
               onClick={() => {
                 onClear();
                 setDraft([]);
+                initialKey.current = "[]";
+                setSavedAt(null);
                 toast("已清除自訂分配");
               }}
               className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-secondary"
@@ -905,7 +952,12 @@ function RoomAssignmentCard({
               if (gRooms.length === 0) return null;
               return (
                 <div key={g.id} className="rounded-lg border border-[oklch(0.94_0.02_82)] p-3">
-                  <p className="mb-2 text-xs font-black text-foreground">{g.name}</p>
+                  <p className="mb-2 text-xs font-black text-foreground">
+                    {g.name}
+                    <span className="ml-2 text-[10px] font-normal text-muted-foreground">
+                      可多選同房型
+                    </span>
+                  </p>
                   <div className="flex flex-wrap gap-1.5">
                     {gRooms.map((r) => {
                       const on = draft.includes(r.id);
@@ -931,6 +983,101 @@ function RoomAssignmentCard({
           </div>
         )}
       </OwnerCard>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// Reissue-request sub-section (要求補件)
+// ------------------------------------------------------------------
+function ReissueSection({
+  field,
+  reason,
+  message,
+  onFieldChange,
+  onReasonChange,
+  onMessageChange,
+}: {
+  field: ReissueField | "";
+  reason: string;
+  message: string;
+  onFieldChange: (v: ReissueField | "") => void;
+  onReasonChange: (v: string) => void;
+  onMessageChange: (v: string) => void;
+}) {
+  const presets: { field: ReissueField; reason: string; label: string }[] = [
+    { field: "id", reason: "身分證未通過（照片不清或資料不完整）", label: "ID 未通過" },
+    { field: "id", reason: "身分證照片模糊，需重新拍攝", label: "ID 照片不清" },
+    { field: "payment", reason: "付款證明資訊不足，請重新上傳", label: "付款證明不足" },
+    { field: "other", reason: "", label: "其他（自行填寫）" },
+  ];
+
+  return (
+    <div className="rounded-lg border border-dashed border-warning bg-warning-soft/30 p-4">
+      <p className="mb-2 text-xs font-black uppercase tracking-wider text-muted-foreground">
+        要求補件
+      </p>
+      <div className="mb-3 flex flex-wrap gap-1.5">
+        {presets.map((p) => {
+          const active = field === p.field && (reason === p.reason || (p.reason === "" && field === "other"));
+          return (
+            <button
+              key={p.label}
+              onClick={() => {
+                onFieldChange(p.field);
+                onReasonChange(p.reason);
+              }}
+              className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                active
+                  ? "border-2 border-warning bg-warning-soft text-foreground"
+                  : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+              }`}
+            >
+              <Pencil className="h-3 w-3" />
+              {p.label}
+            </button>
+          );
+        })}
+        {field && (
+          <button
+            onClick={() => {
+              onFieldChange("");
+              onReasonChange("");
+              onMessageChange("");
+            }}
+            className="rounded-full px-2 py-1 text-[11px] font-semibold text-muted-foreground underline"
+          >
+            清除
+          </button>
+        )}
+      </div>
+      {field && (
+        <>
+          <label className="mb-2 block text-[11px]">
+            <span className="mb-0.5 block font-semibold text-muted-foreground">
+              補件原因（可修改）
+            </span>
+            <input
+              value={reason}
+              onChange={(e) => onReasonChange(e.target.value)}
+              placeholder="請簡述缺少或需重新提供的資訊"
+              className="w-full rounded border border-input bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
+          </label>
+          <label className="block text-[11px]">
+            <span className="mb-0.5 block font-semibold text-muted-foreground">
+              給旅客的訊息（可選）
+            </span>
+            <textarea
+              value={message}
+              onChange={(e) => onMessageChange(e.target.value)}
+              rows={2}
+              placeholder="例：請重新上傳清晰的證件正面照片，四角需完整。"
+              className="w-full resize-none rounded border border-input bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+            />
+          </label>
+        </>
+      )}
     </div>
   );
 }
