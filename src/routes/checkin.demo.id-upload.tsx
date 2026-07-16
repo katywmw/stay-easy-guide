@@ -96,6 +96,8 @@ function IdUploadPage() {
         完整入住指引與門鎖密碼將於民宿審核通過後開放。
       </p>
 
+      <FaqAccordion category="id" title="常見問題（證件相關）" />
+
       <div className="mt-6">
         <PrimaryButton
           disabled={!canNext}
