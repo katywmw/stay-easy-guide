@@ -126,16 +126,16 @@ function OwnerDashboard() {
                       {r.name.slice(0, 1)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-bold text-foreground">
-                          {r.name}
-                        </p>
+                      <p className="break-words text-sm font-bold text-foreground">
+                        {r.name}
+                      </p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${c.chipBg} ${c.chipFg}`}
                           title={propName}
                         >
                           <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                          {c.short}
+                          {propName}
                         </span>
                         <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                           {platformLabels[r.platform]}
