@@ -229,6 +229,7 @@ const seedProperties: Property[] = [
     email: "hello@walnut-stay.tw",
     checkInTime: "15:00",
     checkOutTime: "11:00",
+    gatePassword: "9945",
   },
   {
     id: "anping9",
@@ -238,6 +239,7 @@ const seedProperties: Property[] = [
     email: "hello@anping9.tw",
     checkInTime: "16:00",
     checkOutTime: "11:00",
+    gatePassword: "3388",
   },
 ];
 
