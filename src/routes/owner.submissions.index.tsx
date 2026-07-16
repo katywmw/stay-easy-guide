@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronRight, Filter, Search, X } from "lucide-react";
+import { ChevronRight, Filter, Search, X, Building2 } from "lucide-react";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { platformLabels, type BookingPlatform, type CheckinStatus } from "@/lib/checkin-store";
@@ -9,6 +9,8 @@ import {
   depositPill,
   StatusPill,
 } from "@/components/checkin/StatusPill";
+import { usePropertyConfig } from "@/lib/property-config";
+import { propertyColors } from "@/lib/property-colors";
 
 export const Route = createFileRoute("/owner/submissions/")({
   component: SubmissionsList,
@@ -24,6 +26,8 @@ const statusOptions: { v: CheckinStatus | "all"; label: string }[] = [
 ];
 
 function SubmissionsList() {
+  const { properties, currentPropertyId } = usePropertyConfig();
+  const [scope, setScope] = useState<string>(currentPropertyId); // property id or "all"
   const [status, setStatus] = useState<CheckinStatus | "all">("all");
   const [platform, setPlatform] = useState<BookingPlatform | "all">("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -33,6 +37,7 @@ function SubmissionsList() {
   const list = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return demoSubmissions.filter((r) => {
+      if (scope !== "all" && r.propertyId !== scope) return false;
       if (status !== "all" && r.status !== status) return false;
       if (platform !== "all" && r.platform !== platform) return false;
       if (dateFrom && r.checkIn < dateFrom) return false;
@@ -43,9 +48,10 @@ function SubmissionsList() {
       }
       return true;
     });
-  }, [status, platform, dateFrom, dateTo, keyword]);
+  }, [scope, status, platform, dateFrom, dateTo, keyword]);
 
   const anyFilter = status !== "all" || platform !== "all" || dateFrom || dateTo || keyword;
+
 
   return (
     <OwnerShell title="入住申請" subtitle="Submissions">
