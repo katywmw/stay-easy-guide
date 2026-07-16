@@ -170,7 +170,8 @@ function SidebarContent({
         {navItems.map((item) => {
           const active =
             "matchPrefix" in item && item.matchPrefix
-              ? pathname.startsWith(item.matchPrefix)
+              ? pathname.startsWith(item.matchPrefix) &&
+                pathname !== "/owner/settings/passwords"
               : pathname === item.to || pathname.startsWith(item.to + "/");
           const Icon = item.icon;
           return (
