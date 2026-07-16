@@ -10,6 +10,8 @@ import {
   useCheckinStore,
   type BookingPlatform,
 } from "@/lib/checkin-store";
+import { usePropertyConfig, roomTypeLabels } from "@/lib/property-config";
+import { Check } from "lucide-react";
 
 export const Route = createFileRoute("/checkin/demo/booking")({
   component: BookingPage,
@@ -30,17 +32,26 @@ function addDaysISO(iso: string, days: number) {
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
 }
 
-
 function BookingPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
+  const { properties, rooms } = usePropertyConfig();
 
   const today = todayISO();
   const minCheckout = s.checkInDate ? addDaysISO(s.checkInDate, 1) : today;
 
+  const activePropertyId = s.propertyId || properties[0]?.id || "";
+  const availableRooms = rooms.filter((r) => r.propertyId === activePropertyId);
+
+  const toggleRoom = (id: string) => {
+    const next = s.selectedRoomIds.includes(id)
+      ? s.selectedRoomIds.filter((x) => x !== id)
+      : [...s.selectedRoomIds, id];
+    s.update({ selectedRoomIds: next });
+  };
+
   const handleCheckIn = (v: string) => {
     const patch: Partial<typeof s> = { checkInDate: v };
-    // Clear checkout if it's now invalid
     if (s.checkOutDate && v && s.checkOutDate <= v) {
       patch.checkOutDate = "";
     }
@@ -53,7 +64,8 @@ function BookingPage() {
     s.phone &&
     s.checkInDate &&
     s.checkOutDate &&
-    s.checkOutDate > s.checkInDate;
+    s.checkOutDate > s.checkInDate &&
+    s.selectedRoomIds.length > 0;
 
   return (
     <PhoneShell
@@ -67,6 +79,77 @@ function BookingPage() {
         <p className="mb-3 text-xs text-muted-foreground">
           標示 <span className="font-bold text-destructive">*</span> 為必填欄位
         </p>
+
+        {properties.length > 1 && (
+          <div className="mb-4">
+            <label className="mb-1.5 block text-sm font-semibold text-foreground">
+              入住館別
+            </label>
+            <select
+              value={activePropertyId}
+              onChange={(e) =>
+                s.update({ propertyId: e.target.value, selectedRoomIds: [] })
+              }
+              className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            >
+              {properties.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="mb-4">
+          <label className="mb-1.5 block text-sm font-semibold text-foreground">
+            入住房間 <span className="ml-1 text-destructive">*</span>
+            {s.selectedRoomIds.length > 0 && (
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                已選 {s.selectedRoomIds.length} 間
+              </span>
+            )}
+          </label>
+          <div className="space-y-2">
+            {availableRooms.map((r) => {
+              const active = s.selectedRoomIds.includes(r.id);
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => toggleRoom(r.id)}
+                  className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
+                    active
+                      ? "border-primary bg-primary-soft"
+                      : "border-border bg-card hover:border-primary/50"
+                  }`}
+                >
+                  <span
+                    className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 ${
+                      active ? "border-primary bg-primary" : "border-border bg-card"
+                    }`}
+                  >
+                    {active && <Check className="h-3 w-3 text-primary-foreground" />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold text-foreground">
+                      {r.name}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+                      {roomTypeLabels[r.type]} · {r.beds} 床 · 押金 NT$ {r.depositAmount.toLocaleString()}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+            {availableRooms.length === 0 && (
+              <p className="rounded-xl border border-dashed border-border bg-secondary/40 p-4 text-center text-xs text-muted-foreground">
+                此館別尚未建立房間，請聯繫民宿。
+              </p>
+            )}
+          </div>
+        </div>
+
         <ChipGroup<BookingPlatform>
           label="訂房平台"
           value={s.platform}
