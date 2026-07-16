@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   CheckCircle2,
   IdCard,
@@ -11,6 +11,9 @@ import {
   Send,
   DoorOpen,
   KeyRound,
+  RefreshCw,
+  BellRing,
+  Eye,
 } from "lucide-react";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
