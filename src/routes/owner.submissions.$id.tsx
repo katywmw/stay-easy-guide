@@ -29,7 +29,7 @@ import {
   depositPill,
   StatusPill,
 } from "@/components/checkin/StatusPill";
-import { usePropertyConfig } from "@/lib/property-config";
+import { usePropertyConfig, type Room, type RoomTypeGroup } from "@/lib/property-config";
 import {
   useSurchargeStore,
   surchargeTotal,
