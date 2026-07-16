@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   StickyNote,
   AlertTriangle,
-  Plus,
   Trash2,
   Send,
   DoorOpen,
