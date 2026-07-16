@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Store, KeyRound, ShieldCheck } from "lucide-react";
 import { useOwnerAuth } from "@/lib/owner-auth";
 
@@ -71,6 +71,12 @@ function OwnerLogin() {
               正式版將採用強度足夠的密碼、二階段驗證，並限制業者僅能存取自己民宿的資料。
             </p>
           </div>
+        </div>
+
+        <div className="mt-4 text-center">
+          <Link to="/" className="text-xs text-muted-foreground underline">
+            回旅客首頁（測試用）
+          </Link>
         </div>
       </div>
     </div>
