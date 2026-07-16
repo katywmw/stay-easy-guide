@@ -1,6 +1,13 @@
 import { useEffect } from "react";
 import { X } from "lucide-react";
 
+/** Data URLs beginning with `data:video` (or common video extensions) are treated as videos. */
+export function isVideoUrl(url: string): boolean {
+  if (!url) return false;
+  if (url.startsWith("data:video")) return true;
+  return /\.(mp4|webm|mov|m4v|ogv)(\?.*)?$/i.test(url);
+}
+
 export function ImageLightbox({
   src,
   alt,
@@ -20,9 +27,10 @@ export function ImageLightbox({
   }, [src, onClose]);
 
   if (!src) return null;
+  const video = isVideoUrl(src);
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 p-4"
       onClick={onClose}
     >
       <button
@@ -33,12 +41,22 @@ export function ImageLightbox({
       >
         <X className="h-5 w-5" />
       </button>
-      <img
-        src={src}
-        alt={alt ?? ""}
-        onClick={(e) => e.stopPropagation()}
-        className="max-h-[90vh] max-w-full rounded-xl object-contain"
-      />
+      {video ? (
+        <video
+          src={src}
+          controls
+          autoPlay
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[90vh] max-w-full rounded-xl bg-black"
+        />
+      ) : (
+        <img
+          src={src}
+          alt={alt ?? ""}
+          onClick={(e) => e.stopPropagation()}
+          className="max-h-[90vh] max-w-full rounded-xl object-contain"
+        />
+      )}
     </div>
   );
 }
