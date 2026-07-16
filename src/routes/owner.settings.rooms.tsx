@@ -320,13 +320,14 @@ function GroupCard({
             <Input label="押金金額（NT$）" type="number" value={group.depositAmount} onChange={(v) => onUpdate({ depositAmount: Number(v) || 0 })} />
             <AccessSelect value={group.accessMode} onChange={(v) => onUpdate({ accessMode: v })} />
             <Input label="房型描述" full value={group.description} onChange={(v) => onUpdate({ description: v })} />
-            {group.accessMode === "key" ? (
-              <Input label="取鑰匙位置與方式" full value={group.keyPickupLocation ?? ""} onChange={(v) => onUpdate({ keyPickupLocation: v })} placeholder="例：民宿門口右側鑰匙盒（密碼 5588）" />
-            ) : (
-              <Input label="大門密碼（同房型共用）" value={group.gatePasswordShared ?? ""} onChange={(v) => onUpdate({ gatePasswordShared: v })} />
-            )}
             <Input label="入住指引補充" full value={group.guideNote ?? ""} onChange={(v) => onUpdate({ guideNote: v })} />
           </div>
+          <p className="mt-3 rounded-lg bg-primary-soft/30 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
+            大門密碼、房門密碼、取鑰匙位置等敏感資訊請至
+            <a href="/owner/settings/passwords" className="mx-1 font-bold text-foreground underline">密碼設定</a>
+            統一管理（密碼變動頻繁，建議集中在同一頁）。
+          </p>
+
 
           {/* Rooms table */}
           <div className="mt-5">
@@ -418,11 +419,9 @@ function RoomRow({
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
-            {showDoorPassword && (
-              <span>密碼 {room.doorPassword || "—"}</span>
-            )}
             {room.note && <span className="truncate">備註 {room.note}</span>}
           </div>
+
         </div>
         <button
           onClick={() => setEditing((v) => !v)}
@@ -465,14 +464,6 @@ function RoomRow({
               onChange={(v) => onUpdate({ displayName: v })}
               placeholder="Happy 101 / 松風"
             />
-            {showDoorPassword && (
-              <Input
-                label="房門密碼"
-                value={room.doorPassword ?? ""}
-                onChange={(v) => onUpdate({ doorPassword: v })}
-                placeholder="4-6 位數字"
-              />
-            )}
             <Input
               label="備註"
               full
@@ -481,6 +472,9 @@ function RoomRow({
               placeholder="例：非吸菸房 / 附早餐"
             />
           </div>
+          <p className="mt-2 rounded bg-primary-soft/30 px-2 py-1.5 text-[10px] text-muted-foreground">
+            房門密碼請至「密碼設定」頁編輯（密碼改動集中管理，避免遺漏通知旅客）。
+          </p>
           <div className="mt-3 flex justify-end">
             <button
               onClick={() => setEditing(false)}
@@ -494,3 +488,4 @@ function RoomRow({
     </div>
   );
 }
+

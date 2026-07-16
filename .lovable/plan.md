@@ -1,115 +1,88 @@
-# Implementation Plan — Owner Settings Refinements
+# Plan — Overview clarity, unified password page, guest info-updated notice
 
-Addresses six focused feedback points on the owner end. All work is frontend + local store; no backend changes.
+## 1. Overview: show which property each row belongs to + "所有館別" toggle
 
----
+**Files:** `src/routes/owner.dashboard.tsx`, `src/lib/owner-demo.ts`, `src/routes/owner.submissions.index.tsx`
 
-## 1. Room list — inline edit (name + password + note)
+- Add `propertyId: "walnut" | "anping9"` to every `OwnerSubmission` in `owner-demo.ts` (seed a realistic mix across both properties).
+- Introduce a shared color mapping in one place, e.g. `src/lib/property-colors.ts`:
+  - `walnut` → bright yellow chip (bg `oklch(0.92 0.14 92)` / fg dark)
+  - `anping9` → muted grey chip (bg `oklch(0.92 0.01 250)` / fg muted)
+  - Fallback for future properties: neutral secondary.
+- Dashboard header adds a segmented control: `胡桃民宿 · 安平九號 · 全部館別`.
+  - When a single property is active it matches the existing `currentPropertyId` (switching here also updates the global switcher).
+  - "全部館別" is a local view-only mode (doesn't change `currentPropertyId`, just widens the query for stats + recent list).
+- Stats bubbles (`今日入住 / 等待審核 / 需補件 / 已核准 / 押金待確認`) become derived from filtered submissions instead of the static `ownerStats` constant, so numbers update with the filter.
+- Recent submission rows: render a small `PropertyChip` (yellow / grey) next to the guest name; add the property short label ("胡桃" / "安平") in the meta row.
+- Same chip added to `owner.submissions.index.tsx` list rows so the全部館別 view there also disambiguates. The existing per-property filter behavior is preserved.
 
-**File:** `src/routes/owner.settings.rooms.tsx`, `src/lib/property-config.ts`
+## 2. Unify all password management into one page
 
-- Add `displayName?: string` to `Room` type (e.g. "Happy 101"). Fallback display is `roomNumber`.
-- In each room row (currently a table row), add a pencil icon button next to the existing Copy / Trash icons.
-- Clicking the pencil expands that single row into an inline edit panel with four fields in one card:
-  - 房號 (roomNumber)
-  - 房間別名 (displayName) — new
-  - 房門密碼 (doorPassword, only when group is `password` mode)
-  - 備註 (note)
-- Panel has "完成" (collapse) button; changes stay in local draft until section-level save (see item 6).
-- Room title in collapsed row shows `displayName || roomNumber` with the raw room number as a small secondary label.
+**Files:** `src/routes/owner.settings.passwords.tsx`, `src/routes/owner.settings.rooms.tsx`, `src/routes/owner.settings.index.tsx`
 
----
+- `房型與房間` page keeps房型-level fields (name, bedType, description, deposit, access mode, guide note) and the **房間清單** but removes password fields from both the group card and the room row:
+  - Remove `大門密碼（同房型共用）` and `取鑰匙位置與方式` from the group form.
+  - Remove `房門密碼` from the inline `RoomRow` edit panel; keep房號 / 別名 / 備註 there.
+  - A subtle helper "密碼相關設定請至「密碼設定」頁" with an inline link replaces the removed fields.
+- `密碼設定` page (`passwords.tsx`) becomes the single source of truth:
+  - Top: `大門密碼（整館預設）` card — **add a proper Save button** with its own dirty-tracked draft (currently the input writes to store immediately with no confirmation).
+  - Middle: per房型 cards (already grouped) that expose gate-password mode, group-shared gate password, key-pickup location, plus each房間's 房門密碼 / 房號 / 別名 / 備註 (read-only 房號/別名 label above the password field, editable displayName inline).
+  - Bottom: 密碼釋出規則 (unchanged this iteration).
+- `owner.settings.index.tsx` (settings hub) reworded: rooms card becomes "房型結構與房間清單"; passwords card becomes "所有密碼（大門 + 房門）" and gets a prominent visual weight (larger card / pinned to top of the grid) so owners find it fast when passwords change daily.
 
-## 2. 入住須知編輯器 — replace Markdown hint with a real toolbar
+## 3. Save button for 大門密碼（整館預設）
 
-**File:** `src/routes/owner.settings.house-rules.tsx`, new `src/components/owner/RichTextEditor.tsx`
+Handled in item 2. Implementation detail:
+- Wrap the property gate password field in a local `useState` draft plus a "儲存" button (matching the per-group card pattern). Call `updateProperty(property.id, { gatePassword: draft })` only on save; toast `已儲存整館大門密碼`. Disabled when draft equals stored value.
 
-- Remove the "支援 Markdown 標題（# / ##）與清單" copy.
-- Introduce a lightweight contentEditable-based editor with a sticky toolbar:
-  - Text size: H1 / H2 / Body (via `document.execCommand('formatBlock')`)
-  - Bold, Italic, Underline
-  - Bulleted list, Numbered list
-  - Insert link (prompt for URL)
-  - Clear formatting
-- Store as HTML string in `houseRules` (keep field name). Sanitize on render with a small allowlist (`b, i, u, a[href], h1, h2, ul, ol, li, p, br`).
-- Guest side (`checkin.demo.house-rules.tsx`) renders sanitized HTML instead of Markdown.
-- Migration: existing Markdown content is preserved as plain text (line-broken `<p>`s); user can re-format via toolbar.
+## 4. Make passwords fast to reach and edit
 
-Note: this is a minimal in-house editor to avoid adding a heavy dependency. If richer behavior is later requested we can swap to Tiptap.
+- Owner shell (`OwnerShell`) top bar: add a persistent `密碼` shortcut button (Key icon) next to the property switcher, linking to `/owner/settings/passwords`. Visible on both mobile and desktop.
+- Settings sidebar: reorder so `密碼設定` sits at the top of the "營運設定" group and gets a subtle "常用" tag.
+- Dashboard 快速操作 card: replace the current `房型設定` quick link with `密碼設定` (rooms still reachable via the sidebar).
+- Passwords page structure already scrolls per房型; add a sticky in-page mini-nav on desktop (房型名稱 chips) that jumps to that group card. Mobile keeps the current linear scroll.
 
----
+## 5. "Password / Room info updated" notifier flow
 
-## 3. 入住指引模板 — reorder, lightbox, video
+**Files:** `src/lib/owner-demo.ts`, `src/routes/owner.submissions.$id.tsx`, `src/routes/owner.submissions.index.tsx`, new small helper in `src/lib/checkin-store.ts` or a new `src/lib/submission-updates.ts`.
 
-**Files:** `src/routes/owner.settings.guide.tsx`, `src/components/checkin/ImageLightbox.tsx`, `src/routes/checkin.demo.guide.tsx`, `src/lib/property-config.ts`
+Scope: demo/frontend only — this is a mock flow (no backend), stored in the same client store pattern used for surcharges.
 
-- Change `guidePhotos[k]: string[]` → `guideMedia[k]: Array<{ id: string; kind: "image" | "video"; url: string }>`. Migrate on load: existing strings → `{kind:"image"}`.
-- File picker accepts `image/*,video/*`. Videos stored as data URLs (same pattern as images); show a small "影片" badge on the thumbnail.
-- Reorder: native HTML5 drag-and-drop on the thumbnail strip (draggable tiles, drop reorders within the same field group). Also add left/right arrow buttons for accessibility and mobile.
-- Enlarge on click: extend `ImageLightbox` to `MediaLightbox` — renders `<img>` for image, `<video controls autoPlay>` for video. Guest guide page opens the same lightbox on tap.
-- No cross-field drag (kept scoped to each guide section).
+- New client store `useSubmissionUpdates` (zustand + persist) keyed by `submissionId`:
+  ```
+  {
+    lastNotifiedAt: string;
+    lastVersion: number;
+    channel: "line" | "sms" | "email";
+    payloadSummary: string; // e.g. "房號 101 → Happy 101 / 房門密碼 5821 → 5299"
+    guestAcknowledgedAt: string | null;
+  }
+  ```
+- Submission detail (approved status) grows a new section `已寄出的入住資訊`:
+  - Shows current snapshot (room number, display name, door password, gate password) rendered from `usePropertyConfig`.
+  - When the current snapshot differs from the last-notified snapshot, show an amber banner "資訊已變更，尚未通知旅客" with two buttons: `重新寄送更新給旅客` and `僅記錄，不通知`.
+  - `重新寄送更新` → increments `lastVersion`, sets `lastNotifiedAt`, records the diff summary, triggers a toast. Reset `guestAcknowledgedAt` to null.
+  - After sending, banner turns green "已於 HH:mm 寄出更新（第 N 版）· 尚未確認"; a `模擬旅客已讀` button (demo only) sets `guestAcknowledgedAt`, which flips it to "旅客已收到更新 · HH:mm".
+- Submissions list (`owner.submissions.index.tsx`): rows for approved submissions with a pending diff get a small amber dot + label `資訊已更新未通知`, so owners see this at a glance.
+- Guest side: on the demo booking status view (`checkin.demo.submitted.tsx`), if `lastVersion > 0`, prepend a highlighted notice card "入住資訊已更新，請以下方最新資訊為準（更新時間 HH:mm）" and stamp each affected field with a small "已更新" tag. The old value stays hidden — new information fully replaces the old, per the request. Acknowledgement is auto-recorded when the guest visits this page after the send.
 
----
+## Technical notes
 
-## 4. 房型 / 房間密碼 — clearer per-room card + shared/per-room gate password mode
-
-**Files:** `src/routes/owner.settings.passwords.tsx`, `src/lib/property-config.ts`
-
-- Redesign the passwords page from a flat list into a grouped view mirroring the rooms page:
-  - Grouped by RoomTypeGroup (雙人床套房 / 單人床 / 整棟…).
-  - Each room is its own bordered card (not a table row) showing 房號 / 別名, 房門密碼 field, 大門密碼 field (only when in "per-room" mode), 備註 field.
-- Add `gatePasswordMode: "sharedGroup" | "sharedProperty" | "perRoom"` on `RoomTypeGroup`:
-  - **sharedProperty** (default) — single 大門密碼 stored on Property config; edited once at the top of the page.
-  - **sharedGroup** — one 大門密碼 per room-type group; edited in the group header.
-  - **perRoom** — each room card has its own 大門密碼 field.
-- Radio switcher lives in each group's header with a short explainer: "適合早退房 / 提早入住 / 多晚不同密碼時使用「每房不同」。"
-- Guest guide + submission views resolve gate password by mode.
-
----
-
-## 5. 密碼釋出規則 — reword and re-anchor to approval
-
-**File:** `src/routes/owner.settings.passwords.tsx` (rules section) + property-config
-
-- Reword the three options:
-  - 手動釋出 → "審核通過後，我按下按鈕才寄出密碼"
-  - 定時釋出 → "審核通過後，於指定時間自動寄出密碼"（附時間選擇，如 15:00）
-  - 條件式釋出 → "審核通過並完成付款後自動寄出"
-- Add a leading helper line above the options: "所有規則都必須先完成審核；審核未通過前，密碼不會釋出。"
-- Update guest-facing status copy consistently (e.g. "已審核，將於 15:00 收到密碼").
-
----
-
-## 6. Per-section Save buttons on password-related pages
-
-**Files:** `src/routes/owner.settings.passwords.tsx`, `src/routes/owner.settings.rooms.tsx`, `src/hooks/useDirtyForm.ts`
-
-- Move away from a single page-level SaveBar for these two pages. Instead:
-  - Each RoomTypeGroup card owns its own dirty state and its own "儲存" button in the group header (right side, next to the existing copy/delete icons).
-  - Button is disabled until that group has unsaved changes; shows "已儲存" briefly after save.
-  - Editing gate-password-mode / group-level fields marks that group dirty; editing a room within the group marks the same group dirty.
-- Global SaveBar is removed from these two pages (kept on other settings pages).
-- `useDirtyForm` extended with an optional `key` so multiple independent dirty scopes can coexist on a page.
-
----
-
-## Technical notes (for reference)
-
-- No new npm dependencies. RichTextEditor uses `contentEditable` + `execCommand`; sanitizer is a small allowlist string-based helper in `src/lib/sanitize-html.ts`.
-- Storage: existing zustand persisted config (`walnut-property-config-v2`) is migrated in-place with a version bump to `v3` (guide media + gate password mode + room displayName).
-- Runtime `QuotaExceededError` seen in the preview is caused by large data-URL photos in localStorage; the migration will additionally cap stored media per field to a reasonable count (e.g. 12) and downscale images >1600px on upload before persisting.
-- No changes to routes list, auth, or business logic outside these files.
+- No new npm dependencies.
+- All new state is client-side (zustand + `persist`) and mirrors existing patterns; no schema migrations.
+- Property color chip lives in one module so it can be reused in dashboard, submissions list, submission detail, and any future places.
+- No changes to auth, routes registry, or business logic outside the files listed.
 
 ## Files touched
 
-- edit: `src/lib/property-config.ts`
-- edit: `src/hooks/useDirtyForm.ts`
-- edit: `src/routes/owner.settings.rooms.tsx`
+- edit: `src/routes/owner.dashboard.tsx`
+- edit: `src/routes/owner.submissions.index.tsx`
+- edit: `src/routes/owner.submissions.$id.tsx`
 - edit: `src/routes/owner.settings.passwords.tsx`
-- edit: `src/routes/owner.settings.house-rules.tsx`
-- edit: `src/routes/owner.settings.guide.tsx`
-- edit: `src/routes/checkin.demo.guide.tsx`
-- edit: `src/routes/checkin.demo.house-rules.tsx`
-- edit: `src/components/checkin/ImageLightbox.tsx` (→ MediaLightbox)
-- new: `src/components/owner/RichTextEditor.tsx`
-- new: `src/lib/sanitize-html.ts`
+- edit: `src/routes/owner.settings.rooms.tsx`
+- edit: `src/routes/owner.settings.index.tsx`
+- edit: `src/components/owner/OwnerShell.tsx`
+- edit: `src/lib/owner-demo.ts`
+- edit: `src/routes/checkin.demo.submitted.tsx`
+- new: `src/lib/property-colors.ts`
+- new: `src/lib/submission-updates.ts`

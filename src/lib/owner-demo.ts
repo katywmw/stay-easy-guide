@@ -2,6 +2,7 @@ import type { BookingPlatform, CheckinStatus, DepositStatus } from "./checkin-st
 
 export interface OwnerSubmission {
   id: string;
+  propertyId: string;
   name: string;
   platform: BookingPlatform;
   checkIn: string;
@@ -25,6 +26,7 @@ export interface OwnerSubmission {
 export const demoSubmissions: OwnerSubmission[] = [
   {
     id: "demo",
+    propertyId: "walnut",
     name: "王小明",
     platform: "booking",
     checkIn: "2026-07-18",
@@ -46,6 +48,7 @@ export const demoSubmissions: OwnerSubmission[] = [
   },
   {
     id: "s2",
+    propertyId: "anping9",
     name: "陳美惠",
     platform: "line",
     checkIn: "2026-07-19",
@@ -67,6 +70,7 @@ export const demoSubmissions: OwnerSubmission[] = [
   },
   {
     id: "s3",
+    propertyId: "walnut",
     name: "林大成",
     platform: "airbnb",
     checkIn: "2026-07-20",
@@ -88,6 +92,7 @@ export const demoSubmissions: OwnerSubmission[] = [
   },
   {
     id: "s4",
+    propertyId: "anping9",
     name: "黃雅琪",
     platform: "agoda",
     checkIn: "2026-07-22",
@@ -109,6 +114,7 @@ export const demoSubmissions: OwnerSubmission[] = [
   },
   {
     id: "s5",
+    propertyId: "walnut",
     name: "劉承翰",
     platform: "official",
     checkIn: "2026-07-25",
@@ -130,6 +136,7 @@ export const demoSubmissions: OwnerSubmission[] = [
   },
   {
     id: "s6",
+    propertyId: "anping9",
     name: "張慧君",
     platform: "phone",
     checkIn: "2026-07-15",

@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import {
   CalendarDays,
   Clock,
@@ -9,6 +10,8 @@ import {
   ClipboardList,
   Sunrise,
   Sunset,
+  KeyRound,
+  Building2,
 } from "lucide-react";
 import {
   OwnerShell,
@@ -16,44 +19,112 @@ import {
   StatMini,
   StatPill,
 } from "@/components/owner/OwnerShell";
-import { demoSubmissions, ownerStats } from "@/lib/owner-demo";
+import { demoSubmissions } from "@/lib/owner-demo";
 import { platformLabels } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
   depositPill,
   StatusPill,
 } from "@/components/checkin/StatusPill";
+import { usePropertyConfig } from "@/lib/property-config";
+import { propertyColors } from "@/lib/property-colors";
 
 export const Route = createFileRoute("/owner/dashboard")({
   component: OwnerDashboard,
   head: () => ({ meta: [{ title: "業者 Dashboard · 胡桃民宿" }] }),
 });
 
+type ViewScope = "current" | "all";
+
 function OwnerDashboard() {
-  const recent = demoSubmissions.slice(0, 5);
-  const todayIns = demoSubmissions.slice(0, 3);
+  const { properties, currentPropertyId, update } = usePropertyConfig();
+  const [scope, setScope] = useState<ViewScope>("current");
+
+  const filtered = useMemo(() => {
+    if (scope === "all") return demoSubmissions;
+    return demoSubmissions.filter((s) => s.propertyId === currentPropertyId);
+  }, [scope, currentPropertyId]);
+
+  const stats = useMemo(() => {
+    const today = filtered.filter((s) => s.status === "approved" || s.status === "completed").length;
+    const awaitingReview = filtered.filter((s) => s.status === "submitted").length;
+    const needMoreInfo = filtered.filter((s) => s.status === "need_more_info").length;
+    const approved = filtered.filter((s) => s.status === "approved").length;
+    const depositPending = filtered.filter((s) => s.deposit === "pending" || s.deposit === "unpaid").length;
+    return { today, awaitingReview, needMoreInfo, approved, depositPending };
+  }, [filtered]);
+
+  const recent = filtered.slice(0, 5);
+  const todayIns = filtered.slice(0, 3);
+  const currentProp = properties.find((p) => p.id === currentPropertyId);
 
   return (
     <OwnerShell title="儀表板" subtitle="Overview">
-      {/* Stats — mobile: compact horizontal snap row ~30% viewport */}
+      {/* Scope segmented control */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-[11px] font-semibold text-muted-foreground">檢視範圍：</span>
+        <div className="flex items-center gap-1 rounded-full border border-[oklch(0.90_0.02_80)] bg-card p-1 shadow-sm">
+          {properties.map((p) => {
+            const active = scope === "current" && currentPropertyId === p.id;
+            const c = propertyColors(p.id);
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setScope("current");
+                  update({ currentPropertyId: p.id });
+                }}
+                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+                  active
+                    ? `${c.chipBg} ${c.chipFg} shadow-sm`
+                    : "text-muted-foreground hover:bg-secondary"
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                <span className="max-w-[7rem] truncate">{p.name}</span>
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setScope("all")}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+              scope === "all"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-secondary"
+            }`}
+          >
+            <Building2 className="h-3 w-3" />
+            全部館別
+          </button>
+        </div>
+        <Link
+          to="/owner/settings/passwords"
+          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary-soft/60 px-3 py-1 text-[11px] font-bold text-foreground hover:bg-primary-soft"
+        >
+          <KeyRound className="h-3 w-3" />
+          密碼設定
+        </Link>
+      </div>
+
+      {/* Stats — mobile: compact horizontal snap row */}
       <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:hidden -mx-4 px-4">
-        <StatPill label="今日入住" value={ownerStats.today} icon={CalendarDays} tone="primary" />
-        <StatPill label="等待審核" value={ownerStats.awaitingReview} icon={Clock} tone="warning" />
-        <StatPill label="需補件" value={ownerStats.needMoreInfo} icon={AlertCircle} tone="destructive" />
-        <StatPill label="已核准" value={ownerStats.approved} icon={CheckCircle2} tone="success" />
-        <StatPill label="押金待確認" value={ownerStats.depositPending} icon={Wallet} tone="warning" />
+        <StatPill label="今日入住" value={stats.today} icon={CalendarDays} tone="primary" />
+        <StatPill label="等待審核" value={stats.awaitingReview} icon={Clock} tone="warning" />
+        <StatPill label="需補件" value={stats.needMoreInfo} icon={AlertCircle} tone="destructive" />
+        <StatPill label="已核准" value={stats.approved} icon={CheckCircle2} tone="success" />
+        <StatPill label="押金待確認" value={stats.depositPending} icon={Wallet} tone="warning" />
       </div>
       <div className="mt-1 hidden grid-cols-3 gap-3 sm:grid xl:grid-cols-5">
-        <StatMini label="今日入住" value={ownerStats.today} icon={CalendarDays} tone="primary" />
-        <StatMini label="等待審核" value={ownerStats.awaitingReview} icon={Clock} tone="warning" />
-        <StatMini label="需補件" value={ownerStats.needMoreInfo} icon={AlertCircle} tone="destructive" />
-        <StatMini label="已核准" value={ownerStats.approved} icon={CheckCircle2} tone="success" />
-        <StatMini label="押金待確認" value={ownerStats.depositPending} icon={Wallet} tone="warning" />
+        <StatMini label="今日入住" value={stats.today} icon={CalendarDays} tone="primary" />
+        <StatMini label="等待審核" value={stats.awaitingReview} icon={Clock} tone="warning" />
+        <StatMini label="需補件" value={stats.needMoreInfo} icon={AlertCircle} tone="destructive" />
+        <StatMini label="已核准" value={stats.approved} icon={CheckCircle2} tone="success" />
+        <StatMini label="押金待確認" value={stats.depositPending} icon={Wallet} tone="warning" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <OwnerCard
-          title="近期入住申請"
+          title={scope === "all" ? "近期入住申請（全部館別）" : `近期入住申請 · ${currentProp?.name ?? ""}`}
           desc="最新送出的線上入住表單"
           actions={
             <Link
@@ -68,6 +139,8 @@ function OwnerDashboard() {
             {recent.map((r) => {
               const st = checkinStatusPill(r.status);
               const dp = depositPill(r.deposit);
+              const propName = properties.find((p) => p.id === r.propertyId)?.name ?? "";
+              const c = propertyColors(r.propertyId);
               return (
                 <li key={r.id}>
                   <Link
@@ -83,6 +156,13 @@ function OwnerDashboard() {
                         <p className="truncate text-sm font-bold text-foreground">
                           {r.name}
                         </p>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${c.chipBg} ${c.chipFg}`}
+                          title={propName}
+                        >
+                          <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                          {c.short}
+                        </span>
                         <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                           {platformLabels[r.platform]}
                         </span>
@@ -100,6 +180,11 @@ function OwnerDashboard() {
                 </li>
               );
             })}
+            {recent.length === 0 && (
+              <li className="py-6 text-center text-xs text-muted-foreground">
+                此範圍暫無申請
+              </li>
+            )}
           </ul>
         </OwnerCard>
 
@@ -111,31 +196,24 @@ function OwnerDashboard() {
                 今日入住 · {todayIns.length} 組
               </div>
               <ul className="mt-2 space-y-2">
-                {todayIns.slice(0, 3).map((r) => (
-                  <li
-                    key={r.id}
-                    className="flex items-center gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs"
-                  >
-                    <span className="text-[11px] font-black text-foreground [font-variant-numeric:tabular-nums]">
-                      {r.arrivalTime}
-                    </span>
-                    <span className="truncate font-semibold text-foreground">{r.name}</span>
-                    <span className="ml-auto text-muted-foreground">{r.guests} 人</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <Sunset className="h-3.5 w-3.5 text-[oklch(0.55_0.13_60)]" />
-                今日退房 · 2 組
-              </div>
-              <ul className="mt-2 space-y-2">
-                <li className="flex items-center gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs">
-                  <span className="text-[11px] font-black text-foreground [font-variant-numeric:tabular-nums]">11:00</span>
-                  <span className="truncate font-semibold text-foreground">張慧君</span>
-                  <span className="ml-auto text-muted-foreground">2 人</span>
-                </li>
+                {todayIns.slice(0, 3).map((r) => {
+                  const c = propertyColors(r.propertyId);
+                  return (
+                    <li
+                      key={r.id}
+                      className="flex items-center gap-2 rounded-lg bg-secondary/60 px-3 py-2 text-xs"
+                    >
+                      <span className="text-[11px] font-black text-foreground [font-variant-numeric:tabular-nums]">
+                        {r.arrivalTime}
+                      </span>
+                      <span className="truncate font-semibold text-foreground">{r.name}</span>
+                      <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold ${c.chipBg} ${c.chipFg}`}>
+                        {c.short}
+                      </span>
+                      <span className="ml-auto text-muted-foreground">{r.guests} 人</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </div>
@@ -145,8 +223,8 @@ function OwnerDashboard() {
       <div className="mt-4">
         <OwnerCard title="快速操作" desc="常用的管理入口">
           <div className="grid gap-3 sm:grid-cols-3">
+            <QuickLink to="/owner/settings/passwords" icon={KeyRound} label="密碼設定（每日常用）" />
             <QuickLink to="/owner/submissions" icon={ClipboardList} label="入住申請列表" />
-            <QuickLink to="/owner/settings/rooms" icon={CalendarDays} label="房型設定" />
             <QuickLink to="/owner/settings/payments" icon={Wallet} label="付款方式" />
           </div>
         </OwnerCard>

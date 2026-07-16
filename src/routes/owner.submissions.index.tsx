@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ChevronRight, Filter, Search, X } from "lucide-react";
+import { ChevronRight, Filter, Search, X, Building2 } from "lucide-react";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { platformLabels, type BookingPlatform, type CheckinStatus } from "@/lib/checkin-store";
@@ -9,6 +9,8 @@ import {
   depositPill,
   StatusPill,
 } from "@/components/checkin/StatusPill";
+import { usePropertyConfig } from "@/lib/property-config";
+import { propertyColors } from "@/lib/property-colors";
 
 export const Route = createFileRoute("/owner/submissions/")({
   component: SubmissionsList,
@@ -24,6 +26,8 @@ const statusOptions: { v: CheckinStatus | "all"; label: string }[] = [
 ];
 
 function SubmissionsList() {
+  const { properties, currentPropertyId } = usePropertyConfig();
+  const [scope, setScope] = useState<string>(currentPropertyId); // property id or "all"
   const [status, setStatus] = useState<CheckinStatus | "all">("all");
   const [platform, setPlatform] = useState<BookingPlatform | "all">("all");
   const [dateFrom, setDateFrom] = useState("");
@@ -33,6 +37,7 @@ function SubmissionsList() {
   const list = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
     return demoSubmissions.filter((r) => {
+      if (scope !== "all" && r.propertyId !== scope) return false;
       if (status !== "all" && r.status !== status) return false;
       if (platform !== "all" && r.platform !== platform) return false;
       if (dateFrom && r.checkIn < dateFrom) return false;
@@ -43,9 +48,10 @@ function SubmissionsList() {
       }
       return true;
     });
-  }, [status, platform, dateFrom, dateTo, keyword]);
+  }, [scope, status, platform, dateFrom, dateTo, keyword]);
 
   const anyFilter = status !== "all" || platform !== "all" || dateFrom || dateTo || keyword;
+
 
   return (
     <OwnerShell title="入住申請" subtitle="Submissions">
@@ -70,6 +76,42 @@ function SubmissionsList() {
         }
       >
         <div className="grid gap-3">
+          <div>
+            <p className="mb-1 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <Building2 className="h-3 w-3" />館別
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {properties.map((p) => {
+                const c = propertyColors(p.id);
+                const active = scope === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => setScope(p.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      active
+                        ? `${c.chipBg} ${c.chipFg} border-2 ${c.border}`
+                        : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                    {p.name}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setScope("all")}
+                className={
+                  scope === "all"
+                    ? "rounded-full border-2 border-primary bg-primary-soft px-3 py-1 text-xs font-semibold text-foreground"
+                    : "rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground hover:bg-secondary"
+                }
+              >
+                全部館別
+              </button>
+            </div>
+          </div>
+
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
@@ -79,6 +121,7 @@ function SubmissionsList() {
               className="w-full rounded-lg border border-input bg-card py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
             />
           </div>
+
 
           <div className="grid gap-3 sm:grid-cols-3">
             <div>
@@ -150,6 +193,8 @@ function SubmissionsList() {
         {list.map((r) => {
           const st = checkinStatusPill(r.status);
           const dp = depositPill(r.deposit);
+          const c = propertyColors(r.propertyId);
+          const propName = properties.find((p) => p.id === r.propertyId)?.name ?? "";
           return (
             <li key={r.id}>
               <Link
@@ -166,6 +211,13 @@ function SubmissionsList() {
                     <p className="truncate text-base font-bold text-foreground">
                       {r.name}
                     </p>
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${c.chipBg} ${c.chipFg}`}
+                      title={propName}
+                    >
+                      <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                      {propName}
+                    </span>
                     <span className="rounded-full bg-secondary px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
                       {platformLabels[r.platform]}
                     </span>
