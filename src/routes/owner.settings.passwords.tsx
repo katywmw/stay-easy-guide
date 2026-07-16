@@ -288,12 +288,16 @@ function GroupPasswordCard({
   group,
   rooms,
   propertyGatePassword,
+  collapsed = false,
+  onToggle,
   onSaveGroup,
   onSaveRoom,
 }: {
   group: RoomTypeGroup;
   rooms: Room[];
   propertyGatePassword: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
   onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
   onSaveRoom: (id: string, patch: Partial<Room>) => void;
 }) {
