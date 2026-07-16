@@ -19,6 +19,7 @@ import {
   guideFieldOrder,
   type GuideField,
 } from "@/lib/property-config";
+import { useRoomAssignments } from "@/lib/room-assignments";
 import { ImageLightbox, isVideoUrl } from "@/components/checkin/ImageLightbox";
 import { Play } from "lucide-react";
 
@@ -38,10 +39,20 @@ const iconFor: Record<GuideField, typeof MapPin> = {
 
 function GuidePage() {
   const status = useCheckinStore((s) => s.status);
-  const { guide, guidePhotos } = usePropertyConfig();
+  const { guide, guidePhotos, rooms, roomGroups } = usePropertyConfig();
+  const assignments = useRoomAssignments((s) => s.assignments);
   const locked = status !== "approved" && status !== "completed";
   const pill = checkinStatusPill(status);
   const [lightbox, setLightbox] = useState<string | null>(null);
+
+  // Key-pickup groups for this guest's assigned rooms
+  const assignedIds = assignments["demo"] ?? [];
+  const assignedRooms = rooms.filter((r) => assignedIds.includes(r.id));
+  const keyGroups = Array.from(
+    new Set(assignedRooms.map((r) => r.groupId).filter(Boolean)),
+  )
+    .map((gid) => roomGroups.find((g) => g.id === gid))
+    .filter((g): g is NonNullable<typeof g> => !!g && g.accessMode === "key");
 
   return (
     <PhoneShell title="入住指引" backTo="/checkin/demo/home">
@@ -166,6 +177,54 @@ function GuidePage() {
               );
             })}
           </ul>
+
+          {keyGroups.map((g) => {
+            const media = g.keyPickupMedia ?? [];
+            if (media.length === 0 && !g.keyPickupLocation) return null;
+            return (
+              <div key={g.id} className="card-soft mt-4 p-4">
+                <div className="flex items-center gap-2">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-warning-soft">
+                    <KeyRound className="h-5 w-5 text-foreground" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">取鑰匙指引 · {g.name}</p>
+                    {g.keyPickupLocation && (
+                      <p className="mt-0.5 text-sm font-bold text-foreground">
+                        {g.keyPickupLocation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {media.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {media.map((url, i) => {
+                      const video = isVideoUrl(url) || url.startsWith("data:video");
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => setLightbox(url)}
+                          className="relative overflow-hidden rounded-lg border border-border"
+                        >
+                          {video ? (
+                            <>
+                              <video src={url} muted playsInline className="h-24 w-24 object-cover" />
+                              <span className="absolute inset-0 grid place-items-center bg-black/30">
+                                <Play className="h-5 w-5 fill-white text-white" />
+                              </span>
+                            </>
+                          ) : (
+                            <img src={url} alt={`${g.name} 取鑰匙 ${i + 1}`} className="h-24 w-24 object-cover" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
 
           <div className="card-soft mt-4 flex items-center gap-3 p-4">
             <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft">

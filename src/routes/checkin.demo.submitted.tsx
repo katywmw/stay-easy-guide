@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { CheckCircle2, Clock, MessageCircle, BellRing } from "lucide-react";
+import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
 import { usePropertyConfig } from "@/lib/property-config";
-import { useSubmissionUpdates } from "@/lib/submission-updates";
+import {
+  useSubmissionUpdates,
+  reissueFieldLabels,
+} from "@/lib/submission-updates";
 import { channelIcon, channelHref } from "./owner.settings.contact";
 
 export const Route = createFileRoute("/checkin/demo/submitted")({
@@ -24,7 +27,10 @@ function SubmittedPage() {
   const { contactChannels } = usePropertyConfig();
   const active = contactChannels.filter((c) => c.enabled && c.value.trim());
   const record = useSubmissionUpdates((s) => s.updates["demo"]);
+  const reissue = useSubmissionUpdates((s) => s.reissue["demo"]);
   const acknowledge = useSubmissionUpdates((s) => s.acknowledge);
+  const markGuestUpdate = useSubmissionUpdates((s) => s.markGuestUpdate);
+  const resolveReissue = useSubmissionUpdates((s) => s.resolveReissue);
 
   // Auto-acknowledge when guest visits after an update
   useEffect(() => {
@@ -33,6 +39,13 @@ function SubmittedPage() {
       return () => clearTimeout(t);
     }
   }, [record, acknowledge]);
+
+  const activeReissue = reissue && !reissue.resolvedAt ? reissue : null;
+  const simulateReupload = () => {
+    if (!activeReissue) return;
+    markGuestUpdate("demo", activeReissue.field, "旅客已重新上傳（模擬）");
+    resolveReissue("demo");
+  };
 
 
   return (
@@ -67,6 +80,38 @@ function SubmittedPage() {
             </div>
           </div>
         </div>
+
+        {activeReissue && (
+          <div
+            className="mt-6 rounded-2xl border-2 border-destructive bg-destructive-soft/40 p-5 shadow-md"
+            role="alert"
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <p className="text-sm font-black text-foreground">
+                民宿要求補件：{reissueFieldLabels[activeReissue.field]}
+              </p>
+            </div>
+            {activeReissue.reason && (
+              <p className="mt-2 text-xs leading-relaxed text-foreground/85">
+                {activeReissue.reason}
+              </p>
+            )}
+            {activeReissue.message && (
+              <p className="mt-1 rounded-lg bg-card/70 p-2 text-[11px] text-foreground/80">
+                {activeReissue.message}
+              </p>
+            )}
+            <button
+              onClick={simulateReupload}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              前往補件（模擬完成）
+            </button>
+          </div>
+        )}
+
 
         {record && (
           <div

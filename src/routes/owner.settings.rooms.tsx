@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock, Pencil, Check } from "lucide-react";
+import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock, Pencil, Check, ImagePlus, Play } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
@@ -10,6 +10,7 @@ import {
   type RoomTypeGroup,
   type AccessMode,
 } from "@/lib/property-config";
+import { fileToMediaDataUrl } from "@/lib/media-upload";
 import { toast, Toaster } from "sonner";
 
 export const Route = createFileRoute("/owner/settings/rooms")({
@@ -322,6 +323,12 @@ function GroupCard({
             <Input label="房型描述" full value={group.description} onChange={(v) => onUpdate({ description: v })} />
             <Input label="入住指引補充" full value={group.guideNote ?? ""} onChange={(v) => onUpdate({ guideNote: v })} />
           </div>
+          {group.accessMode === "key" && (
+            <KeyPickupMedia
+              media={group.keyPickupMedia ?? []}
+              onChange={(m) => onUpdate({ keyPickupMedia: m })}
+            />
+          )}
           <p className="mt-3 rounded-lg bg-primary-soft/30 px-3 py-2 text-[11px] leading-relaxed text-muted-foreground">
             大門密碼、房門密碼、取鑰匙位置等敏感資訊請至
             <a href="/owner/settings/passwords" className="mx-1 font-bold text-foreground underline">密碼設定</a>
@@ -489,3 +496,89 @@ function RoomRow({
   );
 }
 
+
+function KeyPickupMedia({
+  media,
+  onChange,
+}: {
+  media: string[];
+  onChange: (m: string[]) => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const onFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setBusy(true);
+    try {
+      const urls: string[] = [];
+      for (const f of Array.from(files)) {
+        urls.push(await fileToMediaDataUrl(f));
+      }
+      onChange([...media, ...urls]);
+      toast.success(`已加入 ${urls.length} 個檔案`);
+    } catch {
+      toast.error("上傳失敗，請重試");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const remove = (i: number) => onChange(media.filter((_, j) => j !== i));
+
+  return (
+    <div className="mt-4 rounded-lg border border-warning bg-warning-soft/30 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <p className="text-xs font-black uppercase tracking-wider text-muted-foreground">
+          取鑰匙照片 / 影片
+        </p>
+        <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground">
+          <ImagePlus className="h-3.5 w-3.5" />
+          {busy ? "處理中…" : "新增檔案"}
+          <input
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            onChange={(e) => onFiles(e.target.files)}
+            className="hidden"
+          />
+        </label>
+      </div>
+      <p className="mb-2 text-[11px] text-muted-foreground">
+        建議上傳鑰匙盒位置、密碼盒、開啟方式等照片或短片，旅客會在入住指引看到。
+      </p>
+      {media.length === 0 ? (
+        <div className="grid place-items-center rounded-lg border border-dashed border-warning bg-card py-6 text-[11px] text-muted-foreground">
+          尚未上傳任何檔案
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {media.map((url, i) => {
+            const isVideo = url.startsWith("data:video") || /\.(mp4|webm|mov|m4v)$/i.test(url);
+            return (
+              <div
+                key={i}
+                className="relative h-20 w-20 overflow-hidden rounded-lg border border-border bg-card"
+              >
+                {isVideo ? (
+                  <>
+                    <video src={url} muted playsInline className="h-full w-full object-cover" />
+                    <span className="absolute inset-0 grid place-items-center bg-black/30">
+                      <Play className="h-4 w-4 fill-white text-white" />
+                    </span>
+                  </>
+                ) : (
+                  <img src={url} alt={`取鑰匙 ${i + 1}`} className="h-full w-full object-cover" />
+                )}
+                <button
+                  onClick={() => remove(i)}
+                  className="absolute right-0.5 top-0.5 grid h-5 w-5 place-items-center rounded-full bg-destructive text-destructive-foreground"
+                  aria-label="移除"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}

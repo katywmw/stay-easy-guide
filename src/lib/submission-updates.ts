@@ -2,9 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 /**
- * Snapshot of the room info owners have sent to a guest. Used to detect drift
- * whenever passwords / room numbers change, and to prompt a re-send flow.
- * Demo/frontend only — no backend.
+ * Snapshot of the room info owners have sent to a guest.
  */
 export interface SentRoomSnapshot {
   roomId: string;
@@ -16,7 +14,7 @@ export interface SentRoomSnapshot {
 
 export interface SubmissionUpdate {
   submissionId: string;
-  lastNotifiedAt: string;         // ISO
+  lastNotifiedAt: string;
   lastVersion: number;
   channel: "line" | "sms" | "email";
   snapshot: SentRoomSnapshot[];
@@ -24,8 +22,37 @@ export interface SubmissionUpdate {
   guestAcknowledgedAt: string | null;
 }
 
+/**
+ * Owner-initiated request for the guest to re-submit something (ID photo,
+ * payment proof, extra info). The guest sees it on the submitted page.
+ */
+export type ReissueField = "id" | "payment" | "other";
+
+export interface ReissueRequest {
+  submissionId: string;
+  field: ReissueField;
+  reason: string;
+  message: string;
+  requestedAt: string;
+  resolvedAt: string | null;
+}
+
+/**
+ * Timeline of what the guest has updated (after a reissue request or on their
+ * own initiative). Read by the owner submission page.
+ */
+export interface GuestUpdateEntry {
+  at: string;
+  field: ReissueField;
+  note?: string;
+}
+
 interface State {
   updates: Record<string, SubmissionUpdate>;
+  reissue: Record<string, ReissueRequest | undefined>;
+  guestUpdates: Record<string, GuestUpdateEntry[]>;
+  lastSeenGuestUpdate: Record<string, string>;
+
   notify: (
     submissionId: string,
     snapshot: SentRoomSnapshot[],
@@ -34,13 +61,22 @@ interface State {
   ) => SubmissionUpdate;
   acknowledge: (submissionId: string) => void;
   reset: (submissionId: string) => void;
-  get: (submissionId: string) => SubmissionUpdate | undefined;
+
+  requestReissue: (r: Omit<ReissueRequest, "requestedAt" | "resolvedAt">) => void;
+  resolveReissue: (submissionId: string) => void;
+
+  markGuestUpdate: (submissionId: string, field: ReissueField, note?: string) => void;
+  markSeen: (submissionId: string) => void;
 }
 
 export const useSubmissionUpdates = create<State>()(
   persist(
     (set, get) => ({
       updates: {},
+      reissue: {},
+      guestUpdates: {},
+      lastSeenGuestUpdate: {},
+
       notify: (submissionId, snapshot, diffSummary, channel = "line") => {
         const prev = get().updates[submissionId];
         const next: SubmissionUpdate = {
@@ -75,11 +111,60 @@ export const useSubmissionUpdates = create<State>()(
           delete n[submissionId];
           return { updates: n };
         }),
-      get: (submissionId) => get().updates[submissionId],
+
+      requestReissue: (r) =>
+        set((s) => ({
+          reissue: {
+            ...s.reissue,
+            [r.submissionId]: {
+              ...r,
+              requestedAt: new Date().toISOString(),
+              resolvedAt: null,
+            },
+          },
+        })),
+      resolveReissue: (submissionId) =>
+        set((s) => {
+          const cur = s.reissue[submissionId];
+          if (!cur) return s;
+          return {
+            reissue: {
+              ...s.reissue,
+              [submissionId]: { ...cur, resolvedAt: new Date().toISOString() },
+            },
+          };
+        }),
+
+      markGuestUpdate: (submissionId, field, note) =>
+        set((s) => {
+          const list = s.guestUpdates[submissionId] ?? [];
+          return {
+            guestUpdates: {
+              ...s.guestUpdates,
+              [submissionId]: [
+                ...list,
+                { at: new Date().toISOString(), field, note },
+              ],
+            },
+          };
+        }),
+      markSeen: (submissionId) =>
+        set((s) => ({
+          lastSeenGuestUpdate: {
+            ...s.lastSeenGuestUpdate,
+            [submissionId]: new Date().toISOString(),
+          },
+        })),
     }),
-    { name: "walnut-submission-updates-v1" },
+    { name: "walnut-submission-updates-v2" },
   ),
 );
+
+export const reissueFieldLabels: Record<ReissueField, string> = {
+  id: "身分證件",
+  payment: "付款證明",
+  other: "其他資料",
+};
 
 export function snapshotEqual(
   a: SentRoomSnapshot[],

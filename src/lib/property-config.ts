@@ -41,6 +41,8 @@ export interface RoomTypeGroup {
   depositAmount: number;      // 該房型的單間押金
   accessMode: AccessMode;     // 密碼 / 鑰匙
   keyPickupLocation?: string; // accessMode = key 時使用
+  /** Optional photos/videos showing where and how to pick up the key. */
+  keyPickupMedia?: string[];
   guideNote?: string;         // 該房型的入住指引補充
   gatePasswordShared?: string; // 大門密碼（此房型群組共用，用於 sharedGroup 模式）
   /** 大門密碼設定模式：整館共用 / 房型群組共用 / 每房獨立。預設 sharedProperty。 */
