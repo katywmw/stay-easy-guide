@@ -126,8 +126,15 @@ export function OwnerShell({
                   {title}
                 </h1>
               </div>
-              <div className="mt-2">
+              <div className="mt-2 flex flex-wrap items-center gap-2">
                 <PropertySwitcher />
+                <Link
+                  to="/owner/settings/passwords"
+                  className="inline-flex items-center gap-1 rounded-full border border-primary bg-primary-soft/60 px-2.5 py-1 text-[11px] font-bold text-foreground"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  密碼
+                </Link>
               </div>
               {right && <div className="mt-2">{right}</div>}
             </div>
