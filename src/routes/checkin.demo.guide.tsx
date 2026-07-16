@@ -19,6 +19,7 @@ import {
   guideFieldOrder,
   type GuideField,
 } from "@/lib/property-config";
+import { useRoomAssignments } from "@/lib/room-assignments";
 import { ImageLightbox, isVideoUrl } from "@/components/checkin/ImageLightbox";
 import { Play } from "lucide-react";
 
