@@ -14,7 +14,13 @@ import {
   RefreshCw,
   BellRing,
   Eye,
+  Pencil,
+  Building2,
+  Home,
+  X,
 } from "lucide-react";
+import { useRoomAssignments } from "@/lib/room-assignments";
+import { propertyColors } from "@/lib/property-colors";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { platformLabels } from "@/lib/checkin-store";
