@@ -4,6 +4,7 @@ import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton, ChipGroup } from "@/components/checkin/Fields";
 import { FaqAccordion } from "@/components/checkin/FaqAccordion";
 import { useCheckinStore } from "@/lib/checkin-store";
+import { usePropertySettings } from "@/lib/property-settings";
 import { StepBar } from "./checkin.demo.booking";
 import { depositPill, StatusPill } from "@/components/checkin/StatusPill";
 
@@ -12,11 +13,28 @@ export const Route = createFileRoute("/checkin/demo/deposit")({
   head: () => ({ meta: [{ title: "押金資訊 · 胡桃民宿" }] }),
 });
 
+function nightsBetween(a: string, b: string) {
+  if (!a || !b) return 1;
+  const ms = new Date(b).getTime() - new Date(a).getTime();
+  const n = Math.round(ms / 86400000);
+  return n > 0 ? n : 1;
+}
+
 function DepositPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
+  const settings = usePropertySettings();
   const canNext = !!s.depositMethod;
   const pill = depositPill(s.depositStatus);
+
+  const nights = nightsBetween(s.checkInDate, s.checkOutDate);
+  const deposit = settings.depositAmount;
+  const petFee =
+    settings.petFeeEnabled && s.hasPet === "yes" && settings.petFeePerNight > 0
+      ? settings.petFeePerNight * nights
+      : 0;
+  const total = deposit + petFee;
+  const fmt = (n: number) => `NT$ ${n.toLocaleString()}`;
 
   return (
     <PhoneShell
@@ -26,7 +44,7 @@ function DepositPage() {
     >
       <StepBar current={4} />
 
-      {/* Deposit amount card */}
+      {/* Fee breakdown card */}
       <div
         className="mt-4 overflow-hidden rounded-3xl p-5"
         style={{
@@ -34,8 +52,23 @@ function DepositPage() {
             "linear-gradient(135deg, oklch(0.94 0.06 90) 0%, oklch(0.90 0.10 82) 100%)",
         }}
       >
-        <p className="text-xs font-semibold text-foreground/70">押金金額</p>
-        <p className="mt-1 text-3xl font-black text-foreground">NT$ 1,000</p>
+        <p className="text-xs font-semibold text-foreground/70">應付金額</p>
+        <div className="mt-2 space-y-1.5 text-sm text-foreground/85">
+          <div className="flex items-center justify-between">
+            <span>押金</span>
+            <span className="font-semibold">{fmt(deposit)}</span>
+          </div>
+          {petFee > 0 && (
+            <div className="flex items-center justify-between">
+              <span>寵物費（{settings.petFeePerNight} × {nights} 晚）</span>
+              <span className="font-semibold">{fmt(petFee)}</span>
+            </div>
+          )}
+        </div>
+        <div className="mt-3 flex items-end justify-between border-t border-foreground/15 pt-3">
+          <span className="text-xs font-semibold text-foreground/70">合計</span>
+          <span className="text-3xl font-black text-foreground">{fmt(total)}</span>
+        </div>
         <div className="mt-3">
           <StatusPill label={pill.label} tone={pill.tone} />
         </div>
@@ -63,8 +96,21 @@ function DepositPage() {
         )}
         {s.depositMethod === "linepay" && (
           <div className="rounded-xl bg-secondary p-3 text-xs leading-relaxed text-foreground/80">
-            <p className="font-bold">LINE Pay 收款（Demo）</p>
-            <p className="mt-1">請至 LINE 訊息中點擊民宿發送之 LINE Pay 連結完成付款。</p>
+            <p className="font-bold">LINE Pay 收款</p>
+            {settings.linePayQrDataUrl ? (
+              <div className="mt-2 flex flex-col items-center gap-2">
+                <img
+                  src={settings.linePayQrDataUrl}
+                  alt="LINE Pay 收款 QR"
+                  className="h-48 w-48 rounded-lg border border-border bg-card object-contain p-2"
+                />
+                <p className="text-center">請以 LINE Pay 掃描上方 QR Code 完成付款。</p>
+              </div>
+            ) : (
+              <p className="mt-1">
+                業者尚未上傳 LINE Pay 收款 QR，請改用其他方式或聯繫民宿。
+              </p>
+            )}
           </div>
         )}
         {s.depositMethod === "onsite" && (
