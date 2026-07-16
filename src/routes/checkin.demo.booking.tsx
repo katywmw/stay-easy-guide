@@ -69,6 +69,9 @@ function BookingPage() {
       <StepBar current={1} />
 
       <div className="card-soft mt-4 p-4">
+        <p className="mb-3 text-xs text-muted-foreground">
+          標示 <span className="font-bold text-destructive">*</span> 為必填欄位
+        </p>
         <ChipGroup<BookingPlatform>
           label="訂房平台"
           value={s.platform}
@@ -80,6 +83,7 @@ function BookingPage() {
 
         <TextField
           label="訂房姓名"
+          required
           placeholder="請輸入訂房人姓名"
           value={s.bookingName}
           hint="請填寫與訂房平台相同的訂房姓名，方便民宿核對資料。"
@@ -88,6 +92,7 @@ function BookingPage() {
 
         <TextField
           label="手機號碼"
+          required
           type="tel"
           placeholder="09XX-XXX-XXX"
           value={s.phone}
@@ -103,34 +108,22 @@ function BookingPage() {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <TextField
-              label="入住日期"
-              type="date"
-              min={today}
-              value={s.checkInDate}
-              onChange={(e) => handleCheckIn(e.target.value)}
-            />
-            {s.checkInDate && (
-              <p className="-mt-3 mb-4 text-xs font-semibold text-[oklch(0.55_0.15_72)]">
-                已選：{formatDate(s.checkInDate)}
-              </p>
-            )}
-          </div>
-          <div>
-            <TextField
-              label="退房日期"
-              type="date"
-              min={minCheckout}
-              value={s.checkOutDate}
-              onChange={(e) => s.update({ checkOutDate: e.target.value })}
-            />
-            {s.checkOutDate && (
-              <p className="-mt-3 mb-4 text-xs font-semibold text-[oklch(0.55_0.15_72)]">
-                已選：{formatDate(s.checkOutDate)}
-              </p>
-            )}
-          </div>
+          <TextField
+            label="入住日期"
+            required
+            type="date"
+            min={today}
+            value={s.checkInDate}
+            onChange={(e) => handleCheckIn(e.target.value)}
+          />
+          <TextField
+            label="退房日期"
+            required
+            type="date"
+            min={minCheckout}
+            value={s.checkOutDate}
+            onChange={(e) => s.update({ checkOutDate: e.target.value })}
+          />
         </div>
 
         {s.checkInDate && s.checkOutDate && s.checkOutDate <= s.checkInDate && (
