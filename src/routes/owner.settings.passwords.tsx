@@ -164,6 +164,95 @@ function PasswordSettings() {
 }
 
 // -------------------------------------------------------------------
+// Groups section: search + collapse-all controls, one card per group
+// -------------------------------------------------------------------
+function PasswordGroupsSection({
+  groups,
+  rooms,
+  propertyGatePassword,
+  onSaveGroup,
+  onSaveRoom,
+}: {
+  groups: RoomTypeGroup[];
+  rooms: Room[];
+  propertyGatePassword: string;
+  onSaveGroup: (id: string, patch: Partial<RoomTypeGroup>) => void;
+  onSaveRoom: (id: string, patch: Partial<Room>) => void;
+}) {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [q, setQ] = useState("");
+  const kw = q.trim().toLowerCase();
+
+  const filtered = groups
+    .map((g) => {
+      const gRooms = rooms.filter((r) => r.groupId === g.id);
+      if (!kw) return { g, gRooms, matches: true };
+      const gMatch = g.name.toLowerCase().includes(kw);
+      const rMatch = gRooms.filter(
+        (r) =>
+          (r.roomNumber ?? "").toLowerCase().includes(kw) ||
+          (r.displayName ?? "").toLowerCase().includes(kw) ||
+          (r.doorPassword ?? "").toLowerCase().includes(kw),
+      );
+      return { g, gRooms: gMatch ? gRooms : rMatch, matches: gMatch || rMatch.length > 0 };
+    })
+    .filter((x) => x.matches);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜尋房型、房號、別名或密碼"
+            className="w-full rounded-lg border border-input bg-card py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+          />
+        </div>
+        <button
+          onClick={() =>
+            setCollapsed(Object.fromEntries(groups.map((g) => [g.id, false])))
+          }
+          className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+        >
+          全部展開
+        </button>
+        <button
+          onClick={() =>
+            setCollapsed(Object.fromEntries(groups.map((g) => [g.id, true])))
+          }
+          className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+        >
+          全部收合
+        </button>
+      </div>
+
+      {filtered.length === 0 && (
+        <p className="rounded-lg border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
+          沒有符合條件的房型或房間。
+        </p>
+      )}
+
+      {filtered.map(({ g, gRooms }) => (
+        <GroupPasswordCard
+          key={g.id}
+          group={g}
+          rooms={gRooms}
+          propertyGatePassword={propertyGatePassword}
+          collapsed={!!collapsed[g.id]}
+          onToggle={() =>
+            setCollapsed((c) => ({ ...c, [g.id]: !c[g.id] }))
+          }
+          onSaveGroup={(patch) => onSaveGroup(g.id, patch)}
+          onSaveRoom={onSaveRoom}
+        />
+      ))}
+    </div>
+  );
+}
+
+// -------------------------------------------------------------------
 // Per-group card with its own local draft + save button
 // -------------------------------------------------------------------
 
