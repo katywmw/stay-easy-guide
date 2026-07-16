@@ -310,7 +310,8 @@ function SubmissionDetail() {
       </div>
 
 
-      {/* Info-updated notifier — appears after passwords have been released */}
+      {/* Info-updated notifier — appears only after passwords released or already sent */}
+      {showSentBox && (
       <div className="mt-4">
         <OwnerCard
           title="已寄出的入住資訊"
