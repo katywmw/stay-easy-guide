@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Key, Lock, Save, Check } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
