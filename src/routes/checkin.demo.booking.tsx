@@ -16,12 +16,49 @@ export const Route = createFileRoute("/checkin/demo/booking")({
   head: () => ({ meta: [{ title: "訂房資料 · 胡桃民宿" }] }),
 });
 
+function todayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+function addDaysISO(iso: string, days: number) {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  const tz = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - tz).toISOString().slice(0, 10);
+}
+
+function formatDate(iso: string) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function BookingPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
 
+  const today = todayISO();
+  const minCheckout = s.checkInDate ? addDaysISO(s.checkInDate, 1) : today;
+
+  const handleCheckIn = (v: string) => {
+    const patch: Partial<typeof s> = { checkInDate: v };
+    // Clear checkout if it's now invalid
+    if (s.checkOutDate && v && s.checkOutDate <= v) {
+      patch.checkOutDate = "";
+    }
+    s.update(patch);
+  };
+
   const canNext =
-    s.platform && s.bookingName && s.phone && s.checkInDate && s.checkOutDate;
+    s.platform &&
+    s.bookingName &&
+    s.phone &&
+    s.checkInDate &&
+    s.checkOutDate &&
+    s.checkOutDate > s.checkInDate;
 
   return (
     <PhoneShell
@@ -66,19 +103,41 @@ function BookingPage() {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <TextField
-            label="入住日期"
-            type="date"
-            value={s.checkInDate}
-            onChange={(e) => s.update({ checkInDate: e.target.value })}
-          />
-          <TextField
-            label="退房日期"
-            type="date"
-            value={s.checkOutDate}
-            onChange={(e) => s.update({ checkOutDate: e.target.value })}
-          />
+          <div>
+            <TextField
+              label="入住日期"
+              type="date"
+              min={today}
+              value={s.checkInDate}
+              onChange={(e) => handleCheckIn(e.target.value)}
+            />
+            {s.checkInDate && (
+              <p className="-mt-3 mb-4 text-xs font-semibold text-[oklch(0.55_0.15_72)]">
+                已選：{formatDate(s.checkInDate)}
+              </p>
+            )}
+          </div>
+          <div>
+            <TextField
+              label="退房日期"
+              type="date"
+              min={minCheckout}
+              value={s.checkOutDate}
+              onChange={(e) => s.update({ checkOutDate: e.target.value })}
+            />
+            {s.checkOutDate && (
+              <p className="-mt-3 mb-4 text-xs font-semibold text-[oklch(0.55_0.15_72)]">
+                已選：{formatDate(s.checkOutDate)}
+              </p>
+            )}
+          </div>
         </div>
+
+        {s.checkInDate && s.checkOutDate && s.checkOutDate <= s.checkInDate && (
+          <p className="-mt-2 mb-3 text-xs font-semibold text-destructive">
+            退房日期需晚於入住日期。
+          </p>
+        )}
 
         <TextField
           label="訂單編號（可選）"
@@ -93,7 +152,7 @@ function BookingPage() {
           disabled={!canNext}
           onClick={() => nav({ to: "/checkin/demo/guest-info" })}
         >
-          下一步：入住人資訊
+          下一步：填寫入住人資訊
         </PrimaryButton>
       </div>
     </PhoneShell>
