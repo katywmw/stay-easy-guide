@@ -37,7 +37,7 @@ export const Route = createFileRoute("/owner/dashboard")({
 type ViewScope = "current" | "all";
 
 function OwnerDashboard() {
-  const { properties, currentPropertyId, update } = usePropertyConfig();
+  const { properties, currentPropertyId } = usePropertyConfig();
   const [scope, setScope] = useState<ViewScope>("current");
 
   const filtered = useMemo(() => {
