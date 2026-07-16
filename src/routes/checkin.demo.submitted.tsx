@@ -81,6 +81,38 @@ function SubmittedPage() {
           </div>
         </div>
 
+        {activeReissue && (
+          <div
+            className="mt-6 rounded-2xl border-2 border-destructive bg-destructive-soft/40 p-5 shadow-md"
+            role="alert"
+          >
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <p className="text-sm font-black text-foreground">
+                民宿要求補件：{reissueFieldLabels[activeReissue.field]}
+              </p>
+            </div>
+            {activeReissue.reason && (
+              <p className="mt-2 text-xs leading-relaxed text-foreground/85">
+                {activeReissue.reason}
+              </p>
+            )}
+            {activeReissue.message && (
+              <p className="mt-1 rounded-lg bg-card/70 p-2 text-[11px] text-foreground/80">
+                {activeReissue.message}
+              </p>
+            )}
+            <button
+              onClick={simulateReupload}
+              className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              <Upload className="h-3.5 w-3.5" />
+              前往補件（模擬完成）
+            </button>
+          </div>
+        )}
+
+
         {record && (
           <div
             className="mt-6 rounded-2xl border-2 border-warning bg-warning-soft/60 p-5 shadow-md"
