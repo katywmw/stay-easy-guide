@@ -169,8 +169,26 @@ function SubmissionDetail() {
     toast.success(`已建立補款單 #${inv.id}，請通知旅客`);
   };
 
+  const hasReleased = releasedRooms.length > 0;
+  const showSentBox = hasReleased || !!record;
+
   return (
-    <OwnerShell title={submission.name} subtitle={`申請 #${submission.id}`}>
+    <OwnerShell
+      title={submission.name}
+      subtitle={`申請 #${submission.id}`}
+      hidePropertySwitcher
+      headerExtra={
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${colors.chipBg} ${colors.chipFg}`}
+          title={submissionProperty?.name}
+        >
+          <Building2 className="h-3 w-3" />
+          <span className="max-w-[10rem] truncate">{submissionProperty?.name ?? "—"}</span>
+          <span className="opacity-60">·</span>
+          <span className="[font-variant-numeric:tabular-nums]">#{submission.id}</span>
+        </span>
+      }
+    >
       <Toaster position="top-center" richColors />
 
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-4">
@@ -180,6 +198,7 @@ function SubmissionDetail() {
           送出：{submission.submittedAt}
         </span>
       </div>
+
 
       <div className="grid gap-4 lg:grid-cols-2">
         <OwnerCard title="訂房資料">
