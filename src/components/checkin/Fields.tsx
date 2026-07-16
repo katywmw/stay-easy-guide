@@ -24,13 +24,15 @@ export function FieldLabel({ children, ...props }: LabelHTMLAttributes<HTMLLabel
 export function TextField({
   label,
   hint,
+  required,
   ...props
-}: { label: string; hint?: string } & InputHTMLAttributes<HTMLInputElement>) {
+}: { label: string; hint?: string; required?: boolean } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="mb-4">
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel><LabelWithRequired label={label} required={required} /></FieldLabel>
       <input
         {...props}
+        required={required}
         className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm text-foreground outline-none transition placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/40"
       />
       {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
@@ -41,11 +43,12 @@ export function TextField({
 export function TextArea({
   label,
   hint,
+  required,
   ...props
-}: { label: string; hint?: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+}: { label: string; hint?: string; required?: boolean } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <div className="mb-4">
-      <FieldLabel>{label}</FieldLabel>
+      <FieldLabel><LabelWithRequired label={label} required={required} /></FieldLabel>
       <textarea
         rows={3}
         {...props}
@@ -115,21 +118,26 @@ export function ChipGroup<T extends string>({
 
 export function PrimaryButton({
   children,
+  className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       {...props}
       className={
-        "w-full rounded-2xl bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-[0_6px_20px_-6px_oklch(0.75_0.14_85_/_0.6)] transition active:scale-[0.98] disabled:opacity-50 " +
-        (props.className ?? "")
+        "flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-base font-bold text-primary-foreground shadow-[0_6px_20px_-6px_oklch(0.75_0.14_85_/_0.6)] transition active:scale-[0.98] disabled:opacity-50 " +
+        (className ?? "")
       }
-    />
+    >
+      <span>{children}</span>
+      <ArrowRight className="h-5 w-5 text-foreground" strokeWidth={2.6} />
+    </button>
   );
 }
 
 export function GhostButton({
   children,
+  className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
@@ -137,8 +145,10 @@ export function GhostButton({
       {...props}
       className={
         "w-full rounded-2xl border border-border bg-card px-6 py-4 text-base font-semibold text-foreground transition active:scale-[0.98] " +
-        (props.className ?? "")
+        (className ?? "")
       }
-    />
+    >
+      {children}
+    </button>
   );
 }
