@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OwnerIndexRouteImport } from './routes/owner.index'
 import { Route as OwnerLoginRouteImport } from './routes/owner.login'
 import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
 import { Route as OwnerSubmissionsIndexRouteImport } from './routes/owner.submissions.index'
@@ -35,6 +36,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerIndexRoute = OwnerIndexRouteImport.update({
+  id: '/owner/',
+  path: '/owner/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OwnerLoginRoute = OwnerLoginRouteImport.update({
@@ -118,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
+  '/owner/': typeof OwnerIndexRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
   '/checkin/demo/faq': typeof CheckinDemoFaqRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
+  '/owner': typeof OwnerIndexRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
   '/checkin/demo/faq': typeof CheckinDemoFaqRoute
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
+  '/owner/': typeof OwnerIndexRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
   '/checkin/demo/faq': typeof CheckinDemoFaqRoute
@@ -178,6 +187,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
+    | '/owner/'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
     | '/checkin/demo/faq'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
+    | '/owner'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
     | '/checkin/demo/faq'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
+    | '/owner/'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
     | '/checkin/demo/faq'
@@ -236,6 +248,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   OwnerDashboardRoute: typeof OwnerDashboardRoute
   OwnerLoginRoute: typeof OwnerLoginRoute
+  OwnerIndexRoute: typeof OwnerIndexRoute
   CheckinDemoBookingRoute: typeof CheckinDemoBookingRoute
   CheckinDemoDepositRoute: typeof CheckinDemoDepositRoute
   CheckinDemoFaqRoute: typeof CheckinDemoFaqRoute
@@ -265,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner/': {
+      id: '/owner/'
+      path: '/owner'
+      fullPath: '/owner/'
+      preLoaderRoute: typeof OwnerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/owner/login': {
@@ -380,6 +400,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   OwnerDashboardRoute: OwnerDashboardRoute,
   OwnerLoginRoute: OwnerLoginRoute,
+  OwnerIndexRoute: OwnerIndexRoute,
   CheckinDemoBookingRoute: CheckinDemoBookingRoute,
   CheckinDemoDepositRoute: CheckinDemoDepositRoute,
   CheckinDemoFaqRoute: CheckinDemoFaqRoute,
@@ -397,13 +418,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

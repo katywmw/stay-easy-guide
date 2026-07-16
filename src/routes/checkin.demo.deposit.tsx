@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Upload, Info, CheckCircle2 } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton, ChipGroup } from "@/components/checkin/Fields";
+import { FaqAccordion } from "@/components/checkin/FaqAccordion";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { StepBar } from "./checkin.demo.booking";
 import { depositPill, StatusPill } from "@/components/checkin/StatusPill";
@@ -119,12 +120,14 @@ function DepositPage() {
         </div>
       </div>
 
+      <FaqAccordion category="deposit" title="常見問題（押金相關）" />
+
       <div className="mt-6">
         <PrimaryButton
           disabled={!canNext}
           onClick={() => nav({ to: "/checkin/demo/faq" })}
         >
-          下一步：常見問題
+          下一步：常見問題與入住須知
         </PrimaryButton>
       </div>
     </PhoneShell>

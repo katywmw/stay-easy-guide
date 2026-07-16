@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Camera, ShieldCheck, Info, CheckCircle2 } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton } from "@/components/checkin/Fields";
+import { FaqAccordion } from "@/components/checkin/FaqAccordion";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { StepBar } from "./checkin.demo.booking";
 
@@ -94,6 +95,8 @@ function IdUploadPage() {
       <p className="mt-4 text-center text-xs text-muted-foreground">
         完整入住指引與門鎖密碼將於民宿審核通過後開放。
       </p>
+
+      <FaqAccordion category="id" title="常見問題（證件相關）" />
 
       <div className="mt-6">
         <PrimaryButton
