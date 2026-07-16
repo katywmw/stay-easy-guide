@@ -78,25 +78,7 @@ function OwnerDashboard() {
       }
     >
 
-            onClick={() => setScope("all")}
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-              scope === "all"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            <Building2 className="h-3 w-3" />
-            全部館別
-          </button>
-        </div>
-        <Link
-          to="/owner/settings/passwords"
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary-soft/60 px-3 py-1 text-[11px] font-bold text-foreground hover:bg-primary-soft"
-        >
-          <KeyRound className="h-3 w-3" />
-          密碼設定
-        </Link>
-      </div>
+
 
       {/* Stats — mobile: compact horizontal snap row */}
       <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:hidden -mx-4 px-4">
