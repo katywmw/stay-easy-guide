@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { Upload, Info, CheckCircle2 } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton, ChipGroup } from "@/components/checkin/Fields";
 import { FaqAccordion } from "@/components/checkin/FaqAccordion";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { usePropertySettings } from "@/lib/property-settings";
+import { usePropertyConfig, computeDeposit } from "@/lib/property-config";
 import { StepBar } from "./checkin.demo.booking";
 import { depositPill, StatusPill } from "@/components/checkin/StatusPill";
 
@@ -24,17 +26,52 @@ function DepositPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
   const settings = usePropertySettings();
-  const canNext = !!s.depositMethod;
+  const config = usePropertyConfig();
   const pill = depositPill(s.depositStatus);
 
   const nights = nightsBetween(s.checkInDate, s.checkOutDate);
-  const deposit = settings.depositAmount;
+  const deposit = computeDeposit(config, s.selectedRoomIds);
   const petFee =
     settings.petFeeEnabled && s.hasPet === "yes" && settings.petFeePerNight > 0
       ? settings.petFeePerNight * nights
       : 0;
   const total = deposit + petFee;
   const fmt = (n: number) => `NT$ ${n.toLocaleString()}`;
+
+  const selectedRooms = config.rooms.filter((r) => s.selectedRoomIds.includes(r.id));
+
+  // Auto-skip when nothing to charge
+  useEffect(() => {
+    if (total === 0) {
+      s.update({ depositStatus: "confirmed", depositMethod: "none" });
+    }
+  }, [total]);
+
+  if (total === 0) {
+    return (
+      <PhoneShell
+        title="押金資訊"
+        subtitle="步驟 4 / 6"
+        backTo="/checkin/demo/id-upload"
+      >
+        <StepBar current={4} />
+        <div className="mt-4 rounded-3xl bg-success-soft p-6 text-center">
+          <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
+          <p className="mt-3 text-lg font-black text-foreground">本次無需支付押金</p>
+          <p className="mt-1 text-xs text-foreground/70">
+            民宿設定此訂單為免押金，可直接進入下一步。
+          </p>
+        </div>
+        <div className="mt-6">
+          <PrimaryButton onClick={() => nav({ to: "/checkin/demo/faq" })}>
+            下一步:常見問題與入住須知
+          </PrimaryButton>
+        </div>
+      </PhoneShell>
+    );
+  }
+
+  const canNext = !!s.depositMethod;
 
   return (
     <PhoneShell
@@ -54,20 +91,33 @@ function DepositPage() {
       >
         <p className="text-xs font-semibold text-foreground/70">應付金額</p>
         <div className="mt-2 space-y-1.5 text-sm text-foreground/85">
-          <div className="flex items-center justify-between">
-            <span>押金</span>
-            <span className="font-semibold">{fmt(deposit)}</span>
-          </div>
+          {config.depositMode === "perRoom" && selectedRooms.length > 0 ? (
+            selectedRooms.map((r) => (
+              <div key={r.id} className="flex items-center justify-between">
+                <span>押金 · {r.name}</span>
+                <span className="font-semibold [font-variant-numeric:tabular-nums]">
+                  {fmt(r.depositAmount)}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center justify-between">
+              <span>押金</span>
+              <span className="font-semibold [font-variant-numeric:tabular-nums]">
+                {fmt(deposit)}
+              </span>
+            </div>
+          )}
           {petFee > 0 && (
             <div className="flex items-center justify-between">
               <span>寵物費（{settings.petFeePerNight} × {nights} 晚）</span>
-              <span className="font-semibold">{fmt(petFee)}</span>
+              <span className="font-semibold [font-variant-numeric:tabular-nums]">{fmt(petFee)}</span>
             </div>
           )}
         </div>
         <div className="mt-3 flex items-end justify-between border-t border-foreground/15 pt-3">
           <span className="text-xs font-semibold text-foreground/70">合計</span>
-          <span className="text-3xl font-black text-foreground">{fmt(total)}</span>
+          <span className="text-3xl font-black text-foreground [font-variant-numeric:tabular-nums]">{fmt(total)}</span>
         </div>
         <div className="mt-3">
           <StatusPill label={pill.label} tone={pill.tone} />
@@ -87,20 +137,23 @@ function DepositPage() {
         />
 
         {s.depositMethod === "transfer" && (
-          <div className="rounded-xl bg-secondary p-3 text-xs leading-relaxed text-foreground/80">
-            <p className="font-bold">匯款帳號（範例）</p>
-            <p className="mt-1">胡桃國際商銀 (013)</p>
-            <p>帳號：1234-5678-9012（Demo）</p>
-            <p className="mt-1">戶名：胡桃民宿有限公司</p>
+          <div className="rounded-xl bg-secondary p-3 text-xs leading-relaxed text-foreground/80 [font-variant-numeric:tabular-nums]">
+            <p className="font-bold">匯款帳號</p>
+            <p className="mt-1">{config.payment.bankName}（{config.payment.bankCode}）</p>
+            <p>帳號：{config.payment.accountNumber}</p>
+            <p className="mt-1">戶名：{config.payment.accountName}</p>
+            {config.payment.notes && (
+              <p className="mt-1 opacity-80">{config.payment.notes}</p>
+            )}
           </div>
         )}
         {s.depositMethod === "linepay" && (
           <div className="rounded-xl bg-secondary p-3 text-xs leading-relaxed text-foreground/80">
             <p className="font-bold">LINE Pay 收款</p>
-            {settings.linePayQrDataUrl ? (
+            {config.payment.linePayQrDataUrl ? (
               <div className="mt-2 flex flex-col items-center gap-2">
                 <img
-                  src={settings.linePayQrDataUrl}
+                  src={config.payment.linePayQrDataUrl}
                   alt="LINE Pay 收款 QR"
                   className="h-48 w-48 rounded-lg border border-border bg-card object-contain p-2"
                 />
