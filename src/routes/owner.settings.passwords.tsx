@@ -377,10 +377,23 @@ function GroupPasswordCard({
               </>
             )}
           </button>
+          {onToggle && (
+            <button
+              onClick={onToggle}
+              className="grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary"
+              aria-label={collapsed ? "展開" : "收合"}
+            >
+              {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+            </button>
+          )}
         </div>
       }
     >
-      {isKey ? (
+      {collapsed ? (
+        <p className="text-[11px] text-muted-foreground">
+          房間清單已收合。共 {rooms.length} 間。
+        </p>
+      ) : isKey ? (
         <Input
           label="取鑰匙位置與方式"
           full
