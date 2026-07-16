@@ -22,54 +22,48 @@ function HouseRulesPage() {
   return (
     <PhoneShell title="入住須知" backTo="/checkin/demo/faq">
       <div className="card-soft p-5">
-        {blocks.map((b, i) => {
-          if (b.type === "h1") {
+        {isHtml ? (
+          <div
+            className="text-sm leading-relaxed text-foreground/85 [&_h1]:mb-3 [&_h1]:text-2xl [&_h1]:font-black [&_h1]:text-foreground [&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-base [&_h2]:font-bold [&_h2]:text-[oklch(0.45_0.13_75)] [&_ol]:mb-3 [&_ol]:list-decimal [&_ol]:pl-6 [&_ul]:mb-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_p]:mb-3 [&_a]:text-primary [&_a]:underline"
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(raw) }}
+          />
+        ) : (
+          blocks.map((b, i) => {
+            if (b.type === "h1") {
+              return (
+                <h1 key={i} className="mb-3 text-2xl font-black text-foreground">
+                  {b.text}
+                </h1>
+              );
+            }
+            if (b.type === "h2") {
+              return (
+                <h2 key={i} className="mb-2 mt-5 text-base font-bold text-[oklch(0.45_0.13_75)]">
+                  {b.text}
+                </h2>
+              );
+            }
+            if (b.type === "ol") {
+              return (
+                <ol key={i} className="mb-3 space-y-1.5 text-sm leading-relaxed text-foreground/85">
+                  {b.items.map((it, j) => (
+                    <li key={j} className="flex gap-2">
+                      <span className="shrink-0 font-semibold text-muted-foreground">{j + 1}.</span>
+                      <span className="min-w-0">{it}</span>
+                    </li>
+                  ))}
+                </ol>
+              );
+            }
             return (
-              <h1
-                key={i}
-                className="mb-3 text-2xl font-black text-foreground"
-              >
+              <p key={i} className="mb-3 text-sm leading-relaxed text-foreground/85">
                 {b.text}
-              </h1>
+              </p>
             );
-          }
-          if (b.type === "h2") {
-            return (
-              <h2
-                key={i}
-                className="mb-2 mt-5 text-base font-bold text-[oklch(0.45_0.13_75)]"
-              >
-                {b.text}
-              </h2>
-            );
-          }
-          if (b.type === "ol") {
-            return (
-              <ol
-                key={i}
-                className="mb-3 space-y-1.5 text-sm leading-relaxed text-foreground/85"
-              >
-                {b.items.map((it, j) => (
-                  <li key={j} className="flex gap-2">
-                    <span className="shrink-0 font-semibold text-muted-foreground">
-                      {j + 1}.
-                    </span>
-                    <span className="min-w-0">{it}</span>
-                  </li>
-                ))}
-              </ol>
-            );
-          }
-          return (
-            <p
-              key={i}
-              className="mb-3 text-sm leading-relaxed text-foreground/85"
-            >
-              {b.text}
-            </p>
-          );
-        })}
+          })
+        )}
       </div>
+
 
       <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-2xl border border-border bg-card p-4">
         <input
