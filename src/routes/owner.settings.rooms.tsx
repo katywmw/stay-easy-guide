@@ -347,73 +347,17 @@ function GroupCard({
                 尚無房間
               </p>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-[oklch(0.94_0.02_82)] bg-card">
-                <table className="w-full text-xs">
-                  <thead className="bg-secondary/60 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="px-2.5 py-2">房號</th>
-                      {group.accessMode === "password" && (
-                        <th className="px-2.5 py-2">房門密碼</th>
-                      )}
-                      <th className="px-2.5 py-2">備註</th>
-                      <th className="w-16 px-2.5 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[oklch(0.94_0.02_82)]">
-                    {rooms.map((r) => (
-                      <tr key={r.id}>
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            value={r.roomNumber ?? ""}
-                            onChange={(e) =>
-                              onUpdateRoom(r.id, { roomNumber: e.target.value })
-                            }
-                            placeholder="101"
-                            className="w-24 rounded border border-transparent bg-transparent px-1.5 py-1 outline-none focus:border-input focus:bg-card"
-                          />
-                        </td>
-                        {group.accessMode === "password" && (
-                          <td className="px-2.5 py-1.5">
-                            <input
-                              value={r.doorPassword ?? ""}
-                              onChange={(e) =>
-                                onUpdateRoom(r.id, { doorPassword: e.target.value })
-                              }
-                              placeholder="4-6 位數字"
-                              className="w-28 rounded border border-transparent bg-transparent px-1.5 py-1 [font-variant-numeric:tabular-nums] outline-none focus:border-input focus:bg-card"
-                            />
-                          </td>
-                        )}
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            value={r.note ?? ""}
-                            onChange={(e) => onUpdateRoom(r.id, { note: e.target.value })}
-                            placeholder="—"
-                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 outline-none focus:border-input focus:bg-card"
-                          />
-                        </td>
-                        <td className="px-2.5 py-1.5">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => onDuplicateRoom(r.id)}
-                              className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-secondary"
-                              title="複製房間"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
-                            <button
-                              onClick={() => onRemoveRoom(r.id)}
-                              className="grid h-7 w-7 place-items-center rounded text-destructive hover:bg-destructive-soft"
-                              title="刪除"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2">
+                {rooms.map((r) => (
+                  <RoomRow
+                    key={r.id}
+                    room={r}
+                    showDoorPassword={group.accessMode === "password"}
+                    onUpdate={(patch) => onUpdateRoom(r.id, patch)}
+                    onRemove={() => onRemoveRoom(r.id)}
+                    onDuplicate={() => onDuplicateRoom(r.id)}
+                  />
+                ))}
               </div>
             )}
           </div>
