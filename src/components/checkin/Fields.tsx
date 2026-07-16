@@ -1,4 +1,14 @@
 import type { LabelHTMLAttributes, InputHTMLAttributes, TextareaHTMLAttributes, SelectHTMLAttributes, ReactNode } from "react";
+import { ArrowRight } from "lucide-react";
+
+function LabelWithRequired({ label, required }: { label: string; required?: boolean }) {
+  return (
+    <>
+      {label}
+      {required && <span className="ml-1 text-destructive">*</span>}
+    </>
+  );
+}
 
 export function FieldLabel({ children, ...props }: LabelHTMLAttributes<HTMLLabelElement>) {
   return (
