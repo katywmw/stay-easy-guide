@@ -10,7 +10,12 @@ import {
   Sunrise,
   Sunset,
 } from "lucide-react";
-import { OwnerShell, OwnerCard, StatMini } from "@/components/owner/OwnerShell";
+import {
+  OwnerShell,
+  OwnerCard,
+  StatMini,
+  StatPill,
+} from "@/components/owner/OwnerShell";
 import { demoSubmissions, ownerStats } from "@/lib/owner-demo";
 import { platformLabels } from "@/lib/checkin-store";
 import {
@@ -30,8 +35,15 @@ function OwnerDashboard() {
 
   return (
     <OwnerShell title="儀表板" subtitle="Overview">
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
+      {/* Stats — mobile: compact horizontal snap row ~30% viewport */}
+      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:hidden -mx-4 px-4">
+        <StatPill label="今日入住" value={ownerStats.today} icon={CalendarDays} tone="primary" />
+        <StatPill label="等待審核" value={ownerStats.awaitingReview} icon={Clock} tone="warning" />
+        <StatPill label="需補件" value={ownerStats.needMoreInfo} icon={AlertCircle} tone="destructive" />
+        <StatPill label="已核准" value={ownerStats.approved} icon={CheckCircle2} tone="success" />
+        <StatPill label="押金待確認" value={ownerStats.depositPending} icon={Wallet} tone="warning" />
+      </div>
+      <div className="mt-1 hidden grid-cols-3 gap-3 sm:grid xl:grid-cols-5">
         <StatMini label="今日入住" value={ownerStats.today} icon={CalendarDays} tone="primary" />
         <StatMini label="等待審核" value={ownerStats.awaitingReview} icon={Clock} tone="warning" />
         <StatMini label="需補件" value={ownerStats.needMoreInfo} icon={AlertCircle} tone="destructive" />
@@ -39,7 +51,7 @@ function OwnerDashboard() {
         <StatMini label="押金待確認" value={ownerStats.depositPending} icon={Wallet} tone="warning" />
       </div>
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <OwnerCard
           title="近期入住申請"
           desc="最新送出的線上入住表單"
@@ -130,14 +142,11 @@ function OwnerDashboard() {
         </OwnerCard>
       </div>
 
-      <div className="mt-6">
-        <OwnerCard
-          title="快速操作"
-          desc="常用的管理入口"
-        >
+      <div className="mt-4">
+        <OwnerCard title="快速操作" desc="常用的管理入口">
           <div className="grid gap-3 sm:grid-cols-3">
             <QuickLink to="/owner/submissions" icon={ClipboardList} label="入住申請列表" />
-            <QuickLink to="/owner/settings/rooms" icon={CalendarDays} label="房間設定" />
+            <QuickLink to="/owner/settings/rooms" icon={CalendarDays} label="房型設定" />
             <QuickLink to="/owner/settings/payments" icon={Wallet} label="付款方式" />
           </div>
         </OwnerCard>
