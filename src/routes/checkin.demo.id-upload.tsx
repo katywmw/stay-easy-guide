@@ -60,15 +60,18 @@ function IdUploadPage() {
         )}
       </button>
 
-      {/* Prototype notice */}
+      {/* Watermark notice */}
       <div className="mt-4 rounded-2xl border border-[oklch(0.88_0.06_85)] bg-warning-soft p-4">
         <div className="flex items-start gap-2">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
           <p className="text-xs leading-relaxed text-foreground/80">
-            目前為原型展示，正式版將採用安全儲存、浮水印與權限控管。
+            為保護您的證件，上傳後將自動加上「
+            <span className="font-bold">僅供入住核對使用 · For verification only</span>
+            」浮水印，避免被挪作他用。
           </p>
         </div>
       </div>
+
 
       <div className="mt-4 rounded-2xl bg-secondary p-4">
         <div className="flex items-start gap-2">
