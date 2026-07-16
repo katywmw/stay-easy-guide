@@ -503,5 +503,3 @@ function PlaceholderCard({ title, uploaded, icon }: { title: string; uploaded: b
   );
 }
 
-// Suppress unused import warning
-void Plus;
