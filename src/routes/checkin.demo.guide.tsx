@@ -19,7 +19,8 @@ import {
   guideFieldOrder,
   type GuideField,
 } from "@/lib/property-config";
-import { ImageLightbox } from "@/components/checkin/ImageLightbox";
+import { ImageLightbox, isVideoUrl } from "@/components/checkin/ImageLightbox";
+import { Play } from "lucide-react";
 
 export const Route = createFileRoute("/checkin/demo/guide")({
   component: GuidePage,
