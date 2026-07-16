@@ -4,13 +4,13 @@ import {
   ClipboardList,
   Settings,
   LogOut,
-  ChevronDown,
   Building2,
   Receipt,
   Menu,
   X,
+  Check,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useOwnerAuth } from "@/lib/owner-auth";
 import { usePropertyConfig } from "@/lib/property-config";
 
@@ -41,9 +41,9 @@ export function OwnerShell({
   }, [loggedIn, nav]);
 
   return (
-    <div className="min-h-screen bg-[oklch(0.98_0.015_88)]">
+    <div className="min-h-screen bg-[oklch(0.965_0.024_86)]">
       {/* Mobile top bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-[oklch(0.90_0.02_80)] bg-card px-4 py-3 lg:hidden">
+      <div className="sticky top-0 z-30 flex items-center justify-between border-b border-[oklch(0.90_0.02_80)] bg-card px-4 py-2.5 lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
           className="grid h-9 w-9 place-items-center rounded-lg hover:bg-secondary"
@@ -56,7 +56,7 @@ export function OwnerShell({
 
       <div className="flex">
         {/* Sidebar (desktop) */}
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-[oklch(0.90_0.02_80)] bg-card lg:block">
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 border-r border-[oklch(0.90_0.02_80)] bg-[oklch(0.955_0.024_86)] lg:block">
           <SidebarContent pathname={pathname} onLogout={() => { logout(); nav({ to: "/owner/login" }); }} />
         </aside>
 
@@ -88,14 +88,14 @@ export function OwnerShell({
 
         {/* Main */}
         <main className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 hidden items-center justify-between gap-4 border-b border-[oklch(0.90_0.02_80)] bg-card/95 px-6 py-3 backdrop-blur lg:flex">
+          <header className="sticky top-0 z-20 hidden items-center justify-between gap-4 border-b border-[oklch(0.90_0.02_80)] bg-card/95 px-6 py-2.5 backdrop-blur lg:flex">
             <div className="min-w-0">
               {subtitle && (
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {subtitle}
                 </p>
               )}
-              <h1 className="truncate text-lg font-black tracking-tight text-foreground">
+              <h1 className="truncate text-base font-black tracking-tight text-foreground">
                 {title}
               </h1>
             </div>
@@ -105,17 +105,19 @@ export function OwnerShell({
             </div>
           </header>
 
-          <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:py-6">
-            <div className="mb-4 lg:hidden">
+          <div className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-6 lg:py-5">
+            <div className="mb-3 lg:hidden">
               {subtitle && (
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   {subtitle}
                 </p>
               )}
               <div className="flex items-center justify-between gap-3">
-                <h1 className="truncate text-xl font-black tracking-tight text-foreground">
+                <h1 className="truncate text-lg font-black tracking-tight text-foreground">
                   {title}
                 </h1>
+              </div>
+              <div className="mt-2">
                 <PropertySwitcher />
               </div>
               {right && <div className="mt-2">{right}</div>}
@@ -140,7 +142,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-[oklch(0.90_0.02_80)] px-5 py-4">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
           Walnut · Ops
         </p>
         <p className="mt-0.5 text-base font-black tracking-tight text-foreground">
@@ -187,59 +189,35 @@ function SidebarContent({
   );
 }
 
+/**
+ * Segmented property switcher — makes it obvious which property is active.
+ */
 function PropertySwitcher() {
   const { properties, currentPropertyId, update } = usePropertyConfig();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement | null>(null);
-  const current = properties.find((p) => p.id === currentPropertyId) ?? properties[0];
-
-  useEffect(() => {
-    const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDoc);
-    return () => document.removeEventListener("mousedown", onDoc);
-  }, []);
-
-  if (!current) return null;
-
+  if (properties.length === 0) return null;
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
-      >
-        <Building2 className="h-3.5 w-3.5 text-[oklch(0.55_0.08_60)]" />
-        <span className="max-w-[8rem] truncate">{current.name}</span>
-        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full z-30 mt-1.5 w-56 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
-          {properties.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => {
-                update({ currentPropertyId: p.id });
-                setOpen(false);
-              }}
-              className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-secondary ${
-                p.id === current.id ? "bg-primary-soft font-semibold" : ""
-              }`}
-            >
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="truncate">{p.name}</span>
-            </button>
-          ))}
-          <Link
-            to="/owner/settings/property"
-            onClick={() => setOpen(false)}
-            className="flex w-full items-center gap-2 border-t border-border px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground hover:bg-secondary"
+    <div className="flex items-center gap-1 rounded-full border border-[oklch(0.90_0.02_80)] bg-card p-1 shadow-sm">
+      {properties.map((p) => {
+        const active = p.id === currentPropertyId;
+        return (
+          <button
+            key={p.id}
+            onClick={() => update({ currentPropertyId: p.id })}
+            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+              active
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+            }`}
           >
-            <Settings className="h-3.5 w-3.5" />
-            管理館別
-          </Link>
-        </div>
-      )}
+            {active ? (
+              <Check className="h-3 w-3" strokeWidth={3} />
+            ) : (
+              <Building2 className="h-3 w-3" />
+            )}
+            <span className="max-w-[7rem] truncate">{p.name}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -316,6 +294,42 @@ export function StatMini({
           <Icon className="h-4 w-4" strokeWidth={2.3} />
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Compact horizontal stat pill — mobile.
+ */
+export function StatPill({
+  label,
+  value,
+  icon: Icon,
+  tone = "default",
+}: {
+  label: string;
+  value: number | string;
+  icon: typeof Receipt;
+  tone?: "default" | "warning" | "success" | "destructive" | "primary";
+}) {
+  const iconBg = {
+    default: "bg-secondary text-foreground",
+    primary: "bg-primary-soft text-foreground",
+    warning: "bg-warning-soft text-[oklch(0.45_0.13_55)]",
+    success: "bg-success-soft text-success",
+    destructive: "bg-destructive-soft text-destructive",
+  }[tone];
+  return (
+    <div className="flex snap-start shrink-0 flex-col items-center gap-1 rounded-xl border border-[oklch(0.92_0.02_80)] bg-card px-2.5 py-2 shadow-sm w-[19%] min-w-[64px]">
+      <div className={`grid h-7 w-7 place-items-center rounded-lg ${iconBg}`}>
+        <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
+      </div>
+      <p className="text-lg font-black leading-none text-foreground [font-variant-numeric:tabular-nums]">
+        {value}
+      </p>
+      <p className="text-[9px] font-semibold text-muted-foreground text-center leading-tight">
+        {label}
+      </p>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   MapPin,
   KeyRound,
   HelpCircle,
+  MessageCircle,
 } from "lucide-react";
 
 export const Route = createFileRoute("/owner/settings")({
@@ -17,45 +18,73 @@ export const Route = createFileRoute("/owner/settings")({
   head: () => ({ meta: [{ title: "民宿設定 · 胡桃民宿" }] }),
 });
 
-const items = [
-  { to: "/owner/settings/property", label: "民宿資料 / 館別", icon: Building2 },
-  { to: "/owner/settings/rooms", label: "房間 / 單位", icon: DoorOpen },
-  { to: "/owner/settings/house-rules", label: "入住須知", icon: ScrollText },
-  { to: "/owner/settings/deposit", label: "押金規則", icon: Coins },
-  { to: "/owner/settings/payments", label: "付款方式", icon: Wallet },
-  { to: "/owner/settings/extra-fees", label: "額外費用項目", icon: Plus },
-  { to: "/owner/settings/guide", label: "入住指引模板", icon: MapPin },
-  { to: "/owner/settings/passwords", label: "密碼模板", icon: KeyRound },
-  { to: "/owner/settings/faq", label: "常見問答", icon: HelpCircle },
-] as const;
+type NavItem = { to: string; label: string; icon: typeof Building2; desc: string };
+type NavGroup = { title: string; items: NavItem[] };
+
+const groups: NavGroup[] = [
+  {
+    title: "民宿基本",
+    items: [
+      { to: "/owner/settings/property", label: "館別 / 資料", icon: Building2, desc: "多館別、聯絡資訊" },
+      { to: "/owner/settings/rooms", label: "房型 / 房間", icon: DoorOpen, desc: "分類、密碼、鑰匙" },
+      { to: "/owner/settings/house-rules", label: "入住須知", icon: ScrollText, desc: "Markdown 編輯" },
+      { to: "/owner/settings/guide", label: "入住指引 + 相片", icon: MapPin, desc: "地址、停車、大門" },
+      { to: "/owner/settings/faq", label: "常見問答", icon: HelpCircle, desc: "自訂 FAQ" },
+      { to: "/owner/settings/contact", label: "旅客聯絡方式", icon: MessageCircle, desc: "LINE / WhatsApp" },
+    ],
+  },
+  {
+    title: "交易與釋出",
+    items: [
+      { to: "/owner/settings/deposit", label: "押金規則", icon: Coins, desc: "無 / 固定 / 按房" },
+      { to: "/owner/settings/payments", label: "付款方式", icon: Wallet, desc: "匯款 + LINE Pay QR" },
+      { to: "/owner/settings/extra-fees", label: "額外費用項目", icon: Plus, desc: "寵物、加床、烤肉" },
+      { to: "/owner/settings/passwords", label: "密碼釋出", icon: KeyRound, desc: "手動 / 定時 / 條件" },
+    ],
+  },
+];
 
 function SettingsLayout() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   return (
     <OwnerShell title="民宿設定" subtitle="Settings">
-      <div className="grid gap-5 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <nav className="rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-2 lg:sticky lg:top-20 lg:self-start">
-          <div className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
-            {items.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.to;
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-xs font-semibold transition lg:text-sm ${
-                    active
-                      ? "bg-primary-soft text-foreground"
-                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-4 w-4" strokeWidth={2.2} />
-                  <span className="whitespace-nowrap lg:whitespace-normal">
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
+      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <nav className="rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-3 lg:sticky lg:top-16 lg:self-start">
+          <div className="space-y-4">
+            {groups.map((g) => (
+              <div key={g.title}>
+                <p className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                  {g.title}
+                </p>
+                <div className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+                  {g.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = pathname === item.to;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className={`flex shrink-0 items-start gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold transition lg:w-full ${
+                          active
+                            ? "bg-primary-soft text-foreground"
+                            : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.2} />
+                        <div className="min-w-0">
+                          <p className="whitespace-nowrap lg:whitespace-normal">
+                            {item.label}
+                          </p>
+                          <p className="hidden text-[10px] font-normal text-muted-foreground lg:block">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </nav>
         <div className="min-w-0">

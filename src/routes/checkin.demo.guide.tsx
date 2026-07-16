@@ -1,27 +1,46 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Lock, MapPin, Route as RouteIcon, DoorOpen, Wifi, Info, KeyRound } from "lucide-react";
+import { useState } from "react";
+import {
+  Lock,
+  MapPin,
+  Route as RouteIcon,
+  DoorOpen,
+  Wifi,
+  Info,
+  KeyRound,
+  Phone,
+} from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { checkinStatusPill, StatusPill } from "@/components/checkin/StatusPill";
+import {
+  usePropertyConfig,
+  guideFieldLabels,
+  guideFieldOrder,
+  type GuideField,
+} from "@/lib/property-config";
+import { ImageLightbox } from "@/components/checkin/ImageLightbox";
 
 export const Route = createFileRoute("/checkin/demo/guide")({
   component: GuidePage,
   head: () => ({ meta: [{ title: "入住指引 · 胡桃民宿" }] }),
 });
 
-const items = [
-  { icon: MapPin, title: "民宿地址", hint: "審核通過後開放" },
-  { icon: RouteIcon, title: "入住路線", hint: "含 Google Maps 連結" },
-  { icon: DoorOpen, title: "房型 / 房號", hint: "審核通過後開放" },
-  { icon: KeyRound, title: "門鎖密碼", hint: "審核通過後開放" },
-  { icon: Wifi, title: "Wi-Fi 資訊", hint: "SSID 與密碼" },
-  { icon: Info, title: "注意事項", hint: "垃圾、退房、緊急聯絡" },
-];
+const iconFor: Record<GuideField, typeof MapPin> = {
+  address: MapPin,
+  parking: RouteIcon,
+  gate: DoorOpen,
+  door: KeyRound,
+  notes: Info,
+  emergency: Phone,
+};
 
 function GuidePage() {
   const status = useCheckinStore((s) => s.status);
+  const { guide, guidePhotos } = usePropertyConfig();
   const locked = status !== "approved" && status !== "completed";
   const pill = checkinStatusPill(status);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   return (
     <PhoneShell title="入住指引" backTo="/checkin/demo/home">
@@ -47,21 +66,23 @@ function GuidePage() {
           </div>
 
           <ul className="mt-4 space-y-2.5">
-            {items.map((it) => (
-              <li
-                key={it.title}
-                className="card-soft flex items-center gap-3 p-4 opacity-70"
-              >
-                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary">
-                  <it.icon className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-foreground">{it.title}</p>
-                  <p className="text-xs text-muted-foreground">{it.hint}</p>
-                </div>
-                <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
-              </li>
-            ))}
+            {guideFieldOrder.map((k) => {
+              const Icon = iconFor[k];
+              return (
+                <li key={k} className="card-soft flex items-center gap-3 p-4 opacity-70">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary">
+                    <Icon className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-foreground">
+                      {guideFieldLabels[k]}
+                    </p>
+                    <p className="text-xs text-muted-foreground">審核通過後開放</p>
+                  </div>
+                  <Lock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </li>
+              );
+            })}
           </ul>
 
           {status === "draft" && (
@@ -86,52 +107,63 @@ function GuidePage() {
           </div>
 
           <ul className="mt-4 space-y-2.5">
-            <GuideRow icon={MapPin} title="民宿地址" value="台灣宜蘭縣礁溪鄉溫泉路 88 號（Demo）" />
-            <GuideRow icon={RouteIcon} title="入住路線" value="礁溪火車站步行 10 分鐘，或搭計程車約 3 分鐘" />
-            <GuideRow icon={DoorOpen} title="房型 / 房號" value="山景雙人房 · 202 室" />
-            <GuideRow
-              icon={KeyRound}
-              title="門鎖密碼"
-              value="Prototype 不顯示真實密碼"
-              muted
-            />
-            <GuideRow icon={Wifi} title="Wi-Fi" value="Walnut-Guest / 密碼於現場提供" />
-            <GuideRow icon={Info} title="注意事項" value="退房請放置鑰匙於桌上並關閉冷氣" />
+            {guideFieldOrder.map((k) => {
+              const Icon = iconFor[k];
+              const value = guide[k];
+              const photos = guidePhotos[k] ?? [];
+              if (!value && photos.length === 0) return null;
+              return (
+                <li key={k} className="card-soft flex flex-col gap-3 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft">
+                      <Icon className="h-5 w-5 text-foreground" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground">
+                        {guideFieldLabels[k]}
+                      </p>
+                      <p className="mt-0.5 whitespace-pre-line text-sm font-semibold leading-relaxed text-foreground">
+                        {value}
+                      </p>
+                    </div>
+                  </div>
+                  {photos.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {photos.map((url, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setLightbox(url)}
+                          className="overflow-hidden rounded-lg border border-border transition hover:shadow-md"
+                        >
+                          <img
+                            src={url}
+                            alt={guideFieldLabels[k] + " 照片"}
+                            className="h-20 w-20 object-cover"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
+
+          <div className="card-soft mt-4 flex items-center gap-3 p-4">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft">
+              <Wifi className="h-5 w-5 text-foreground" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Wi-Fi</p>
+              <p className="mt-0.5 text-sm font-bold text-foreground">
+                Walnut-Guest / 密碼於現場提供
+              </p>
+            </div>
+          </div>
+
+          <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />
         </>
       )}
     </PhoneShell>
-  );
-}
-
-function GuideRow({
-  icon: Icon,
-  title,
-  value,
-  muted = false,
-}: {
-  icon: typeof MapPin;
-  title: string;
-  value: string;
-  muted?: boolean;
-}) {
-  return (
-    <li className="card-soft flex items-start gap-3 p-4">
-      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary-soft">
-        <Icon className="h-5 w-5 text-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-xs text-muted-foreground">{title}</p>
-        <p
-          className={
-            muted
-              ? "mt-0.5 text-sm font-semibold text-muted-foreground"
-              : "mt-0.5 text-sm font-bold text-foreground"
-          }
-        >
-          {value}
-        </p>
-      </div>
-    </li>
   );
 }

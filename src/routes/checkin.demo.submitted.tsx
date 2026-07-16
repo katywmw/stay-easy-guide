@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Clock, MessageCircle } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
+import { usePropertyConfig } from "@/lib/property-config";
+import { channelIcon, channelHref } from "./owner.settings.contact";
 
 export const Route = createFileRoute("/checkin/demo/submitted")({
   component: SubmittedPage,
@@ -17,11 +19,13 @@ const nextSteps = [
 ];
 
 function SubmittedPage() {
+  const { contactChannels } = usePropertyConfig();
+  const active = contactChannels.filter((c) => c.enabled && c.value.trim());
+
   return (
     <PhoneShell showBack={false} bare>
       <div className="flex min-h-screen flex-col px-4 pb-8 pt-[max(env(safe-area-inset-top),1.5rem)]">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          {/* Success icon */}
           <div
             className="relative grid h-28 w-28 place-items-center rounded-full"
             style={{
@@ -34,9 +38,7 @@ function SubmittedPage() {
             </div>
           </div>
 
-          <h1 className="mt-6 text-2xl font-black text-foreground">
-            資料已送出
-          </h1>
+          <h1 className="mt-6 text-2xl font-black text-foreground">資料已送出</h1>
           <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted-foreground">
             您的入住資料已送出，民宿將盡快確認。
           </p>
@@ -67,11 +69,41 @@ function SubmittedPage() {
           </ol>
         </div>
 
+        {active.length > 0 && (
+          <div className="card-soft mt-4 p-5">
+            <h2 className="text-sm font-bold text-foreground">聯絡屋主</h2>
+            <p className="mt-1 text-xs text-muted-foreground">
+              如有緊急事項可透過以下方式聯繫民宿。
+            </p>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              {active.map((c) => {
+                const Icon = channelIcon(c.type);
+                return (
+                  <a
+                    key={c.id}
+                    href={channelHref(c)}
+                    target={
+                      c.type === "email" || c.type === "phone" || c.type === "sms"
+                        ? undefined
+                        : "_blank"
+                    }
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2.5 text-xs font-bold text-foreground"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="truncate">{c.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="mt-4 rounded-2xl bg-warning-soft p-4">
           <div className="flex items-start gap-2">
             <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
             <p className="text-xs leading-relaxed text-foreground/80">
-              如有緊急事項，可直接透過 LINE 聯繫民宿。門鎖密碼將於審核通過後開放，請耐心等候。
+              門鎖密碼將於審核通過後開放，請耐心等候。
             </p>
           </div>
         </div>

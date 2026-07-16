@@ -10,8 +10,8 @@ import {
   useCheckinStore,
   type BookingPlatform,
 } from "@/lib/checkin-store";
-import { usePropertyConfig, roomTypeLabels } from "@/lib/property-config";
-import { Check } from "lucide-react";
+import { usePropertyConfig } from "@/lib/property-config";
+import { Check, Key, Lock } from "lucide-react";
 
 export const Route = createFileRoute("/checkin/demo/booking")({
   component: BookingPage,
@@ -35,12 +35,13 @@ function addDaysISO(iso: string, days: number) {
 function BookingPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
-  const { properties, rooms } = usePropertyConfig();
+  const { properties, rooms, roomGroups } = usePropertyConfig();
 
   const today = todayISO();
   const minCheckout = s.checkInDate ? addDaysISO(s.checkInDate, 1) : today;
 
   const activePropertyId = s.propertyId || properties[0]?.id || "";
+  const availableGroups = roomGroups.filter((g) => g.propertyId === activePropertyId);
   const availableRooms = rooms.filter((r) => r.propertyId === activePropertyId);
 
   const toggleRoom = (id: string) => {
@@ -110,8 +111,69 @@ function BookingPage() {
               </span>
             )}
           </label>
-          <div className="space-y-2">
-            {availableRooms.map((r) => {
+          <div className="space-y-4">
+            {availableGroups.map((g) => {
+              const groupRooms = availableRooms.filter((r) => r.groupId === g.id);
+              if (groupRooms.length === 0) return null;
+              return (
+                <div key={g.id}>
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-black text-foreground">{g.name}</p>
+                    {g.bedType && (
+                      <span className="rounded-full bg-primary-soft px-1.5 py-0.5 text-[10px] font-bold">
+                        {g.bedType}
+                      </span>
+                    )}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      {g.accessMode === "password" ? (
+                        <Lock className="h-2.5 w-2.5" />
+                      ) : (
+                        <Key className="h-2.5 w-2.5" />
+                      )}
+                      {g.accessMode === "password" ? "密碼進門" : "鑰匙"}
+                    </span>
+                    <span className="ml-auto text-[10px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+                      押金 NT$ {g.depositAmount.toLocaleString()}／間
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {groupRooms.map((r) => {
+                      const active = s.selectedRoomIds.includes(r.id);
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => toggleRoom(r.id)}
+                          className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
+                            active
+                              ? "border-primary bg-primary-soft"
+                              : "border-border bg-card hover:border-primary/50"
+                          }`}
+                        >
+                          <span
+                            className={`grid h-5 w-5 shrink-0 place-items-center rounded-md border-2 ${
+                              active ? "border-primary bg-primary" : "border-border bg-card"
+                            }`}
+                          >
+                            {active && <Check className="h-3 w-3 text-primary-foreground" />}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-bold text-foreground">
+                              {r.roomNumber ? `房號 ${r.roomNumber}` : r.name}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {g.description || g.name}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            {/* Ungrouped rooms (legacy) */}
+            {availableRooms.filter((r) => !r.groupId).map((r) => {
               const active = s.selectedRoomIds.includes(r.id);
               return (
                 <button
@@ -136,7 +198,7 @@ function BookingPage() {
                       {r.name}
                     </p>
                     <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
-                      {roomTypeLabels[r.type]} · {r.beds} 床 · 押金 NT$ {r.depositAmount.toLocaleString()}
+                      押金 NT$ {r.depositAmount.toLocaleString()}
                     </p>
                   </div>
                 </button>

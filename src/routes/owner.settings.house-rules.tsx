@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { OwnerCard } from "@/components/owner/OwnerShell";
+import { PropertyBadge } from "@/components/owner/PropertyBadge";
+import { CopyFromPropertyButton } from "@/components/owner/CopyFromPropertyButton";
+import { SaveBar } from "@/components/owner/SaveBar";
+import { useDirtyForm } from "@/hooks/useDirtyForm";
 import { usePropertyConfig } from "@/lib/property-config";
 import { houseRulesText } from "@/lib/checkin-content";
 import { toast, Toaster } from "sonner";
@@ -10,37 +14,46 @@ export const Route = createFileRoute("/owner/settings/house-rules")({
 
 function HouseRulesSettings() {
   const { houseRules, update } = usePropertyConfig();
-  const value = houseRules || houseRulesText;
+  const { draft, set, dirty, savedAt, markSaved, reset } = useDirtyForm(houseRules);
+
+  const value = draft || houseRulesText;
+
+  const save = () => {
+    update({ houseRules: draft });
+    markSaved();
+    toast.success("已儲存");
+  };
 
   return (
-    <OwnerCard
-      title="入住須知編輯器"
-      desc="旅客於「入住須知」步驟閱讀的內容。支援 Markdown 標題（# / ##）與清單。"
-      actions={
-        <button
-          onClick={() => {
-            update({ houseRules: houseRulesText });
-            toast.success("已還原為預設模板");
-          }}
-          className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
-        >
-          還原預設
-        </button>
-      }
-    >
+    <div className="space-y-4">
       <Toaster position="top-center" richColors />
-      <textarea
-        value={value}
-        onChange={(e) => update({ houseRules: e.target.value })}
-        rows={20}
-        className="w-full resize-y rounded-lg border border-input bg-card px-4 py-3 font-mono text-xs leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
-      />
-      <button
-        onClick={() => toast.success("已儲存")}
-        className="mt-3 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+      <PropertyBadge />
+      <OwnerCard
+        title="入住須知編輯器"
+        desc="旅客於「入住須知」步驟閱讀的內容。支援 Markdown 標題（# / ##）與清單。每館獨立設定。"
+        actions={
+          <div className="flex items-center gap-2">
+            <CopyFromPropertyButton kinds={["houseRules"]} />
+            <button
+              onClick={() => {
+                set(houseRulesText);
+                toast.success("已載入預設模板，別忘了儲存");
+              }}
+              className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+            >
+              載入預設
+            </button>
+          </div>
+        }
       >
-        儲存
-      </button>
-    </OwnerCard>
+        <textarea
+          value={value}
+          onChange={(e) => set(e.target.value)}
+          rows={20}
+          className="w-full resize-y rounded-lg border border-input bg-card px-4 py-3 font-mono text-xs leading-relaxed outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
+        />
+      </OwnerCard>
+      <SaveBar dirty={dirty} savedAt={savedAt} onSave={save} onReset={reset} />
+    </div>
   );
 }
