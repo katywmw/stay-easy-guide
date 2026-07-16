@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { CheckCircle2, Clock, MessageCircle, BellRing } from "lucide-react";
+import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
 import { usePropertyConfig } from "@/lib/property-config";
-import { useSubmissionUpdates } from "@/lib/submission-updates";
+import {
+  useSubmissionUpdates,
+  reissueFieldLabels,
+} from "@/lib/submission-updates";
 import { channelIcon, channelHref } from "./owner.settings.contact";
 
 export const Route = createFileRoute("/checkin/demo/submitted")({
@@ -24,7 +27,10 @@ function SubmittedPage() {
   const { contactChannels } = usePropertyConfig();
   const active = contactChannels.filter((c) => c.enabled && c.value.trim());
   const record = useSubmissionUpdates((s) => s.updates["demo"]);
+  const reissue = useSubmissionUpdates((s) => s.reissue["demo"]);
   const acknowledge = useSubmissionUpdates((s) => s.acknowledge);
+  const markGuestUpdate = useSubmissionUpdates((s) => s.markGuestUpdate);
+  const resolveReissue = useSubmissionUpdates((s) => s.resolveReissue);
 
   // Auto-acknowledge when guest visits after an update
   useEffect(() => {
@@ -33,6 +39,13 @@ function SubmittedPage() {
       return () => clearTimeout(t);
     }
   }, [record, acknowledge]);
+
+  const activeReissue = reissue && !reissue.resolvedAt ? reissue : null;
+  const simulateReupload = () => {
+    if (!activeReissue) return;
+    markGuestUpdate("demo", activeReissue.field, "旅客已重新上傳（模擬）");
+    resolveReissue("demo");
+  };
 
 
   return (
