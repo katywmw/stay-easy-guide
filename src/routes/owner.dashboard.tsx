@@ -59,33 +59,25 @@ function OwnerDashboard() {
   const currentProp = properties.find((p) => p.id === currentPropertyId);
 
   return (
-    <OwnerShell title="儀表板" subtitle="Overview">
-      {/* Scope segmented control */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold text-muted-foreground">檢視範圍：</span>
-        <div className="flex items-center gap-1 rounded-full border border-[oklch(0.90_0.02_80)] bg-card p-1 shadow-sm">
-          {properties.map((p) => {
-            const active = scope === "current" && currentPropertyId === p.id;
-            const c = propertyColors(p.id);
-            return (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setScope("current");
-                  update({ currentPropertyId: p.id });
-                }}
-                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-                  active
-                    ? `${c.chipBg} ${c.chipFg} shadow-sm`
-                    : "text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                <span className="max-w-[7rem] truncate">{p.name}</span>
-              </button>
-            );
-          })}
-          <button
+    <OwnerShell
+      title="儀表板"
+      subtitle="Overview"
+      headerExtra={
+        <button
+          onClick={() => setScope(scope === "all" ? "current" : "all")}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+            scope === "all"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+          }`}
+          title="顯示全部館別"
+        >
+          <Building2 className="h-3 w-3" />
+          {scope === "all" ? "檢視全部館別" : "檢視全部"}
+        </button>
+      }
+    >
+
             onClick={() => setScope("all")}
             className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
               scope === "all"
