@@ -35,6 +35,10 @@ export type CheckinStatus =
   | "completed";
 
 export interface CheckinState {
+  // Property / rooms
+  propertyId: string;
+  selectedRoomIds: string[];
+
   // Booking
   platform: BookingPlatform | "";
   bookingName: string;
@@ -74,6 +78,8 @@ export interface CheckinState {
 }
 
 const initial = {
+  propertyId: "walnut",
+  selectedRoomIds: [] as string[],
   platform: "" as const,
   bookingName: "",
   phone: "",

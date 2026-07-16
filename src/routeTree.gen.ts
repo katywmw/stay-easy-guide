@@ -12,10 +12,21 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as OwnerIndexRouteImport } from './routes/owner.index'
+import { Route as OwnerSettingsRouteImport } from './routes/owner.settings'
 import { Route as OwnerLoginRouteImport } from './routes/owner.login'
 import { Route as OwnerDashboardRouteImport } from './routes/owner.dashboard'
 import { Route as OwnerSubmissionsIndexRouteImport } from './routes/owner.submissions.index'
+import { Route as OwnerSettingsIndexRouteImport } from './routes/owner.settings.index'
 import { Route as OwnerSubmissionsIdRouteImport } from './routes/owner.submissions.$id'
+import { Route as OwnerSettingsRoomsRouteImport } from './routes/owner.settings.rooms'
+import { Route as OwnerSettingsPropertyRouteImport } from './routes/owner.settings.property'
+import { Route as OwnerSettingsPaymentsRouteImport } from './routes/owner.settings.payments'
+import { Route as OwnerSettingsPasswordsRouteImport } from './routes/owner.settings.passwords'
+import { Route as OwnerSettingsHouseRulesRouteImport } from './routes/owner.settings.house-rules'
+import { Route as OwnerSettingsGuideRouteImport } from './routes/owner.settings.guide'
+import { Route as OwnerSettingsFaqRouteImport } from './routes/owner.settings.faq'
+import { Route as OwnerSettingsExtraFeesRouteImport } from './routes/owner.settings.extra-fees'
+import { Route as OwnerSettingsDepositRouteImport } from './routes/owner.settings.deposit'
 import { Route as CheckinDemoSubmittedRouteImport } from './routes/checkin.demo.submitted'
 import { Route as CheckinDemoStartRouteImport } from './routes/checkin.demo.start'
 import { Route as CheckinDemoReviewRouteImport } from './routes/checkin.demo.review'
@@ -27,6 +38,7 @@ import { Route as CheckinDemoGuestInfoRouteImport } from './routes/checkin.demo.
 import { Route as CheckinDemoFaqRouteImport } from './routes/checkin.demo.faq'
 import { Route as CheckinDemoDepositRouteImport } from './routes/checkin.demo.deposit'
 import { Route as CheckinDemoBookingRouteImport } from './routes/checkin.demo.booking'
+import { Route as CheckinDemoSurchargeIdRouteImport } from './routes/checkin.demo.surcharge.$id'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -41,6 +53,11 @@ const IndexRoute = IndexRouteImport.update({
 const OwnerIndexRoute = OwnerIndexRouteImport.update({
   id: '/owner/',
   path: '/owner/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerSettingsRoute = OwnerSettingsRouteImport.update({
+  id: '/owner/settings',
+  path: '/owner/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OwnerLoginRoute = OwnerLoginRouteImport.update({
@@ -58,10 +75,60 @@ const OwnerSubmissionsIndexRoute = OwnerSubmissionsIndexRouteImport.update({
   path: '/owner/submissions/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OwnerSettingsIndexRoute = OwnerSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
 const OwnerSubmissionsIdRoute = OwnerSubmissionsIdRouteImport.update({
   id: '/owner/submissions/$id',
   path: '/owner/submissions/$id',
   getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerSettingsRoomsRoute = OwnerSettingsRoomsRouteImport.update({
+  id: '/rooms',
+  path: '/rooms',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsPropertyRoute = OwnerSettingsPropertyRouteImport.update({
+  id: '/property',
+  path: '/property',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsPaymentsRoute = OwnerSettingsPaymentsRouteImport.update({
+  id: '/payments',
+  path: '/payments',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsPasswordsRoute = OwnerSettingsPasswordsRouteImport.update({
+  id: '/passwords',
+  path: '/passwords',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsHouseRulesRoute = OwnerSettingsHouseRulesRouteImport.update({
+  id: '/house-rules',
+  path: '/house-rules',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsGuideRoute = OwnerSettingsGuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsFaqRoute = OwnerSettingsFaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsExtraFeesRoute = OwnerSettingsExtraFeesRouteImport.update({
+  id: '/extra-fees',
+  path: '/extra-fees',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
+const OwnerSettingsDepositRoute = OwnerSettingsDepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => OwnerSettingsRoute,
 } as any)
 const CheckinDemoSubmittedRoute = CheckinDemoSubmittedRouteImport.update({
   id: '/checkin/demo/submitted',
@@ -118,12 +185,18 @@ const CheckinDemoBookingRoute = CheckinDemoBookingRouteImport.update({
   path: '/checkin/demo/booking',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckinDemoSurchargeIdRoute = CheckinDemoSurchargeIdRouteImport.update({
+  id: '/checkin/demo/surcharge/$id',
+  path: '/checkin/demo/surcharge/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
+  '/owner/settings': typeof OwnerSettingsRouteWithChildren
   '/owner/': typeof OwnerIndexRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
@@ -136,8 +209,19 @@ export interface FileRoutesByFullPath {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/settings/deposit': typeof OwnerSettingsDepositRoute
+  '/owner/settings/extra-fees': typeof OwnerSettingsExtraFeesRoute
+  '/owner/settings/faq': typeof OwnerSettingsFaqRoute
+  '/owner/settings/guide': typeof OwnerSettingsGuideRoute
+  '/owner/settings/house-rules': typeof OwnerSettingsHouseRulesRoute
+  '/owner/settings/passwords': typeof OwnerSettingsPasswordsRoute
+  '/owner/settings/payments': typeof OwnerSettingsPaymentsRoute
+  '/owner/settings/property': typeof OwnerSettingsPropertyRoute
+  '/owner/settings/rooms': typeof OwnerSettingsRoomsRoute
   '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
+  '/owner/settings/': typeof OwnerSettingsIndexRoute
   '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
+  '/checkin/demo/surcharge/$id': typeof CheckinDemoSurchargeIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -156,8 +240,19 @@ export interface FileRoutesByTo {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/settings/deposit': typeof OwnerSettingsDepositRoute
+  '/owner/settings/extra-fees': typeof OwnerSettingsExtraFeesRoute
+  '/owner/settings/faq': typeof OwnerSettingsFaqRoute
+  '/owner/settings/guide': typeof OwnerSettingsGuideRoute
+  '/owner/settings/house-rules': typeof OwnerSettingsHouseRulesRoute
+  '/owner/settings/passwords': typeof OwnerSettingsPasswordsRoute
+  '/owner/settings/payments': typeof OwnerSettingsPaymentsRoute
+  '/owner/settings/property': typeof OwnerSettingsPropertyRoute
+  '/owner/settings/rooms': typeof OwnerSettingsRoomsRoute
   '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
+  '/owner/settings': typeof OwnerSettingsIndexRoute
   '/owner/submissions': typeof OwnerSubmissionsIndexRoute
+  '/checkin/demo/surcharge/$id': typeof CheckinDemoSurchargeIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -165,6 +260,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/owner/dashboard': typeof OwnerDashboardRoute
   '/owner/login': typeof OwnerLoginRoute
+  '/owner/settings': typeof OwnerSettingsRouteWithChildren
   '/owner/': typeof OwnerIndexRoute
   '/checkin/demo/booking': typeof CheckinDemoBookingRoute
   '/checkin/demo/deposit': typeof CheckinDemoDepositRoute
@@ -177,8 +273,19 @@ export interface FileRoutesById {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/settings/deposit': typeof OwnerSettingsDepositRoute
+  '/owner/settings/extra-fees': typeof OwnerSettingsExtraFeesRoute
+  '/owner/settings/faq': typeof OwnerSettingsFaqRoute
+  '/owner/settings/guide': typeof OwnerSettingsGuideRoute
+  '/owner/settings/house-rules': typeof OwnerSettingsHouseRulesRoute
+  '/owner/settings/passwords': typeof OwnerSettingsPasswordsRoute
+  '/owner/settings/payments': typeof OwnerSettingsPaymentsRoute
+  '/owner/settings/property': typeof OwnerSettingsPropertyRoute
+  '/owner/settings/rooms': typeof OwnerSettingsRoomsRoute
   '/owner/submissions/$id': typeof OwnerSubmissionsIdRoute
+  '/owner/settings/': typeof OwnerSettingsIndexRoute
   '/owner/submissions/': typeof OwnerSubmissionsIndexRoute
+  '/checkin/demo/surcharge/$id': typeof CheckinDemoSurchargeIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +294,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
+    | '/owner/settings'
     | '/owner/'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
@@ -199,8 +307,19 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/settings/deposit'
+    | '/owner/settings/extra-fees'
+    | '/owner/settings/faq'
+    | '/owner/settings/guide'
+    | '/owner/settings/house-rules'
+    | '/owner/settings/passwords'
+    | '/owner/settings/payments'
+    | '/owner/settings/property'
+    | '/owner/settings/rooms'
     | '/owner/submissions/$id'
+    | '/owner/settings/'
     | '/owner/submissions/'
+    | '/checkin/demo/surcharge/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -219,14 +338,26 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/settings/deposit'
+    | '/owner/settings/extra-fees'
+    | '/owner/settings/faq'
+    | '/owner/settings/guide'
+    | '/owner/settings/house-rules'
+    | '/owner/settings/passwords'
+    | '/owner/settings/payments'
+    | '/owner/settings/property'
+    | '/owner/settings/rooms'
     | '/owner/submissions/$id'
+    | '/owner/settings'
     | '/owner/submissions'
+    | '/checkin/demo/surcharge/$id'
   id:
     | '__root__'
     | '/'
     | '/sitemap.xml'
     | '/owner/dashboard'
     | '/owner/login'
+    | '/owner/settings'
     | '/owner/'
     | '/checkin/demo/booking'
     | '/checkin/demo/deposit'
@@ -239,8 +370,19 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/settings/deposit'
+    | '/owner/settings/extra-fees'
+    | '/owner/settings/faq'
+    | '/owner/settings/guide'
+    | '/owner/settings/house-rules'
+    | '/owner/settings/passwords'
+    | '/owner/settings/payments'
+    | '/owner/settings/property'
+    | '/owner/settings/rooms'
     | '/owner/submissions/$id'
+    | '/owner/settings/'
     | '/owner/submissions/'
+    | '/checkin/demo/surcharge/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -248,6 +390,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   OwnerDashboardRoute: typeof OwnerDashboardRoute
   OwnerLoginRoute: typeof OwnerLoginRoute
+  OwnerSettingsRoute: typeof OwnerSettingsRouteWithChildren
   OwnerIndexRoute: typeof OwnerIndexRoute
   CheckinDemoBookingRoute: typeof CheckinDemoBookingRoute
   CheckinDemoDepositRoute: typeof CheckinDemoDepositRoute
@@ -262,6 +405,7 @@ export interface RootRouteChildren {
   CheckinDemoSubmittedRoute: typeof CheckinDemoSubmittedRoute
   OwnerSubmissionsIdRoute: typeof OwnerSubmissionsIdRoute
   OwnerSubmissionsIndexRoute: typeof OwnerSubmissionsIndexRoute
+  CheckinDemoSurchargeIdRoute: typeof CheckinDemoSurchargeIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -287,6 +431,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OwnerIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner/settings': {
+      id: '/owner/settings'
+      path: '/owner/settings'
+      fullPath: '/owner/settings'
+      preLoaderRoute: typeof OwnerSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/owner/login': {
       id: '/owner/login'
       path: '/owner/login'
@@ -308,12 +459,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OwnerSubmissionsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/owner/settings/': {
+      id: '/owner/settings/'
+      path: '/'
+      fullPath: '/owner/settings/'
+      preLoaderRoute: typeof OwnerSettingsIndexRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
     '/owner/submissions/$id': {
       id: '/owner/submissions/$id'
       path: '/owner/submissions/$id'
       fullPath: '/owner/submissions/$id'
       preLoaderRoute: typeof OwnerSubmissionsIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/owner/settings/rooms': {
+      id: '/owner/settings/rooms'
+      path: '/rooms'
+      fullPath: '/owner/settings/rooms'
+      preLoaderRoute: typeof OwnerSettingsRoomsRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/property': {
+      id: '/owner/settings/property'
+      path: '/property'
+      fullPath: '/owner/settings/property'
+      preLoaderRoute: typeof OwnerSettingsPropertyRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/payments': {
+      id: '/owner/settings/payments'
+      path: '/payments'
+      fullPath: '/owner/settings/payments'
+      preLoaderRoute: typeof OwnerSettingsPaymentsRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/passwords': {
+      id: '/owner/settings/passwords'
+      path: '/passwords'
+      fullPath: '/owner/settings/passwords'
+      preLoaderRoute: typeof OwnerSettingsPasswordsRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/house-rules': {
+      id: '/owner/settings/house-rules'
+      path: '/house-rules'
+      fullPath: '/owner/settings/house-rules'
+      preLoaderRoute: typeof OwnerSettingsHouseRulesRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/guide': {
+      id: '/owner/settings/guide'
+      path: '/guide'
+      fullPath: '/owner/settings/guide'
+      preLoaderRoute: typeof OwnerSettingsGuideRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/faq': {
+      id: '/owner/settings/faq'
+      path: '/faq'
+      fullPath: '/owner/settings/faq'
+      preLoaderRoute: typeof OwnerSettingsFaqRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/extra-fees': {
+      id: '/owner/settings/extra-fees'
+      path: '/extra-fees'
+      fullPath: '/owner/settings/extra-fees'
+      preLoaderRoute: typeof OwnerSettingsExtraFeesRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
+    '/owner/settings/deposit': {
+      id: '/owner/settings/deposit'
+      path: '/deposit'
+      fullPath: '/owner/settings/deposit'
+      preLoaderRoute: typeof OwnerSettingsDepositRouteImport
+      parentRoute: typeof OwnerSettingsRoute
     }
     '/checkin/demo/submitted': {
       id: '/checkin/demo/submitted'
@@ -392,14 +613,52 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckinDemoBookingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkin/demo/surcharge/$id': {
+      id: '/checkin/demo/surcharge/$id'
+      path: '/checkin/demo/surcharge/$id'
+      fullPath: '/checkin/demo/surcharge/$id'
+      preLoaderRoute: typeof CheckinDemoSurchargeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
+
+interface OwnerSettingsRouteChildren {
+  OwnerSettingsDepositRoute: typeof OwnerSettingsDepositRoute
+  OwnerSettingsExtraFeesRoute: typeof OwnerSettingsExtraFeesRoute
+  OwnerSettingsFaqRoute: typeof OwnerSettingsFaqRoute
+  OwnerSettingsGuideRoute: typeof OwnerSettingsGuideRoute
+  OwnerSettingsHouseRulesRoute: typeof OwnerSettingsHouseRulesRoute
+  OwnerSettingsPasswordsRoute: typeof OwnerSettingsPasswordsRoute
+  OwnerSettingsPaymentsRoute: typeof OwnerSettingsPaymentsRoute
+  OwnerSettingsPropertyRoute: typeof OwnerSettingsPropertyRoute
+  OwnerSettingsRoomsRoute: typeof OwnerSettingsRoomsRoute
+  OwnerSettingsIndexRoute: typeof OwnerSettingsIndexRoute
+}
+
+const OwnerSettingsRouteChildren: OwnerSettingsRouteChildren = {
+  OwnerSettingsDepositRoute: OwnerSettingsDepositRoute,
+  OwnerSettingsExtraFeesRoute: OwnerSettingsExtraFeesRoute,
+  OwnerSettingsFaqRoute: OwnerSettingsFaqRoute,
+  OwnerSettingsGuideRoute: OwnerSettingsGuideRoute,
+  OwnerSettingsHouseRulesRoute: OwnerSettingsHouseRulesRoute,
+  OwnerSettingsPasswordsRoute: OwnerSettingsPasswordsRoute,
+  OwnerSettingsPaymentsRoute: OwnerSettingsPaymentsRoute,
+  OwnerSettingsPropertyRoute: OwnerSettingsPropertyRoute,
+  OwnerSettingsRoomsRoute: OwnerSettingsRoomsRoute,
+  OwnerSettingsIndexRoute: OwnerSettingsIndexRoute,
+}
+
+const OwnerSettingsRouteWithChildren = OwnerSettingsRoute._addFileChildren(
+  OwnerSettingsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   OwnerDashboardRoute: OwnerDashboardRoute,
   OwnerLoginRoute: OwnerLoginRoute,
+  OwnerSettingsRoute: OwnerSettingsRouteWithChildren,
   OwnerIndexRoute: OwnerIndexRoute,
   CheckinDemoBookingRoute: CheckinDemoBookingRoute,
   CheckinDemoDepositRoute: CheckinDemoDepositRoute,
@@ -414,6 +673,7 @@ const rootRouteChildren: RootRouteChildren = {
   CheckinDemoSubmittedRoute: CheckinDemoSubmittedRoute,
   OwnerSubmissionsIdRoute: OwnerSubmissionsIdRoute,
   OwnerSubmissionsIndexRoute: OwnerSubmissionsIndexRoute,
+  CheckinDemoSurchargeIdRoute: CheckinDemoSurchargeIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
