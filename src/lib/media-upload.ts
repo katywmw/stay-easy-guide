@@ -59,3 +59,50 @@ function fit(w: number, h: number, max: number) {
   const ratio = w > h ? max / w : max / h;
   return { width: Math.round(w * ratio), height: Math.round(h * ratio) };
 }
+
+/**
+ * Overlay a repeating diagonal watermark on an image data URL. Used for
+ * guest-uploaded ID photos so the file is only usable for verification.
+ */
+export async function watermarkImageDataUrl(
+  dataUrl: string,
+  text = "僅供入住核對使用 · For verification only",
+): Promise<string> {
+  try {
+    const img = await loadImage(dataUrl);
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return dataUrl;
+    ctx.drawImage(img, 0, 0);
+
+    const stamp = `${text} · ${new Date().toISOString().slice(0, 10)}`;
+    const fontSize = Math.max(16, Math.round(canvas.width / 34));
+    ctx.font = `700 ${fontSize}px "Noto Sans TC", system-ui, sans-serif`;
+    ctx.textBaseline = "middle";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.strokeStyle = "rgba(0,0,0,0.35)";
+    ctx.lineWidth = Math.max(1, fontSize / 14);
+
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate((-25 * Math.PI) / 180);
+    const stepY = fontSize * 4;
+    const stepX = ctx.measureText(stamp).width + fontSize * 3;
+    const diag = Math.hypot(canvas.width, canvas.height);
+    for (let y = -diag; y < diag; y += stepY) {
+      for (let x = -diag; x < diag; x += stepX) {
+        ctx.strokeText(stamp, x, y);
+        ctx.fillText(stamp, x, y);
+      }
+    }
+    ctx.restore();
+
+    return canvas.toDataURL("image/jpeg", 0.85);
+  } catch {
+    return dataUrl;
+  }
+}
+

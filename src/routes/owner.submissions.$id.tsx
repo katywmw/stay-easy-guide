@@ -14,7 +14,13 @@ import {
   RefreshCw,
   BellRing,
   Eye,
+  Pencil,
+  Building2,
+  Home,
+  X,
 } from "lucide-react";
+import { useRoomAssignments } from "@/lib/room-assignments";
+import { propertyColors } from "@/lib/property-colors";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { platformLabels } from "@/lib/checkin-store";
@@ -23,7 +29,7 @@ import {
   depositPill,
   StatusPill,
 } from "@/components/checkin/StatusPill";
-import { usePropertyConfig } from "@/lib/property-config";
+import { usePropertyConfig, type Room, type RoomTypeGroup } from "@/lib/property-config";
 import {
   useSurchargeStore,
   surchargeTotal,
@@ -74,8 +80,8 @@ function NotFound() {
   );
 }
 
-// Simulated: which rooms this booking covers
-function roomsFor(submissionId: string, currentPropertyId: string, allRoomIds: string[]) {
+// Default suggested rooms per booking (used to seed the assignment card)
+function defaultRoomsFor(submissionId: string, allRoomIds: string[]) {
   if (submissionId === "demo") return allRoomIds.slice(0, 2);
   if (submissionId === "s5") return allRoomIds.slice(0, Math.min(3, allRoomIds.length));
   return allRoomIds.slice(0, 1);
@@ -83,12 +89,19 @@ function roomsFor(submissionId: string, currentPropertyId: string, allRoomIds: s
 
 function SubmissionDetail() {
   const { submission } = Route.useLoaderData();
-  const { rooms, properties, extraFeeCatalog, payment } = usePropertyConfig();
+  const { rooms, roomGroups, properties, extraFeeCatalog, payment, updateRoom, updateProperty } = usePropertyConfig();
   const submissionPropertyId = submission.propertyId;
   const submissionProperty = properties.find((p) => p.id === submissionPropertyId);
   const propertyRooms = rooms.filter((r) => r.propertyId === submissionPropertyId);
-  const bookedRoomIds = roomsFor(submission.id, submissionPropertyId, propertyRooms.map((r) => r.id));
-  const bookedRooms = propertyRooms.filter((r) => bookedRoomIds.includes(r.id));
+  const propertyGroups = roomGroups.filter((g) => g.propertyId === submissionPropertyId);
+  const colors = propertyColors(submissionPropertyId);
+
+  // Room assignment (manual, owner-controlled). Falls back to a suggested default.
+  const assignments = useRoomAssignments();
+  const storedAssignment = assignments.assignments[submission.id];
+  const assignedRoomIds = storedAssignment ?? defaultRoomsFor(submission.id, propertyRooms.map((r) => r.id));
+  const isAutoAssigned = !storedAssignment;
+  const bookedRooms = propertyRooms.filter((r) => assignedRoomIds.includes(r.id));
 
   // Current snapshot of the room info owners would send to the guest
   const currentSnapshot: SentRoomSnapshot[] = useMemo(
@@ -156,8 +169,26 @@ function SubmissionDetail() {
     toast.success(`已建立補款單 #${inv.id}，請通知旅客`);
   };
 
+  const hasReleased = releasedRooms.length > 0;
+  const showSentBox = hasReleased || !!record;
+
   return (
-    <OwnerShell title={submission.name} subtitle={`申請 #${submission.id}`}>
+    <OwnerShell
+      title={submission.name}
+      subtitle={`申請 #${submission.id}`}
+      hidePropertySwitcher
+      headerExtra={
+        <span
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold ${colors.chipBg} ${colors.chipFg}`}
+          title={submissionProperty?.name}
+        >
+          <Building2 className="h-3 w-3" />
+          <span className="max-w-[10rem] truncate">{submissionProperty?.name ?? "—"}</span>
+          <span className="opacity-60">·</span>
+          <span className="[font-variant-numeric:tabular-nums]">#{submission.id}</span>
+        </span>
+      }
+    >
       <Toaster position="top-center" richColors />
 
       <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-4">
@@ -167,6 +198,7 @@ function SubmissionDetail() {
           送出：{submission.submittedAt}
         </span>
       </div>
+
 
       <div className="grid gap-4 lg:grid-cols-2">
         <OwnerCard title="訂房資料">
@@ -191,54 +223,95 @@ function SubmissionDetail() {
         </OwnerCard>
       </div>
 
-      <OwnerCard title="訂購房間與密碼釋出" desc="可個別或一次釋出所有房間密碼">
-        <div className="space-y-3">
-          {bookedRooms.map((r) => {
-            const released = releasedRooms.includes(r.id);
-            return (
-              <div
-                key={r.id}
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3"
-              >
-                <DoorOpen className="h-4 w-4 text-[oklch(0.55_0.08_60)]" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-foreground">{r.name}</p>
-                  <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
-                    大門 {r.gatePassword || "—"} · 房門 {r.doorPassword || "—"} · 押金 NT$ {r.depositAmount.toLocaleString()}
-                  </p>
-                </div>
-                {released ? (
-                  <StatusPill label="密碼已釋出" tone="success" />
-                ) : (
-                  <button
-                    onClick={() => {
-                      setReleasedRooms((v) => [...v, r.id]);
-                      toast.success(`已釋出「${r.name}」密碼`);
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
-                  >
-                    <KeyRound className="h-3.5 w-3.5" />
-                    釋出密碼
-                  </button>
-                )}
-              </div>
-            );
-          })}
-          {bookedRooms.length > 1 && (
-            <button
-              onClick={() => {
-                setReleasedRooms(bookedRooms.map((r) => r.id));
-                toast.success("已釋出全部房間密碼");
-              }}
-              className="w-full rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
-            >
-              一次釋出所有房間
-            </button>
-          )}
-        </div>
-      </OwnerCard>
+      <RoomAssignmentCard
+        submissionId={submission.id}
+        propertyRooms={propertyRooms}
+        groups={propertyGroups}
+        assignedRoomIds={assignedRoomIds}
+        isAutoAssigned={isAutoAssigned}
+        onSave={(ids) => assignments.set(submission.id, ids)}
+        onClear={() => assignments.clear(submission.id)}
+        guestCount={submission.guests}
+      />
 
-      {/* Info-updated notifier — appears after passwords have been released */}
+      <div className="mt-4">
+        <OwnerCard title="訂購房間與密碼釋出" desc="可個別編輯密碼或一次釋出所有房間">
+          {bookedRooms.length === 0 ? (
+            <p className="rounded-lg border border-dashed border-warning bg-warning-soft/40 p-4 text-center text-xs text-foreground">
+              尚未分配房間，請於上方「分配房間」選擇後才能釋出密碼。
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {bookedRooms.map((r) => {
+                const released = releasedRooms.includes(r.id);
+                const gate = r.gatePassword || submissionProperty?.gatePassword || "";
+                return (
+                  <div
+                    key={r.id}
+                    className="rounded-lg border border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-3">
+                      <DoorOpen className="h-4 w-4 text-[oklch(0.55_0.08_60)]" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-foreground">
+                          {r.displayName || r.roomNumber || r.name}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+                          大門 {gate || "—"} · 房門 {r.doorPassword || "—"} · 押金 NT$ {r.depositAmount.toLocaleString()}
+                        </p>
+                      </div>
+                      <InlinePasswordEditor
+                        room={r}
+                        propertyGate={submissionProperty?.gatePassword ?? ""}
+                        onSaveRoom={(patch) => updateRoom(r.id, patch)}
+                        onSaveProperty={(gp) =>
+                          submissionProperty && updateProperty(submissionProperty.id, { gatePassword: gp })
+                        }
+                      />
+                      {released ? (
+                        <StatusPill label="密碼已釋出" tone="success" />
+                      ) : (
+                        <button
+                          onClick={() => {
+                            setReleasedRooms((v) => [...v, r.id]);
+                            toast.success(`已釋出「${r.displayName || r.roomNumber || r.name}」密碼`);
+                          }}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                        >
+                          <KeyRound className="h-3.5 w-3.5" />
+                          釋出密碼
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {bookedRooms.length > 1 && (
+                <button
+                  onClick={() => {
+                    setReleasedRooms(bookedRooms.map((r) => r.id));
+                    toast.success("已釋出全部房間密碼");
+                  }}
+                  className="w-full rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
+                >
+                  一次釋出所有房間
+                </button>
+              )}
+              <p className="text-[11px] text-muted-foreground">
+                密碼預設由「
+                <Link to="/owner/settings/passwords" className="font-semibold text-foreground underline">
+                  密碼設定
+                </Link>
+                」頁管理，此處的鉛筆按鈕可就地覆寫並自動同步。
+              </p>
+            </div>
+          )}
+        </OwnerCard>
+      </div>
+
+
+      {/* Info-updated notifier — appears only after passwords released or already sent */}
+      {showSentBox && (
       <div className="mt-4">
         <OwnerCard
           title="已寄出的入住資訊"
@@ -353,6 +426,8 @@ function SubmissionDetail() {
           </div>
         </OwnerCard>
       </div>
+      )}
+
 
 
 
@@ -651,4 +726,199 @@ function PlaceholderCard({ title, uploaded, icon }: { title: string; uploaded: b
     </div>
   );
 }
+
+// ------------------------------------------------------------------
+// Room assignment
+// ------------------------------------------------------------------
+function RoomAssignmentCard({
+  submissionId: _sid,
+  propertyRooms,
+  groups,
+  assignedRoomIds,
+  isAutoAssigned,
+  onSave,
+  onClear,
+  guestCount,
+}: {
+  submissionId: string;
+  propertyRooms: Room[];
+  groups: RoomTypeGroup[];
+  assignedRoomIds: string[];
+  isAutoAssigned: boolean;
+  onSave: (ids: string[]) => void;
+  onClear: () => void;
+  guestCount: number;
+}) {
+  const [draft, setDraft] = useState<string[]>(assignedRoomIds);
+  const dirty = JSON.stringify([...draft].sort()) !== JSON.stringify([...assignedRoomIds].sort());
+  const toggle = (id: string) =>
+    setDraft((d) => (d.includes(id) ? d.filter((x) => x !== id) : [...d, id]));
+
+  return (
+    <div className="mt-4">
+      <OwnerCard
+        title="分配房間"
+        desc="由業者依據入住需求選擇實際入住的房間"
+        actions={
+          <div className="flex items-center gap-2">
+            {isAutoAssigned && (
+              <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
+                系統建議（尚未確認）
+              </span>
+            )}
+            <button
+              onClick={() => {
+                onSave(draft);
+                toast.success("已儲存房間分配");
+              }}
+              disabled={!dirty}
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
+            >
+              儲存分配
+            </button>
+            <button
+              onClick={() => {
+                onClear();
+                setDraft([]);
+                toast("已清除自訂分配");
+              }}
+              className="rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-secondary"
+            >
+              清除
+            </button>
+          </div>
+        }
+      >
+        <p className="mb-3 text-xs text-muted-foreground">
+          入住人數：<span className="font-bold text-foreground">{guestCount}</span>　·　
+          已選：<span className="font-bold text-foreground">{draft.length}</span> 間
+        </p>
+        {groups.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+            此民宿尚未建立房型。
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {groups.map((g) => {
+              const gRooms = propertyRooms.filter((r) => r.groupId === g.id);
+              if (gRooms.length === 0) return null;
+              return (
+                <div key={g.id} className="rounded-lg border border-[oklch(0.94_0.02_82)] p-3">
+                  <p className="mb-2 text-xs font-black text-foreground">{g.name}</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {gRooms.map((r) => {
+                      const on = draft.includes(r.id);
+                      return (
+                        <button
+                          key={r.id}
+                          onClick={() => toggle(r.id)}
+                          className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold transition ${
+                            on
+                              ? "border-2 border-primary bg-primary-soft text-foreground"
+                              : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+                          }`}
+                        >
+                          <Home className="h-3 w-3" />
+                          {r.displayName || r.roomNumber || r.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </OwnerCard>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------------
+// Inline password editor (pencil button)
+// ------------------------------------------------------------------
+function InlinePasswordEditor({
+  room,
+  propertyGate,
+  onSaveRoom,
+  onSaveProperty,
+}: {
+  room: Room;
+  propertyGate: string;
+  onSaveRoom: (patch: Partial<Room>) => void;
+  onSaveProperty: (gp: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [door, setDoor] = useState(room.doorPassword ?? "");
+  const [gate, setGate] = useState(room.gatePassword ?? propertyGate ?? "");
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => {
+          setDoor(room.doorPassword ?? "");
+          setGate(room.gatePassword ?? propertyGate ?? "");
+          setOpen(true);
+        }}
+        className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-secondary"
+        title="編輯密碼"
+      >
+        <Pencil className="h-3 w-3" />
+        編輯
+      </button>
+    );
+  }
+
+  return (
+    <div className="w-full rounded-lg border border-primary bg-primary-soft/30 p-3">
+      <div className="mb-2 flex items-center gap-2">
+        <Pencil className="h-3.5 w-3.5 text-foreground" />
+        <p className="text-xs font-bold text-foreground">就地編輯密碼</p>
+        <button
+          onClick={() => setOpen(false)}
+          className="ml-auto grid h-6 w-6 place-items-center rounded hover:bg-card"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <label className="text-[11px]">
+          <span className="mb-0.5 block font-semibold text-muted-foreground">房門密碼</span>
+          <input
+            value={door}
+            onChange={(e) => setDoor(e.target.value)}
+            className="w-full rounded border border-input bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+          />
+        </label>
+        <label className="text-[11px]">
+          <span className="mb-0.5 block font-semibold text-muted-foreground">大門密碼（此房覆寫）</span>
+          <input
+            value={gate}
+            onChange={(e) => setGate(e.target.value)}
+            className="w-full rounded border border-input bg-card px-2 py-1.5 text-sm outline-none focus:border-primary"
+          />
+        </label>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => {
+            onSaveRoom({ doorPassword: door, gatePassword: gate });
+            toast.success("已更新密碼，資訊已同步至密碼設定頁");
+            setOpen(false);
+          }}
+          className="rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+        >
+          儲存
+        </button>
+        <Link
+          to="/owner/settings/passwords"
+          className="text-[11px] font-semibold text-muted-foreground underline"
+        >
+          改用密碼設定頁編輯
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 

@@ -37,7 +37,7 @@ export const Route = createFileRoute("/owner/dashboard")({
 type ViewScope = "current" | "all";
 
 function OwnerDashboard() {
-  const { properties, currentPropertyId, update } = usePropertyConfig();
+  const { properties, currentPropertyId } = usePropertyConfig();
   const [scope, setScope] = useState<ViewScope>("current");
 
   const filtered = useMemo(() => {
@@ -59,52 +59,26 @@ function OwnerDashboard() {
   const currentProp = properties.find((p) => p.id === currentPropertyId);
 
   return (
-    <OwnerShell title="儀表板" subtitle="Overview">
-      {/* Scope segmented control */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="text-[11px] font-semibold text-muted-foreground">檢視範圍：</span>
-        <div className="flex items-center gap-1 rounded-full border border-[oklch(0.90_0.02_80)] bg-card p-1 shadow-sm">
-          {properties.map((p) => {
-            const active = scope === "current" && currentPropertyId === p.id;
-            const c = propertyColors(p.id);
-            return (
-              <button
-                key={p.id}
-                onClick={() => {
-                  setScope("current");
-                  update({ currentPropertyId: p.id });
-                }}
-                className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-                  active
-                    ? `${c.chipBg} ${c.chipFg} shadow-sm`
-                    : "text-muted-foreground hover:bg-secondary"
-                }`}
-              >
-                <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                <span className="max-w-[7rem] truncate">{p.name}</span>
-              </button>
-            );
-          })}
-          <button
-            onClick={() => setScope("all")}
-            className={`flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
-              scope === "all"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-secondary"
-            }`}
-          >
-            <Building2 className="h-3 w-3" />
-            全部館別
-          </button>
-        </div>
-        <Link
-          to="/owner/settings/passwords"
-          className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary-soft/60 px-3 py-1 text-[11px] font-bold text-foreground hover:bg-primary-soft"
+    <OwnerShell
+      title="儀表板"
+      subtitle="Overview"
+      headerExtra={
+        <button
+          onClick={() => setScope(scope === "all" ? "current" : "all")}
+          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold transition ${
+            scope === "all"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+          }`}
+          title="顯示全部館別"
         >
-          <KeyRound className="h-3 w-3" />
-          密碼設定
-        </Link>
-      </div>
+          <Building2 className="h-3 w-3" />
+          {scope === "all" ? "檢視全部館別" : "檢視全部"}
+        </button>
+      }
+    >
+
+
 
       {/* Stats — mobile: compact horizontal snap row */}
       <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:hidden -mx-4 px-4">
@@ -152,16 +126,16 @@ function OwnerDashboard() {
                       {r.name.slice(0, 1)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="truncate text-sm font-bold text-foreground">
-                          {r.name}
-                        </p>
+                      <p className="break-words text-sm font-bold text-foreground">
+                        {r.name}
+                      </p>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold ${c.chipBg} ${c.chipFg}`}
                           title={propName}
                         >
                           <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
-                          {c.short}
+                          {propName}
                         </span>
                         <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
                           {platformLabels[r.platform]}

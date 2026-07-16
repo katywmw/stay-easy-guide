@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Key, Lock, Save, Check } from "lucide-react";
+import { Key, Lock, Save, Check, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
@@ -105,19 +105,14 @@ function PasswordSettings() {
 
 
       {/* Per-group password cards */}
-      {groups.map((g) => {
-        const groupRooms = rooms.filter((r) => r.groupId === g.id);
-        return (
-          <GroupPasswordCard
-            key={g.id}
-            group={g}
-            rooms={groupRooms}
-            propertyGatePassword={property?.gatePassword ?? ""}
-            onSaveGroup={(patch) => updateRoomGroup(g.id, patch)}
-            onSaveRoom={(id, patch) => updateRoom(id, patch)}
-          />
-        );
-      })}
+      <PasswordGroupsSection
+        groups={groups}
+        rooms={rooms}
+        propertyGatePassword={property?.gatePassword ?? ""}
+        onSaveGroup={(id, patch) => updateRoomGroup(id, patch)}
+        onSaveRoom={(id, patch) => updateRoom(id, patch)}
+      />
+
 
       {/* Release rules */}
       <OwnerCard title="密碼釋出規則">
@@ -169,6 +164,95 @@ function PasswordSettings() {
 }
 
 // -------------------------------------------------------------------
+// Groups section: search + collapse-all controls, one card per group
+// -------------------------------------------------------------------
+function PasswordGroupsSection({
+  groups,
+  rooms,
+  propertyGatePassword,
+  onSaveGroup,
+  onSaveRoom,
+}: {
+  groups: RoomTypeGroup[];
+  rooms: Room[];
+  propertyGatePassword: string;
+  onSaveGroup: (id: string, patch: Partial<RoomTypeGroup>) => void;
+  onSaveRoom: (id: string, patch: Partial<Room>) => void;
+}) {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [q, setQ] = useState("");
+  const kw = q.trim().toLowerCase();
+
+  const filtered = groups
+    .map((g) => {
+      const gRooms = rooms.filter((r) => r.groupId === g.id);
+      if (!kw) return { g, gRooms, matches: true };
+      const gMatch = g.name.toLowerCase().includes(kw);
+      const rMatch = gRooms.filter(
+        (r) =>
+          (r.roomNumber ?? "").toLowerCase().includes(kw) ||
+          (r.displayName ?? "").toLowerCase().includes(kw) ||
+          (r.doorPassword ?? "").toLowerCase().includes(kw),
+      );
+      return { g, gRooms: gMatch ? gRooms : rMatch, matches: gMatch || rMatch.length > 0 };
+    })
+    .filter((x) => x.matches);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="搜尋房型、房號、別名或密碼"
+            className="w-full rounded-lg border border-input bg-card py-2 pl-9 pr-3 text-sm outline-none focus:border-primary"
+          />
+        </div>
+        <button
+          onClick={() =>
+            setCollapsed(Object.fromEntries(groups.map((g) => [g.id, false])))
+          }
+          className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+        >
+          全部展開
+        </button>
+        <button
+          onClick={() =>
+            setCollapsed(Object.fromEntries(groups.map((g) => [g.id, true])))
+          }
+          className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+        >
+          全部收合
+        </button>
+      </div>
+
+      {filtered.length === 0 && (
+        <p className="rounded-lg border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
+          沒有符合條件的房型或房間。
+        </p>
+      )}
+
+      {filtered.map(({ g, gRooms }) => (
+        <GroupPasswordCard
+          key={g.id}
+          group={g}
+          rooms={gRooms}
+          propertyGatePassword={propertyGatePassword}
+          collapsed={!!collapsed[g.id]}
+          onToggle={() =>
+            setCollapsed((c) => ({ ...c, [g.id]: !c[g.id] }))
+          }
+          onSaveGroup={(patch) => onSaveGroup(g.id, patch)}
+          onSaveRoom={onSaveRoom}
+        />
+      ))}
+    </div>
+  );
+}
+
+// -------------------------------------------------------------------
 // Per-group card with its own local draft + save button
 // -------------------------------------------------------------------
 
@@ -204,12 +288,16 @@ function GroupPasswordCard({
   group,
   rooms,
   propertyGatePassword,
+  collapsed = false,
+  onToggle,
   onSaveGroup,
   onSaveRoom,
 }: {
   group: RoomTypeGroup;
   rooms: Room[];
   propertyGatePassword: string;
+  collapsed?: boolean;
+  onToggle?: () => void;
   onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
   onSaveRoom: (id: string, patch: Partial<Room>) => void;
 }) {
@@ -253,6 +341,9 @@ function GroupPasswordCard({
       desc={group.description}
       actions={
         <div className="flex items-center gap-2">
+          <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+            {rooms.length} 間
+          </span>
           {isKey ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
               <Key className="h-3 w-3" /> 鑰匙房型
@@ -286,10 +377,23 @@ function GroupPasswordCard({
               </>
             )}
           </button>
+          {onToggle && (
+            <button
+              onClick={onToggle}
+              className="grid h-7 w-7 place-items-center rounded-full border border-border bg-card text-muted-foreground hover:bg-secondary"
+              aria-label={collapsed ? "展開" : "收合"}
+            >
+              {collapsed ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5" />}
+            </button>
+          )}
         </div>
       }
     >
-      {isKey ? (
+      {collapsed ? (
+        <p className="text-[11px] text-muted-foreground">
+          房間清單已收合。共 {rooms.length} 間。
+        </p>
+      ) : isKey ? (
         <Input
           label="取鑰匙位置與方式"
           full
