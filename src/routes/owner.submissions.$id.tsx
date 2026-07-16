@@ -426,6 +426,8 @@ function SubmissionDetail() {
           </div>
         </OwnerCard>
       </div>
+      )}
+
 
 
 
