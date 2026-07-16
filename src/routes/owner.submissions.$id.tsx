@@ -1,15 +1,19 @@
-import { createFileRoute, useNavigate, Link, notFound } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useState } from "react";
 import {
-  ArrowLeft,
   CheckCircle2,
   IdCard,
   Receipt,
   ShieldCheck,
   StickyNote,
   AlertTriangle,
+  Plus,
+  Trash2,
+  Send,
+  DoorOpen,
+  KeyRound,
 } from "lucide-react";
-import { useOwnerAuth } from "@/lib/owner-auth";
+import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { platformLabels } from "@/lib/checkin-store";
 import {
@@ -17,6 +21,12 @@ import {
   depositPill,
   StatusPill,
 } from "@/components/checkin/StatusPill";
+import { usePropertyConfig } from "@/lib/property-config";
+import {
+  useSurchargeStore,
+  surchargeTotal,
+  type SurchargeLine,
+} from "@/lib/surcharge-store";
 import { toast, Toaster } from "sonner";
 
 export const Route = createFileRoute("/owner/submissions/$id")({
@@ -40,235 +50,415 @@ export const Route = createFileRoute("/owner/submissions/$id")({
 
 function NotFound() {
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-6 text-center">
-      <h1 className="text-2xl font-black text-foreground">找不到申請</h1>
-      <p className="mt-2 text-sm text-muted-foreground">此申請不存在或已被移除。</p>
-      <Link
-        to="/owner/submissions"
-        className="mt-6 rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
-      >
-        回列表
-      </Link>
-    </div>
+    <OwnerShell title="找不到申請" subtitle="Submissions">
+      <div className="rounded-xl border border-dashed border-border bg-secondary/30 p-8 text-center">
+        <p className="text-sm text-muted-foreground">此申請不存在或已被移除。</p>
+        <Link
+          to="/owner/submissions"
+          className="mt-4 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
+        >
+          回列表
+        </Link>
+      </div>
+    </OwnerShell>
   );
 }
 
+// Simulated: which rooms this booking covers
+function roomsFor(submissionId: string, currentPropertyId: string, allRoomIds: string[]) {
+  if (submissionId === "demo") return allRoomIds.slice(0, 2);
+  if (submissionId === "s5") return allRoomIds.slice(0, Math.min(3, allRoomIds.length));
+  return allRoomIds.slice(0, 1);
+}
+
 function SubmissionDetail() {
-  const nav = useNavigate();
-  const loggedIn = useOwnerAuth((s) => s.loggedIn);
-  useEffect(() => {
-    if (!loggedIn) nav({ to: "/owner/login" });
-  }, [loggedIn, nav]);
-
   const { submission } = Route.useLoaderData();
+  const { rooms, currentPropertyId, extraFeeCatalog, payment } = usePropertyConfig();
+  const propertyRooms = rooms.filter((r) => r.propertyId === currentPropertyId);
+  const bookedRoomIds = roomsFor(submission.id, currentPropertyId, propertyRooms.map((r) => r.id));
+  const bookedRooms = propertyRooms.filter((r) => bookedRoomIds.includes(r.id));
 
+  const [releasedRooms, setReleasedRooms] = useState<string[]>([]);
+  const [note, setNote] = useState("");
+  const [status, setStatus] = useState(submission.status);
   const [checks, setChecks] = useState({
     booking: false,
     id: false,
     deposit: false,
     rules: false,
   });
-  const [note, setNote] = useState("");
-  const [status, setStatus] = useState(submission.status);
   const allChecked = Object.values(checks).every(Boolean);
-
   const st = checkinStatusPill(status);
   const dp = depositPill(submission.deposit);
 
+  const surcharge = useSurchargeStore();
+  const invoices = surcharge.bySubmission(submission.id);
+
+  const [surchargeLines, setSurchargeLines] = useState<SurchargeLine[]>([]);
+  const [surchargeNote, setSurchargeNote] = useState("");
+  const surchargeSum = surchargeLines.reduce((s, l) => s + l.unitAmount * l.quantity, 0);
+
+  const addSurchargeLine = (feeId: string) => {
+    const fee = extraFeeCatalog.find((f) => f.id === feeId);
+    if (!fee) return;
+    setSurchargeLines((prev) => [
+      ...prev,
+      {
+        id: Math.random().toString(36).slice(2, 8),
+        name: fee.name,
+        unit: fee.unit,
+        quantity: 1,
+        unitAmount: fee.defaultAmount,
+      },
+    ]);
+  };
+
+  const createSurcharge = () => {
+    if (surchargeLines.length === 0) return toast.error("請至少加入一項費用");
+    const inv = surcharge.create({
+      submissionId: submission.id,
+      guestName: submission.name,
+      lines: surchargeLines,
+      note: surchargeNote,
+    });
+    setSurchargeLines([]);
+    setSurchargeNote("");
+    toast.success(`已建立補款單 #${inv.id}，請通知旅客`);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <OwnerShell title={submission.name} subtitle={`申請 #${submission.id}`}>
       <Toaster position="top-center" richColors />
-      <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
-        <header className="mb-4 flex items-center gap-3">
-          <Link
-            to="/owner/submissions"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary hover:bg-accent"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div className="min-w-0">
-            <p className="text-xs text-muted-foreground">入住申請</p>
-            <h1 className="truncate text-xl font-black text-foreground">
-              {submission.name}
-            </h1>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-4">
+        <StatusPill label={st.label} tone={st.tone} />
+        <StatusPill label={`押金 · ${dp.label}`} tone={dp.tone} />
+        <span className="ml-auto text-xs text-muted-foreground">
+          送出：{submission.submittedAt}
+        </span>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <OwnerCard title="訂房資料">
+          <dl className="space-y-1.5 text-sm">
+            <Row k="訂房平台" v={platformLabels[submission.platform as keyof typeof platformLabels]} />
+            <Row k="訂房姓名" v={submission.name} />
+            <Row k="手機" v={submission.phone} />
+            <Row k="Email" v={submission.email} />
+            <Row k="入住 / 退房" v={`${submission.checkIn} → ${submission.checkOut}`} />
+            <Row k="房間數" v={`${bookedRooms.length} 間`} />
+          </dl>
+        </OwnerCard>
+
+        <OwnerCard title="入住人資訊">
+          <dl className="space-y-1.5 text-sm">
+            <Row k="入住人數" v={`${submission.guests} 人`} />
+            <Row k="預計抵達" v={submission.arrivalTime} />
+            <Row k="攜帶寵物" v={submission.hasPet ? "是" : "否"} />
+            <Row k="需要停車" v={submission.needParking ? "是" : "否"} />
+            <Row k="備註" v={submission.notes || "—"} />
+          </dl>
+        </OwnerCard>
+      </div>
+
+      <OwnerCard title="訂購房間與密碼釋出" desc="可個別或一次釋出所有房間密碼">
+        <div className="space-y-3">
+          {bookedRooms.map((r) => {
+            const released = releasedRooms.includes(r.id);
+            return (
+              <div
+                key={r.id}
+                className="flex flex-wrap items-center gap-3 rounded-lg border border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3"
+              >
+                <DoorOpen className="h-4 w-4 text-[oklch(0.55_0.08_60)]" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-foreground">{r.name}</p>
+                  <p className="text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+                    大門 {r.gatePassword || "—"} · 房門 {r.doorPassword || "—"} · 押金 NT$ {r.depositAmount.toLocaleString()}
+                  </p>
+                </div>
+                {released ? (
+                  <StatusPill label="密碼已釋出" tone="success" />
+                ) : (
+                  <button
+                    onClick={() => {
+                      setReleasedRooms((v) => [...v, r.id]);
+                      toast.success(`已釋出「${r.name}」密碼`);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+                  >
+                    <KeyRound className="h-3.5 w-3.5" />
+                    釋出密碼
+                  </button>
+                )}
+              </div>
+            );
+          })}
+          {bookedRooms.length > 1 && (
+            <button
+              onClick={() => {
+                setReleasedRooms(bookedRooms.map((r) => r.id));
+                toast.success("已釋出全部房間密碼");
+              }}
+              className="w-full rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground hover:bg-secondary"
+            >
+              一次釋出所有房間
+            </button>
+          )}
+        </div>
+      </OwnerCard>
+
+      <div className="mt-4">
+        <OwnerCard
+          title="補款 / 額外費用"
+          desc="從「額外費用項目」選取，建立獨立補款單。旅客會收到補款連結，付款完成後在此標記已收。"
+        >
+          {invoices.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {invoices.map((inv) => (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-[oklch(0.94_0.02_82)] bg-primary-soft/20 p-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-foreground">
+                      補款單 #{inv.id} · NT$ {surchargeTotal(inv).toLocaleString()}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {inv.lines.map((l) => `${l.name} × ${l.quantity}`).join("、")}
+                    </p>
+                    <p className="mt-1">
+                      <StatusPill
+                        label={inv.status === "paid" ? "已收款" : inv.status === "cancelled" ? "已取消" : "待付款"}
+                        tone={inv.status === "paid" ? "success" : inv.status === "cancelled" ? "muted" : "warning"}
+                      />
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Link
+                      to="/checkin/demo/surcharge/$id"
+                      params={{ id: inv.id }}
+                      target="_blank"
+                      className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary"
+                    >
+                      預覽旅客頁
+                    </Link>
+                    {inv.status === "pending" && (
+                      <button
+                        onClick={() => {
+                          surcharge.updateStatus(inv.id, "paid");
+                          toast.success("已標記已收款");
+                        }}
+                        className="rounded-full bg-success px-3 py-1 text-[11px] font-bold text-success-foreground"
+                      >
+                        標記已收
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="rounded-lg border border-dashed border-primary bg-primary-soft/20 p-4">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs font-semibold text-foreground">新增品項：</span>
+              <select
+                onChange={(e) => {
+                  if (e.target.value) {
+                    addSurchargeLine(e.target.value);
+                    e.target.value = "";
+                  }
+                }}
+                className="rounded-lg border border-input bg-card px-3 py-1.5 text-xs outline-none focus:border-primary"
+                defaultValue=""
+              >
+                <option value="" disabled>從清單選取…</option>
+                {extraFeeCatalog.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}（{f.unit} NT$ {f.defaultAmount}）
+                  </option>
+                ))}
+              </select>
+              <Link
+                to="/owner/settings/extra-fees"
+                className="text-[11px] font-semibold text-[oklch(0.55_0.08_60)] underline"
+              >
+                管理項目
+              </Link>
+            </div>
+
+            {surchargeLines.length > 0 && (
+              <div className="mb-3 overflow-hidden rounded-lg border border-[oklch(0.94_0.02_82)]">
+                <table className="w-full text-xs">
+                  <thead className="bg-secondary/60 text-left font-semibold text-muted-foreground">
+                    <tr>
+                      <th className="px-3 py-2">項目</th>
+                      <th className="px-3 py-2">單位</th>
+                      <th className="px-3 py-2 w-20 text-right">數量</th>
+                      <th className="px-3 py-2 w-24 text-right">單價</th>
+                      <th className="px-3 py-2 w-24 text-right">小計</th>
+                      <th className="px-3 py-2 w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[oklch(0.94_0.02_82)] bg-card">
+                    {surchargeLines.map((l, i) => (
+                      <tr key={l.id}>
+                        <td className="px-3 py-2 font-semibold text-foreground">{l.name}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{l.unit}</td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            min={1}
+                            value={l.quantity}
+                            onChange={(e) => {
+                              const q = Number(e.target.value) || 1;
+                              setSurchargeLines((prev) => prev.map((x, j) => j === i ? { ...x, quantity: q } : x));
+                            }}
+                            className="w-full rounded border border-input bg-card px-2 py-1 text-right text-xs outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <input
+                            type="number"
+                            min={0}
+                            value={l.unitAmount}
+                            onChange={(e) => {
+                              const a = Number(e.target.value) || 0;
+                              setSurchargeLines((prev) => prev.map((x, j) => j === i ? { ...x, unitAmount: a } : x));
+                            }}
+                            className="w-full rounded border border-input bg-card px-2 py-1 text-right text-xs outline-none"
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-right font-bold text-foreground [font-variant-numeric:tabular-nums]">
+                          NT$ {(l.quantity * l.unitAmount).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2">
+                          <button
+                            onClick={() =>
+                              setSurchargeLines((prev) => prev.filter((_, j) => j !== i))
+                            }
+                            className="grid h-6 w-6 place-items-center rounded text-destructive hover:bg-destructive-soft"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-secondary/60 font-bold text-foreground">
+                      <td colSpan={4} className="px-3 py-2 text-right">合計</td>
+                      <td className="px-3 py-2 text-right [font-variant-numeric:tabular-nums]">
+                        NT$ {surchargeSum.toLocaleString()}
+                      </td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            )}
+
+            <textarea
+              value={surchargeNote}
+              onChange={(e) => setSurchargeNote(e.target.value)}
+              rows={2}
+              placeholder="備註（旅客可見）"
+              className="mb-3 w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-xs outline-none focus:border-primary"
+            />
+            <button
+              onClick={createSurcharge}
+              disabled={surchargeLines.length === 0}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
+            >
+              <Send className="h-3.5 w-3.5" />
+              建立補款單並通知旅客
+            </button>
           </div>
-        </header>
+        </OwnerCard>
+      </div>
 
-        <div className="card-soft flex flex-wrap items-center gap-2 p-4">
-          <StatusPill label={st.label} tone={st.tone} />
-          <StatusPill label={`押金 · ${dp.label}`} tone={dp.tone} />
-          <span className="ml-auto text-xs text-muted-foreground">
-            送出：{submission.submittedAt}
-          </span>
-        </div>
-
-        {/* Booking */}
-        <Panel title="訂房資料" icon={<Receipt className="h-4 w-4" />}>
-          <Row k="訂房平台" v={platformLabels[submission.platform as keyof typeof platformLabels]} />
-          <Row k="訂房姓名" v={submission.name} />
-          <Row k="手機" v={submission.phone} />
-          <Row k="Email" v={submission.email} />
-          <Row k="入住 / 退房" v={`${submission.checkIn} → ${submission.checkOut}`} />
-        </Panel>
-
-        {/* Guest info */}
-        <Panel title="入住人資訊" icon={<StickyNote className="h-4 w-4" />}>
-          <Row k="入住人數" v={`${submission.guests} 人`} />
-          <Row k="預計抵達" v={submission.arrivalTime} />
-          <Row k="攜帶寵物" v={submission.hasPet ? "是" : "否"} />
-          <Row k="需要停車" v={submission.needParking ? "是" : "否"} />
-          <Row k="備註" v={submission.notes || "—"} />
-        </Panel>
-
-        {/* Documents */}
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <PlaceholderCard
-            title="證件 Placeholder"
-            hint="正式版將以 signed URL 顯示模糊縮圖"
-            uploaded={submission.idUploaded}
-            icon={<IdCard className="h-5 w-5" />}
-          />
-          <PlaceholderCard
-            title="付款證明 Placeholder"
-            hint="正式版將以 signed URL 顯示"
-            uploaded={submission.proofUploaded}
-            icon={<Receipt className="h-5 w-5" />}
-          />
-        </div>
-
-        <div className="card-soft mt-4 space-y-1.5 p-4">
-          <div className="text-sm font-bold text-foreground">閱讀 / 同意狀態</div>
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <FlagRow label="常見問題已閱讀" ok={submission.faqRead} />
-            <FlagRow label="入住須知已同意" ok={submission.rulesAgreed} />
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <OwnerCard title="證件 / 付款證明">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PlaceholderCard title="證件" uploaded={submission.idUploaded} icon={<IdCard className="h-5 w-5" />} />
+            <PlaceholderCard title="付款證明" uploaded={submission.proofUploaded} icon={<Receipt className="h-5 w-5" />} />
           </div>
-        </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+            <FlagRow label="FAQ 已閱讀" ok={submission.faqRead} />
+            <FlagRow label="須知已同意" ok={submission.rulesAgreed} />
+          </div>
+        </OwnerCard>
 
-        {/* Internal note */}
-        <div className="card-soft mt-4 p-4">
-          <label className="text-sm font-bold text-foreground">內部備註</label>
+        <OwnerCard title="內部備註 / Checklist">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             rows={3}
-            placeholder="僅民宿內部可見，例如：客人希望安排景觀房。"
-            className="mt-2 w-full resize-none rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+            placeholder="僅民宿內部可見。"
+            className="mb-3 w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary"
           />
-        </div>
-
-        {/* Checklist */}
-        <div className="card-soft mt-4 p-4">
-          <div className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
-            <ShieldCheck className="h-4 w-4" />
-            審核 Checklist
-          </div>
           <div className="space-y-2">
-            <CheckRow
-              label="訂房資料已確認"
-              checked={checks.booking}
-              onChange={(v) => setChecks({ ...checks, booking: v })}
-            />
-            <CheckRow
-              label="證件資料已確認"
-              checked={checks.id}
-              onChange={(v) => setChecks({ ...checks, id: v })}
-            />
-            <CheckRow
-              label="押金已確認"
-              checked={checks.deposit}
-              onChange={(v) => setChecks({ ...checks, deposit: v })}
-            />
-            <CheckRow
-              label="入住須知已確認"
-              checked={checks.rules}
-              onChange={(v) => setChecks({ ...checks, rules: v })}
-            />
+            {(["booking","id","deposit","rules"] as const).map((k) => (
+              <CheckRow
+                key={k}
+                label={{
+                  booking: "訂房資料已確認",
+                  id: "證件資料已確認",
+                  deposit: "押金已確認",
+                  rules: "入住須知已確認",
+                }[k]}
+                checked={checks[k]}
+                onChange={(v) => setChecks({ ...checks, [k]: v })}
+              />
+            ))}
           </div>
-        </div>
-
-        {/* Actions */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <button
-            onClick={() => {
-              setStatus("need_more_info");
-              toast.warning("已通知旅客補件");
-            }}
-            className="rounded-2xl border border-border bg-card px-4 py-3.5 text-sm font-semibold text-foreground hover:bg-secondary"
-          >
-            <AlertTriangle className="mr-1.5 inline h-4 w-4 text-[oklch(0.55_0.13_75)]" />
-            要求補件
-          </button>
-          <button
-            disabled={!allChecked}
-            onClick={() => {
-              setStatus("approved");
-              toast.success("已核准入住申請");
-            }}
-            className="rounded-2xl bg-primary px-4 py-3.5 text-sm font-bold text-primary-foreground shadow-[0_6px_20px_-6px_oklch(0.75_0.14_85_/_0.6)] disabled:opacity-50"
-          >
-            <CheckCircle2 className="mr-1.5 inline h-4 w-4" />
-            核准入住
-          </button>
-          <button
-            onClick={() => {
-              setStatus("completed");
-              toast.success("已標記為完成");
-            }}
-            className="rounded-2xl bg-success px-4 py-3.5 text-sm font-bold text-success-foreground"
-          >
-            標記完成
-          </button>
-        </div>
-
-        {status === "approved" && (
-          <div className="mt-4 rounded-2xl bg-success-soft p-4">
-            <p className="text-sm font-bold text-success">已核准</p>
-            <p className="mt-1 text-xs text-foreground/75">
-              正式版中，核准後將會開放旅客查看入住指引。
-            </p>
-          </div>
-        )}
-
-        <div className="mt-6 rounded-2xl border border-border bg-secondary/50 p-4 text-xs leading-relaxed text-muted-foreground">
-          <p className="mb-1 font-bold text-foreground">Developer Note · 正式版安全需求</p>
-          <ul className="list-disc space-y-0.5 pl-4">
-            <li>證件與付款證明需使用 private storage，不可使用公開圖片網址</li>
-            <li>業者預覽圖片需使用 signed URL</li>
-            <li>所有敏感資料表需啟用 Row Level Security</li>
-            <li>客人入住連結需使用高強度隨機 token</li>
-            <li>審核通過前，後端也不可回傳門鎖密碼</li>
-            <li>需建立資料保存與刪除政策，並加入操作紀錄 audit logs</li>
-            <li>使用真實客人證件前，需請專業工程師做安全檢查</li>
-          </ul>
-        </div>
+        </OwnerCard>
       </div>
-    </div>
-  );
-}
 
-function Panel({
-  title,
-  icon,
-  children,
-}: {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="card-soft mt-4 p-4">
-      <div className="mb-2 flex items-center gap-2 text-sm font-bold text-foreground">
-        {icon}
-        {title}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <button
+          onClick={() => {
+            setStatus("need_more_info");
+            toast.warning("已通知旅客補件");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary"
+        >
+          <AlertTriangle className="h-4 w-4 text-[oklch(0.55_0.13_75)]" />
+          要求補件
+        </button>
+        <button
+          disabled={!allChecked}
+          onClick={() => {
+            setStatus("approved");
+            toast.success("已核准入住申請");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+        >
+          <ShieldCheck className="h-4 w-4" />
+          核准入住
+        </button>
+        <button
+          onClick={() => {
+            setStatus("completed");
+            toast.success("已標記為完成");
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-success px-4 py-2.5 text-sm font-bold text-success-foreground"
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          標記完成
+        </button>
+        <span className="ml-auto text-xs text-muted-foreground">
+          付款帳戶：{payment.accountName}
+        </span>
       </div>
-      <dl className="space-y-1.5">{children}</dl>
-    </div>
+    </OwnerShell>
   );
 }
 
 function Row({ k, v }: { k: string; v: string }) {
   return (
-    <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-2 text-sm">
+    <div className="grid grid-cols-[6rem_minmax(0,1fr)] gap-2">
       <dt className="text-muted-foreground">{k}</dt>
       <dd className="min-w-0 break-words font-medium text-foreground">{v}</dd>
     </div>
@@ -278,78 +468,41 @@ function Row({ k, v }: { k: string; v: string }) {
 function FlagRow({ label, ok }: { label: string; ok: boolean }) {
   return (
     <div className="flex items-center gap-2">
-      {ok ? (
-        <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
-      ) : (
-        <span className="h-4 w-4 shrink-0 rounded-full border-2 border-destructive" />
-      )}
-      <span className={ok ? "text-foreground" : "text-muted-foreground"}>
-        {label}
-      </span>
+      {ok ? <CheckCircle2 className="h-4 w-4 shrink-0 text-success" /> : <span className="h-4 w-4 shrink-0 rounded-full border-2 border-destructive" />}
+      <span className={ok ? "text-foreground" : "text-muted-foreground"}>{label}</span>
     </div>
   );
 }
 
-function CheckRow({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
+function CheckRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 rounded-xl bg-secondary/50 px-3 py-2.5">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 accent-[oklch(0.55_0.13_75)]"
-      />
+    <label className="flex cursor-pointer items-center gap-2 rounded-lg bg-secondary/40 px-3 py-2">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="h-4 w-4 accent-[oklch(0.75_0.14_85)]" />
       <span className="text-sm text-foreground">{label}</span>
     </label>
   );
 }
 
-function PlaceholderCard({
-  title,
-  hint,
-  uploaded,
-  icon,
-}: {
-  title: string;
-  hint: string;
-  uploaded: boolean;
-  icon: React.ReactNode;
-}) {
+function PlaceholderCard({ title, uploaded, icon }: { title: string; uploaded: boolean; icon: React.ReactNode }) {
   return (
-    <div className="card-soft p-4">
-      <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+    <div className="rounded-lg border border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3">
+      <div className="flex items-center gap-2 text-xs font-bold text-foreground">
         {icon}
         {title}
       </div>
-      <div
-        className={`mt-3 grid h-32 place-items-center rounded-xl border-2 border-dashed ${
-          uploaded
-            ? "border-success bg-success-soft"
-            : "border-border bg-secondary/50"
-        }`}
-      >
+      <div className={`mt-2 grid h-24 place-items-center rounded-lg border-2 border-dashed ${uploaded ? "border-success bg-success-soft" : "border-border bg-card"}`}>
         {uploaded ? (
           <div className="text-center">
-            <CheckCircle2 className="mx-auto h-8 w-8 text-success" />
-            <p className="mt-1 text-xs font-semibold text-foreground">
-              已上傳（Demo）
-            </p>
+            <CheckCircle2 className="mx-auto h-6 w-6 text-success" />
+            <p className="mt-0.5 text-[10px] font-semibold text-foreground">已上傳</p>
           </div>
         ) : (
-          <p className="text-xs text-muted-foreground">尚未上傳</p>
+          <p className="text-[10px] text-muted-foreground">尚未上傳</p>
         )}
       </div>
-      <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-        {hint}
-      </p>
     </div>
   );
 }
+
+// Suppress unused import warning
+void Plus;
