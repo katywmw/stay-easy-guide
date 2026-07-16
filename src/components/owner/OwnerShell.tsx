@@ -27,11 +27,15 @@ export function OwnerShell({
   subtitle,
   right,
   children,
+  hidePropertySwitcher = false,
+  headerExtra,
 }: {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
   children: React.ReactNode;
+  hidePropertySwitcher?: boolean;
+  headerExtra?: React.ReactNode;
 }) {
   const nav = useNavigate();
   const { loggedIn, logout } = useOwnerAuth();
