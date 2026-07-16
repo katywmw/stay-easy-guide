@@ -58,6 +58,16 @@ function PasswordSettings() {
   const property = properties.find((p) => p.id === currentPropertyId);
   const groups = roomGroups.filter((g) => g.propertyId === currentPropertyId);
 
+  // Local draft for property-wide gate password
+  const [gateDraft, setGateDraft] = useState(property?.gatePassword ?? "");
+  const gateDirty = (property?.gatePassword ?? "") !== gateDraft;
+  // Re-sync when switching property
+  const propKey = property?.id ?? "";
+  useEffect(() => {
+    setGateDraft(property?.gatePassword ?? "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propKey]);
+
   return (
     <div className="space-y-4">
       <Toaster position="top-center" richColors />
@@ -68,17 +78,31 @@ function PasswordSettings() {
         title="大門密碼（整館預設）"
         desc="供選擇「整館共用」的房型使用；也是新房型的預設值。"
       >
-        <div className="max-w-xs">
-          <Input
-            label={`${property?.name ?? ""} · 大門密碼`}
-            value={property?.gatePassword ?? ""}
-            onChange={(v) =>
-              property && updateProperty(property.id, { gatePassword: v })
-            }
-            placeholder="例：9945"
-          />
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-0 max-w-xs flex-1">
+            <Input
+              label={`${property?.name ?? ""} · 大門密碼`}
+              value={gateDraft}
+              onChange={setGateDraft}
+              placeholder="例：9945"
+            />
+          </div>
+          <button
+            onClick={() => {
+              if (property) {
+                updateProperty(property.id, { gatePassword: gateDraft });
+                toast.success("已儲存整館大門密碼");
+              }
+            }}
+            disabled={!gateDirty}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
+          >
+            <Save className="h-3.5 w-3.5" />
+            儲存
+          </button>
         </div>
       </OwnerCard>
+
 
       {/* Per-group password cards */}
       {groups.map((g) => {
