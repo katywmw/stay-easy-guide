@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { Star, MapPin, Phone, ShieldCheck, Wifi, Car, Coffee, Wind, ArrowRight } from "lucide-react";
+import { Star, MapPin, ShieldCheck, Wifi, Car, Coffee, Wind, ArrowRight } from "lucide-react";
 import heroImg from "@/assets/hero-minsu.jpg";
+import { usePropertyConfig } from "@/lib/property-config";
+import { channelIcon, channelHref } from "@/routes/owner.settings.contact";
 
 const AMENITIES = [
   { icon: Wifi, label: "無線網路" },
@@ -10,6 +12,9 @@ const AMENITIES = [
 ];
 
 export function GuestHome() {
+  const { contactChannels } = usePropertyConfig();
+  const active = contactChannels.filter((c) => c.enabled && c.value.trim());
+
   return (
     <div className="min-h-screen w-full bg-[oklch(0.985_0.04_95)] flex items-start justify-center py-6 px-3 sm:py-10">
       <div className="w-full max-w-md flex flex-col overflow-hidden rounded-[2.5rem] border border-[oklch(0.94_0.13_95)] bg-white shadow-[0_20px_60px_-20px_oklch(0.24_0.04_55_/_0.15)]">
@@ -113,23 +118,31 @@ export function GuestHome() {
             </div>
           </div>
 
-          {/* Contact */}
-          <div className="mb-10 grid grid-cols-2 gap-3">
-            <a
-              href="tel:+886900000000"
-              className="flex items-center justify-center gap-2 rounded-xl border border-foreground/10 bg-white py-3.5 text-sm font-bold text-foreground shadow-sm transition active:scale-[0.98]"
-            >
-              <Phone className="h-4 w-4" strokeWidth={2.4} />
-              聯絡房東
-            </a>
-            <a
-              href="#"
-              className="flex items-center justify-center gap-2 rounded-xl bg-[oklch(0.72_0.19_150)] py-3.5 text-sm font-bold text-white shadow-[0_6px_16px_-6px_oklch(0.72_0.19_150_/_0.5)] transition active:scale-[0.98]"
-            >
-              <span style={{ fontFamily: "Quicksand, sans-serif" }}>LINE</span>
-              加入好友
-            </a>
-          </div>
+          {/* Contact — dynamic channels */}
+          {active.length > 0 && (
+            <div className="mb-10">
+              <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-foreground/40">
+                聯絡屋主
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                {active.map((c) => {
+                  const Icon = channelIcon(c.type);
+                  return (
+                    <a
+                      key={c.id}
+                      href={channelHref(c)}
+                      target={c.type === "email" || c.type === "phone" || c.type === "sms" ? undefined : "_blank"}
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 rounded-xl border border-foreground/10 bg-white py-3 text-xs font-bold text-foreground shadow-sm transition active:scale-[0.98]"
+                    >
+                      <Icon className="h-4 w-4" strokeWidth={2.4} />
+                      <span className="truncate">{c.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Amenities at bottom */}
           <div className="border-t border-foreground/5 pt-8">
@@ -140,7 +153,7 @@ export function GuestHome() {
               {AMENITIES.map(({ icon: Icon, label }) => (
                 <div key={label} className="flex flex-col items-center gap-1.5">
                   <div className="grid h-11 w-11 place-items-center rounded-full bg-[oklch(0.985_0.04_95)]">
-                    <Icon className="h-4.5 w-4.5 text-[oklch(0.55_0.15_72)]" strokeWidth={2.2} />
+                    <Icon className="h-4 w-4 text-[oklch(0.55_0.15_72)]" strokeWidth={2.2} />
                   </div>
                   <span className="text-[10px] font-bold text-foreground/60">
                     {label}

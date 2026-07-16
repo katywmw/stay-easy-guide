@@ -27,6 +27,7 @@ import { Route as OwnerSettingsGuideRouteImport } from './routes/owner.settings.
 import { Route as OwnerSettingsFaqRouteImport } from './routes/owner.settings.faq'
 import { Route as OwnerSettingsExtraFeesRouteImport } from './routes/owner.settings.extra-fees'
 import { Route as OwnerSettingsDepositRouteImport } from './routes/owner.settings.deposit'
+import { Route as OwnerSettingsContactRouteImport } from './routes/owner.settings.contact'
 import { Route as CheckinDemoSubmittedRouteImport } from './routes/checkin.demo.submitted'
 import { Route as CheckinDemoStartRouteImport } from './routes/checkin.demo.start'
 import { Route as CheckinDemoReviewRouteImport } from './routes/checkin.demo.review'
@@ -130,6 +131,11 @@ const OwnerSettingsDepositRoute = OwnerSettingsDepositRouteImport.update({
   path: '/deposit',
   getParentRoute: () => OwnerSettingsRoute,
 } as any)
+const OwnerSettingsContactRoute = OwnerSettingsContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => OwnerSettingsRoute,
+} as any)
 const CheckinDemoSubmittedRoute = CheckinDemoSubmittedRouteImport.update({
   id: '/checkin/demo/submitted',
   path: '/checkin/demo/submitted',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/settings/contact': typeof OwnerSettingsContactRoute
   '/owner/settings/deposit': typeof OwnerSettingsDepositRoute
   '/owner/settings/extra-fees': typeof OwnerSettingsExtraFeesRoute
   '/owner/settings/faq': typeof OwnerSettingsFaqRoute
@@ -240,6 +247,7 @@ export interface FileRoutesByTo {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/settings/contact': typeof OwnerSettingsContactRoute
   '/owner/settings/deposit': typeof OwnerSettingsDepositRoute
   '/owner/settings/extra-fees': typeof OwnerSettingsExtraFeesRoute
   '/owner/settings/faq': typeof OwnerSettingsFaqRoute
@@ -273,6 +281,7 @@ export interface FileRoutesById {
   '/checkin/demo/review': typeof CheckinDemoReviewRoute
   '/checkin/demo/start': typeof CheckinDemoStartRoute
   '/checkin/demo/submitted': typeof CheckinDemoSubmittedRoute
+  '/owner/settings/contact': typeof OwnerSettingsContactRoute
   '/owner/settings/deposit': typeof OwnerSettingsDepositRoute
   '/owner/settings/extra-fees': typeof OwnerSettingsExtraFeesRoute
   '/owner/settings/faq': typeof OwnerSettingsFaqRoute
@@ -307,6 +316,7 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/settings/contact'
     | '/owner/settings/deposit'
     | '/owner/settings/extra-fees'
     | '/owner/settings/faq'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/settings/contact'
     | '/owner/settings/deposit'
     | '/owner/settings/extra-fees'
     | '/owner/settings/faq'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/checkin/demo/review'
     | '/checkin/demo/start'
     | '/checkin/demo/submitted'
+    | '/owner/settings/contact'
     | '/owner/settings/deposit'
     | '/owner/settings/extra-fees'
     | '/owner/settings/faq'
@@ -536,6 +548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OwnerSettingsDepositRouteImport
       parentRoute: typeof OwnerSettingsRoute
     }
+    '/owner/settings/contact': {
+      id: '/owner/settings/contact'
+      path: '/contact'
+      fullPath: '/owner/settings/contact'
+      preLoaderRoute: typeof OwnerSettingsContactRouteImport
+      parentRoute: typeof OwnerSettingsRoute
+    }
     '/checkin/demo/submitted': {
       id: '/checkin/demo/submitted'
       path: '/checkin/demo/submitted'
@@ -624,6 +643,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface OwnerSettingsRouteChildren {
+  OwnerSettingsContactRoute: typeof OwnerSettingsContactRoute
   OwnerSettingsDepositRoute: typeof OwnerSettingsDepositRoute
   OwnerSettingsExtraFeesRoute: typeof OwnerSettingsExtraFeesRoute
   OwnerSettingsFaqRoute: typeof OwnerSettingsFaqRoute
@@ -637,6 +657,7 @@ interface OwnerSettingsRouteChildren {
 }
 
 const OwnerSettingsRouteChildren: OwnerSettingsRouteChildren = {
+  OwnerSettingsContactRoute: OwnerSettingsContactRoute,
   OwnerSettingsDepositRoute: OwnerSettingsDepositRoute,
   OwnerSettingsExtraFeesRoute: OwnerSettingsExtraFeesRoute,
   OwnerSettingsFaqRoute: OwnerSettingsFaqRoute,
