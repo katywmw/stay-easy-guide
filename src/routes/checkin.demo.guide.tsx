@@ -19,7 +19,8 @@ import {
   guideFieldOrder,
   type GuideField,
 } from "@/lib/property-config";
-import { ImageLightbox } from "@/components/checkin/ImageLightbox";
+import { ImageLightbox, isVideoUrl } from "@/components/checkin/ImageLightbox";
+import { Play } from "lucide-react";
 
 export const Route = createFileRoute("/checkin/demo/guide")({
   component: GuidePage,
@@ -129,19 +130,36 @@ function GuidePage() {
                   </div>
                   {photos.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {photos.map((url, i) => (
-                        <button
-                          key={i}
-                          onClick={() => setLightbox(url)}
-                          className="overflow-hidden rounded-lg border border-border transition hover:shadow-md"
-                        >
-                          <img
-                            src={url}
-                            alt={guideFieldLabels[k] + " 照片"}
-                            className="h-20 w-20 object-cover"
-                          />
-                        </button>
-                      ))}
+                      {photos.map((url, i) => {
+                        const video = isVideoUrl(url);
+                        return (
+                          <button
+                            key={i}
+                            onClick={() => setLightbox(url)}
+                            className="relative overflow-hidden rounded-lg border border-border transition hover:shadow-md"
+                          >
+                            {video ? (
+                              <>
+                                <video
+                                  src={url}
+                                  muted
+                                  playsInline
+                                  className="h-20 w-20 object-cover"
+                                />
+                                <span className="absolute inset-0 grid place-items-center bg-black/30">
+                                  <Play className="h-5 w-5 fill-white text-white" />
+                                </span>
+                              </>
+                            ) : (
+                              <img
+                                src={url}
+                                alt={guideFieldLabels[k] + " 照片"}
+                                className="h-20 w-20 object-cover"
+                              />
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
                 </li>

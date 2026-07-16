@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock } from "lucide-react";
+import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock, Pencil, Check } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
@@ -347,73 +347,17 @@ function GroupCard({
                 尚無房間
               </p>
             ) : (
-              <div className="overflow-hidden rounded-lg border border-[oklch(0.94_0.02_82)] bg-card">
-                <table className="w-full text-xs">
-                  <thead className="bg-secondary/60 text-left text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="px-2.5 py-2">房號</th>
-                      {group.accessMode === "password" && (
-                        <th className="px-2.5 py-2">房門密碼</th>
-                      )}
-                      <th className="px-2.5 py-2">備註</th>
-                      <th className="w-16 px-2.5 py-2"></th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[oklch(0.94_0.02_82)]">
-                    {rooms.map((r) => (
-                      <tr key={r.id}>
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            value={r.roomNumber ?? ""}
-                            onChange={(e) =>
-                              onUpdateRoom(r.id, { roomNumber: e.target.value })
-                            }
-                            placeholder="101"
-                            className="w-24 rounded border border-transparent bg-transparent px-1.5 py-1 outline-none focus:border-input focus:bg-card"
-                          />
-                        </td>
-                        {group.accessMode === "password" && (
-                          <td className="px-2.5 py-1.5">
-                            <input
-                              value={r.doorPassword ?? ""}
-                              onChange={(e) =>
-                                onUpdateRoom(r.id, { doorPassword: e.target.value })
-                              }
-                              placeholder="4-6 位數字"
-                              className="w-28 rounded border border-transparent bg-transparent px-1.5 py-1 [font-variant-numeric:tabular-nums] outline-none focus:border-input focus:bg-card"
-                            />
-                          </td>
-                        )}
-                        <td className="px-2.5 py-1.5">
-                          <input
-                            value={r.note ?? ""}
-                            onChange={(e) => onUpdateRoom(r.id, { note: e.target.value })}
-                            placeholder="—"
-                            className="w-full rounded border border-transparent bg-transparent px-1.5 py-1 outline-none focus:border-input focus:bg-card"
-                          />
-                        </td>
-                        <td className="px-2.5 py-1.5">
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => onDuplicateRoom(r.id)}
-                              className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-secondary"
-                              title="複製房間"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
-                            <button
-                              onClick={() => onRemoveRoom(r.id)}
-                              className="grid h-7 w-7 place-items-center rounded text-destructive hover:bg-destructive-soft"
-                              title="刪除"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-2">
+                {rooms.map((r) => (
+                  <RoomRow
+                    key={r.id}
+                    room={r}
+                    showDoorPassword={group.accessMode === "password"}
+                    onUpdate={(patch) => onUpdateRoom(r.id, patch)}
+                    onRemove={() => onRemoveRoom(r.id)}
+                    onDuplicate={() => onDuplicateRoom(r.id)}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -442,5 +386,111 @@ function AccessSelect({
         <option value="key">實體鑰匙（同一取鑰匙地點）</option>
       </select>
     </label>
+  );
+}
+
+function RoomRow({
+  room,
+  showDoorPassword,
+  onUpdate,
+  onRemove,
+  onDuplicate,
+}: {
+  room: Room;
+  showDoorPassword: boolean;
+  onUpdate: (patch: Partial<Room>) => void;
+  onRemove: () => void;
+  onDuplicate: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const title = room.displayName?.trim() || room.roomNumber || "未命名";
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-[oklch(0.94_0.02_82)] bg-card">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-2">
+            <p className="truncate text-sm font-bold text-foreground">{title}</p>
+            {room.displayName && room.roomNumber && (
+              <span className="text-[11px] text-muted-foreground">
+                房號 {room.roomNumber}
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+            {showDoorPassword && (
+              <span>密碼 {room.doorPassword || "—"}</span>
+            )}
+            {room.note && <span className="truncate">備註 {room.note}</span>}
+          </div>
+        </div>
+        <button
+          onClick={() => setEditing((v) => !v)}
+          className={`grid h-7 w-7 place-items-center rounded ${
+            editing
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:bg-secondary"
+          }`}
+          title={editing ? "完成" : "編輯"}
+        >
+          {editing ? <Check className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+        </button>
+        <button
+          onClick={onDuplicate}
+          className="grid h-7 w-7 place-items-center rounded text-muted-foreground hover:bg-secondary"
+          title="複製房間"
+        >
+          <Copy className="h-3.5 w-3.5" />
+        </button>
+        <button
+          onClick={onRemove}
+          className="grid h-7 w-7 place-items-center rounded text-destructive hover:bg-destructive-soft"
+          title="刪除"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {editing && (
+        <div className="border-t border-[oklch(0.94_0.02_82)] bg-secondary/30 p-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="房號"
+              value={room.roomNumber ?? ""}
+              onChange={(v) => onUpdate({ roomNumber: v })}
+              placeholder="101"
+            />
+            <Input
+              label="房間別名（選填）"
+              value={room.displayName ?? ""}
+              onChange={(v) => onUpdate({ displayName: v })}
+              placeholder="Happy 101 / 松風"
+            />
+            {showDoorPassword && (
+              <Input
+                label="房門密碼"
+                value={room.doorPassword ?? ""}
+                onChange={(v) => onUpdate({ doorPassword: v })}
+                placeholder="4-6 位數字"
+              />
+            )}
+            <Input
+              label="備註"
+              full
+              value={room.note ?? ""}
+              onChange={(v) => onUpdate({ note: v })}
+              placeholder="例：非吸菸房 / 附早餐"
+            />
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={() => setEditing(false)}
+              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+            >
+              完成
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
