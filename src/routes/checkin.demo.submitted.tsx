@@ -68,6 +68,51 @@ function SubmittedPage() {
           </div>
         </div>
 
+        {record && (
+          <div
+            className="mt-6 rounded-2xl border-2 border-warning bg-warning-soft/60 p-5 shadow-md"
+            role="alert"
+          >
+            <div className="flex items-center gap-2">
+              <BellRing className="h-4 w-4 text-[oklch(0.55_0.13_75)]" />
+              <p className="text-sm font-black text-foreground">入住資訊已更新</p>
+              <span className="ml-auto rounded-full bg-card px-2 py-0.5 text-[10px] font-bold text-foreground">
+                第 {record.lastVersion} 版
+              </span>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-foreground/85">
+              請以下方最新資訊為準，舊資訊已失效。
+            </p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              更新時間：{new Date(record.lastNotifiedAt).toLocaleString("zh-TW", { hour: "2-digit", minute: "2-digit", month: "2-digit", day: "2-digit" })}
+            </p>
+            <div className="mt-3 space-y-2">
+              {record.snapshot.map((r) => {
+                const title = r.displayName || r.roomNumber || "—";
+                return (
+                  <div key={r.roomId} className="rounded-lg bg-card p-3">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-foreground">{title}</p>
+                      {r.displayName && r.roomNumber && (
+                        <span className="text-[11px] text-muted-foreground">房號 {r.roomNumber}</span>
+                      )}
+                      <span className="ml-auto rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
+                        最新
+                      </span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-foreground/80 [font-variant-numeric:tabular-nums]">
+                      大門密碼 <span className="font-bold text-foreground">{r.gatePassword || "—"}</span>
+                      　·　房門密碼 <span className="font-bold text-foreground">{r.doorPassword || "—"}</span>
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+
+
         <div className="card-soft mt-6 p-5">
           <h2 className="text-sm font-bold text-foreground">接下來的流程</h2>
           <ol className="mt-3 space-y-2.5">
