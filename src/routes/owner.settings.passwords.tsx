@@ -105,19 +105,14 @@ function PasswordSettings() {
 
 
       {/* Per-group password cards */}
-      {groups.map((g) => {
-        const groupRooms = rooms.filter((r) => r.groupId === g.id);
-        return (
-          <GroupPasswordCard
-            key={g.id}
-            group={g}
-            rooms={groupRooms}
-            propertyGatePassword={property?.gatePassword ?? ""}
-            onSaveGroup={(patch) => updateRoomGroup(g.id, patch)}
-            onSaveRoom={(id, patch) => updateRoom(id, patch)}
-          />
-        );
-      })}
+      <PasswordGroupsSection
+        groups={groups}
+        rooms={rooms}
+        propertyGatePassword={property?.gatePassword ?? ""}
+        onSaveGroup={(id, patch) => updateRoomGroup(id, patch)}
+        onSaveRoom={(id, patch) => updateRoom(id, patch)}
+      />
+
 
       {/* Release rules */}
       <OwnerCard title="密碼釋出規則">
