@@ -30,11 +30,6 @@ function addDaysISO(iso: string, days: number) {
   return new Date(d.getTime() - tz).toISOString().slice(0, 10);
 }
 
-function formatDate(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`;
-}
 
 function BookingPage() {
   const nav = useNavigate();
