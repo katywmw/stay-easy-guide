@@ -1,115 +1,93 @@
-# Plan — Overview cleanup, password UX, room assignment, ID watermark, cross-device
+# Plan — Guest booking simplification, FAQ sync, password/approval overhaul
 
-## 1. Overview: one segmented control, not two
+## 1. Guest booking: drop 入住館別 & 入住房間 selection
 
-`src/routes/owner.dashboard.tsx` currently renders the shell's `PropertySwitcher` (via `OwnerShell`) AND a local "檢視範圍" segmented row with the same two properties + `全部館別`. Result: duplicate columns.
+`src/routes/checkin.demo.booking.tsx`
 
-- Remove the local segmented row from `owner.dashboard.tsx`.
-- Keep a single segmented control in the header area that combines both roles: `胡桃民宿 · 安平九號 · 全部館別`. Selecting a property also updates `currentPropertyId`; `全部館別` is a view-only override that widens data but leaves `currentPropertyId` untouched.
-- On dashboard/submissions pages, hide `OwnerShell`'s `PropertySwitcher` and let the page own the combined control. Add an `OwnerShell` prop `hidePropertySwitcher?: boolean` to opt in; other settings pages keep the switcher (they always operate on a single property).
+- Remove the `入住館別` `<select>` block (lines ~84–103) and the `入住房間` selector block (lines ~105–213).
+- Auto-assign `propertyId` on mount: if `s.propertyId` is empty, default to `properties[0].id` (guest-facing side only needs a property context for downstream copy; owner assigns actual rooms).
+- Clear `selectedRoomIds` from the guest flow: the guest no longer picks rooms — the owner assigns rooms via the approval page (already introduced in prior turn). Drop `selectedRoomIds.length > 0` from `canNext`.
+- Guest just fills 訂房平台 → 訂房姓名 → 手機 → Email → 入住/退房 → 訂單編號. StepBar remains.
+- Downstream screens that referenced `selectedRoomIds` (submitted page, review) already read from the room-assignments store — verify they gracefully render "由民宿安排中" when unassigned.
 
-## 2. Sidebar: add 密碼 entry
+## 2. FAQ editor: expose default seed for edit/delete
 
-`OwnerShell` sidebar `navItems` currently: 儀表板, 入住申請, 民宿設定. Add:
+Guest 常見問題 currently reads from `faqItems` in `src/lib/checkin-content.ts` (hardcoded system default), while `owner.settings.faq.tsx` reads/writes `faq` from `usePropertyConfig` (empty by default). They are disconnected.
 
-- `{ to: "/owner/settings/passwords", label: "密碼設定", icon: KeyRound }` inserted between 入住申請 and 民宿設定, matched by exact path so 民宿設定 highlight is unaffected.
-- Keep the top-bar `密碼` shortcut on mobile only; drop it from the desktop header since sidebar now has it (avoids duplication).
+- Change `FaqAccordion` (`src/components/checkin/FaqAccordion.tsx`) to read the merged list from `usePropertyConfig().faq`; fall back to the default seed only when the store is empty (backwards-compat).
+- Seed `property-config` store's `faq` on first load with the built-in `faqItems` (migrate on rehydrate: if `faq.length === 0`, populate from defaults, tag each entry with a `source: "system" | "custom"` field so we can reset later if desired).
+- FAQ editor page renders all entries (system + custom) with edit + delete controls. Add a "還原系統預設題庫" button that repopulates missing defaults.
+- Filter by category dropdown stays.
 
-## 3. Denser password list
+## 3. Password page: remove "此房型共用" mode, keep only 整館預設
 
-`owner.settings.passwords.tsx` today renders one large card per room. Make it scale for 20+ rooms:
+`src/routes/owner.settings.passwords.tsx` + `property-config` room-group mode.
 
-- Group by 房型 as collapsible accordions (default: current property's first group open; others collapsed). Header row of each group shows: 房型名稱 · 房間數 · 大門密碼模式 · 未儲存徽章.
-- Inside each group, render a compact table (desktop) / stacked card (mobile) with columns: 房號/別名 · 房門密碼 (masked with 顯示 toggle) · 房型共用大門密碼 (when mode = shared) · 備註 · 儲存.
-- Sticky in-page mini-nav (房型 chips) on desktop jumps to accordion sections.
-- Top-of-page controls: 全部展開 / 全部收合, 全部顯示密碼 / 全部隱藏, search box that filters by 房號/別名/密碼.
-- Preserve per-group Save behavior; add a per-row "只儲存這間" quick save.
+- Drop the `共用 / 各房獨立` toggle at the room-group level. All front-door password logic collapses to a single "整館大門密碼" section shown at the very top of the page.
+- Each room row shows only 房門密碼 (+備註). Room groups list becomes a compact accordion of 房門密碼 rows.
+- Migration: any group currently in `shared` mode is coerced to `per-property` on load; the shared value is discarded (or, if non-empty, promoted to the property default when empty).
+- Update `checkin.demo.*` screens that read `group.frontDoorPassword` to fall back to property-level default.
 
-## 4. Cross-device / PWA polish
+## 4. Hide toggle behavior on password rows
 
-Not a native app — but make the web app feel right on desktop and every mobile browser:
+In the password list, the eye/hide toggle currently masks the whole password including the room number label. Change so 房號/別名 stays visible and only the password value is masked (`••••••`) when hidden. Applies to per-row and 全部隱藏 bulk toggle.
 
-- Audit tap targets to min 40x40 on all owner + guest pages; enlarge the pill controls that are currently ~28px tall on mobile.
-- Add `viewport-fit=cover` + safe-area padding (`env(safe-area-inset-*)`) to `__root.tsx` head + main layouts so iOS notch/home-indicator don't clip sticky headers/footers.
-- Add PWA manifest (`public/manifest.webmanifest`) + icons + `apple-touch-icon` + theme-color so users can "Add to Home Screen" on iOS/Android and get an app-like launcher. No service worker in this pass (avoid stale-cache traps).
-- Verify horizontal-scroll offenders: password table wraps to cards <640px; dashboard segmented control already snap-scrolls, keep it.
-- Test matrix documented in plan.md: Chrome/Safari/Firefox desktop, iOS Safari, Android Chrome, Samsung Internet.
+## 5. 取鑰匙 房型: photos/videos per room-type
 
-## 5. ID watermark on guest uploads
+For any room group whose `accessMode === "key"`:
 
-`checkin.demo.id-upload.tsx` accepts photos. Add a watermark applied client-side right after compression, before persisting:
+- Add a `keyPickupMedia: MediaItem[]` field to `RoomGroup` in `property-config` (image/video URLs; reuse `fileToMediaDataUrl`).
+- Room settings page (`owner.settings.rooms.tsx`) adds a media uploader block visible only when the group is 取鑰匙 mode, with drag reorder + delete (mirrors existing guide media uploader).
+- Guest 入住指引 page renders the group's key-pickup media when the guest's assigned room belongs to a key-mode group.
 
-- Extend `src/lib/media-upload.ts` with `watermarkImage(blob, text)` that draws the original image to a canvas, overlays a repeating diagonal watermark ("僅供入住核對使用 · For verification only · {今日日期}") at ~30% opacity, and returns a new Blob. Font size scales with image width.
-- ID-upload flow calls compress → watermark → store. Original un-watermarked file is discarded (owner only ever sees the watermarked version).
-- Owner submission detail preview shows the same watermarked image; a small caption "已加浮水印" explains why.
-- Copy the guest-facing notice on the upload screen: "為保護您的證件，上傳後將自動加上『僅供核對』浮水印。"
+## 6. Approval page: multi-select same-category rooms, live sync, auto-save
 
-## 6. Full guest name in list rows
+`src/routes/owner.submissions.$id.tsx` + `src/lib/room-assignments.ts`.
 
-Dashboard + submissions list currently truncate long names because the row uses `flex flex-wrap` + `truncate`. Rework the row layout per the responsive-layout rule:
+- Room assignment card: allow selecting multiple rooms in the SAME room-type (e.g. 2× 標準雙人). Remove any "one per group" guard; keep only the overlap-with-other-submissions guard.
+- 訂購房間與密碼釋出 list auto-derives from `useRoomAssignments` — already the case; add an effect that re-computes released-rooms diff when assignment changes so drift banner updates.
+- Replace manual `SaveBar` on this page with **auto-save**: on every mutation, debounce 400ms then persist. Header status pill shows `儲存中…` (spinner) → `已儲存 · HH:MM` (check). No 儲存 button. Same behavior for the inline password popovers on this page.
 
-- Container: `grid grid-cols-[auto_minmax(0,1fr)_auto]` — avatar, name/meta column, chevron.
-- Name/property chip line: name gets `truncate` but the parent gets `min-w-0`; property chip goes to a second line on narrow widths (using `flex flex-wrap`) so it never eats horizontal budget from the name.
-- On rows narrower than ~360px, chevron is hidden (already done); date/#id line stays as its own row.
-- Apply same layout to `owner.submissions.index.tsx`.
+## 7. Approval page: consolidate 補款 / 額外費用 / 要求補件, delete redundant buttons
 
-## 7. Approval page: edit password inline + always show 已寄出的入住資訊 after 首次寄出
+- Move the 補款/額外費用 card to sit directly below the 證件 (ID) section.
+- Rename the card to **"補款 / 額外費用 / 要求補件"**.
+- Inside the card, add a **要求補件** sub-section:
+  - Reason chips: `身分證未通過`, `身分證照片不清楚`, `補款憑證不足`, `其他` (with a pencil → freeform text).
+  - Optional message textarea (pre-filled with a template based on the selected reason chip).
+- Button label change: `建立補款單並通知旅客` → **`通知旅客`**. Behavior: creates the surcharge/reissue request AND pushes a guest notification (versioned via existing `submission-updates` history) so the guest sees "民宿要求補件：___" in their submitted page with a CTA to update the missing item (e.g. re-upload ID, pay surcharge).
+- **Remove** the bottom-of-page `要求補件` button (redundant — the card handles it).
+- **Remove** the `標記完成` button (approval implicitly finalizes).
+- **Remove** the standalone `釋出密碼` button (密碼 releases automatically on `核准入住`). Keep the room-level inline pencil for edits; the "release" event is fired by 核准入住.
 
-`owner.submissions.$id.tsx`:
+## 8. Owners can see guests updated their info
 
-- Source of truth stays `密碼設定` page (`property-config` store). Add an inline pencil button next to each room's "釋出密碼" that opens a small popover to edit 房門密碼 and 大門密碼 for that room. Saving writes through `updateRoom` / `updateProperty` — this is the same store, so all consumers stay consistent.
-- Because the write touches the store, the drift detector in the existing `已寄出的入住資訊` card automatically flags "資訊已變更，尚未通知旅客" and offers "重新寄送更新" — no extra plumbing.
-- Add a "改用 密碼設定 頁編輯" link on the popover for owners who prefer bulk edits.
-- Track record: each `updates.notify` call already bumps `lastVersion` and stores diffSummary. Surface a compact history list at the bottom of the box ("版本歷程"): v1 → v2 diffs with timestamps. Extend `submission-updates.ts` to keep a `history: { version, at, diffSummary, channel }[]` array in addition to the current latest snapshot.
+Extend `src/lib/submission-updates.ts`:
 
-## 8. 已寄出的入住資訊 appears only after first release
-
-Per item 9 of the request. Today the box always renders. Change to:
-
-- Track `releasedRooms` (already local state). Persist it in a new lightweight store slice keyed by `submissionId` so it survives navigation (add to `submission-updates.ts` or a small companion store).
-- Only render the `已寄出的入住資訊` card once `releasedRooms.length > 0` OR a `record` exists.
-- The "首次寄出入住資訊" button auto-fires the first time all booked rooms have been released, or is presented as the last step of the release flow.
-
-## 9. Submission detail header cleanup
-
-Same file: the header currently shows `PropertySwitcher` and the `密碼` shortcut inherited from `OwnerShell`. On a submission page:
-
-- Hide `PropertySwitcher` (via the new `hidePropertySwitcher` prop) and the header `密碼` shortcut. Replace them with a **PropertyBadge** showing the submission's property + a `#申請編號` chip. This makes it unambiguous which property the booking belongs to and prevents accidental context switches while reviewing.
-- Do the same on `owner.submissions.$id` for mobile (mobile top area of `OwnerShell` also renders the switcher — gate by prop).
-
-## 10. Manual room assignment
-
-Right now `roomsFor()` deterministically picks the first N rooms — owners never chose. Replace with an explicit assignment flow:
-
-- Extend submission data: add `assignedRoomIds: string[]` and `requestedRoomCount: number` (default 1) to `OwnerSubmission` in `owner-demo.ts`. Seed existing demo submissions with realistic values.
-- New store `useRoomAssignments` (zustand + persist) keyed by `submissionId` so demo edits stick. Falls back to `submission.assignedRoomIds` when empty.
-- In `owner.submissions.$id.tsx`, add a new card **"分配房間"** placed ABOVE "訂購房間與密碼釋出":
-  - Shows `requestedRoomCount` and current assignment count with a mismatch warning.
-  - List each房型 group with its available rooms (checkbox multi-select). Disable rooms already assigned to overlapping submissions (compute overlap client-side across `demoSubmissions` + assignments store).
-  - Buttons: 儲存分配 · 清除. Save writes to store; toast.
-- "訂購房間與密碼釋出" derives its list from the assignments store instead of `roomsFor()`. When no room assigned yet, show an empty state with a "先分配房間" CTA that scrolls to the assignment card, and hide the release buttons.
-- Guest-side (`checkin.demo.submitted.tsx`) reads the same store so guests see the actually-assigned room, not a mock.
-- Submissions list gets a small badge "未分配房間" for approved-but-unassigned rows.
+- Add a `guestUpdates` history slice per `submissionId`: entries `{ at, field: "id_photo" | "surcharge_paid" | "other", note? }` written when the guest re-submits after a 要求補件.
+- Submission detail page adds a **"旅客更新紀錄"** timeline card under 補款/補件, showing latest guest actions with timestamps and a "查看更新" quick link that scrolls to the changed section (ID photo, payment proof, etc.).
+- Submissions list badge: rows with unread guest updates show a dot on the row; opening the detail marks them read.
+- Guest side: after receiving a 補件請求, the submitted page shows an actionable card ("民宿要求補件：___ · 前往補件") that, on completion, calls a `markGuestUpdate(submissionId, field)` helper.
 
 ## Technical notes
 
-- No new npm dependencies. Canvas watermark uses browser canvas; PWA manifest is plain JSON.
-- All new state lives in zustand+persist stores, matching existing patterns; no schema/backend changes.
-- New `hidePropertySwitcher` prop on `OwnerShell` — default false to keep other pages unchanged.
-- Route paths, auth, and existing store shapes stay compatible; extensions are additive.
+- No backend/schema changes — all stores are zustand+persist.
+- `property-config` gets a persist migration for FAQ seed and room-group password mode collapse.
+- Auto-save uses a simple `useEffect` + `setTimeout` debouncer per store slice; status derived from `saving` boolean.
+- Media uploads reuse `fileToMediaDataUrl` (compression already in place).
+- No new npm deps.
 
 ## Files touched
 
-- edit: `src/components/owner/OwnerShell.tsx` (sidebar item, hidePropertySwitcher prop, mobile shortcut only)
-- edit: `src/routes/owner.dashboard.tsx` (remove duplicate segmented row, combined control, full-name row layout)
-- edit: `src/routes/owner.submissions.index.tsx` (row layout, 未分配房間 badge, combined control)
-- edit: `src/routes/owner.submissions.$id.tsx` (PropertyBadge header, inline password edit, gated 已寄出 box, room assignment card, version history)
-- edit: `src/routes/owner.settings.passwords.tsx` (accordion + compact table + search + bulk toggles + mini nav)
-- edit: `src/routes/checkin.demo.id-upload.tsx` (call watermark, add notice)
-- edit: `src/routes/checkin.demo.submitted.tsx` (read assignment store)
-- edit: `src/lib/media-upload.ts` (add `watermarkImage`)
-- edit: `src/lib/owner-demo.ts` (`assignedRoomIds`, `requestedRoomCount`)
-- edit: `src/lib/submission-updates.ts` (history array, released-rooms slice)
-- edit: `src/routes/__root.tsx` (viewport-fit, manifest link, apple-touch-icon, theme-color)
-- new: `src/lib/room-assignments.ts` (zustand store)
-- new: `public/manifest.webmanifest` + icons
+- edit: `src/routes/checkin.demo.booking.tsx` (drop property+room selectors)
+- edit: `src/components/checkin/FaqAccordion.tsx` (read from store)
+- edit: `src/lib/property-config.ts` (FAQ seed migration; drop shared-mode; add `keyPickupMedia`)
+- edit: `src/routes/owner.settings.faq.tsx` (show system defaults; add restore button)
+- edit: `src/routes/owner.settings.passwords.tsx` (remove 共用 toggle; keep only property-level 大門密碼; fix hide toggle to mask password only)
+- edit: `src/routes/owner.settings.rooms.tsx` (key-pickup media uploader for 取鑰匙 groups)
+- edit: `src/routes/checkin.demo.guide.tsx` (render key-pickup media)
+- edit: `src/routes/owner.submissions.$id.tsx` (multi-select same category, auto-save, restructured 補款/補件 card, remove redundant buttons, guest-updates timeline)
+- edit: `src/lib/submission-updates.ts` (guestUpdates slice, read/unread)
+- edit: `src/lib/room-assignments.ts` (allow duplicates within a group)
+- edit: `src/routes/checkin.demo.submitted.tsx` (補件 CTA + markGuestUpdate)
+- edit: `src/routes/owner.submissions.index.tsx` (unread-update dot)

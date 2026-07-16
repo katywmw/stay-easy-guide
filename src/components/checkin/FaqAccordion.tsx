@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
 import { faqItems, type FaqCategory } from "@/lib/checkin-content";
+import { usePropertyConfig } from "@/lib/property-config";
 
 interface FaqAccordionProps {
   category: FaqCategory;
@@ -9,7 +10,13 @@ interface FaqAccordionProps {
 
 export function FaqAccordion({ category, title = "常見問題" }: FaqAccordionProps) {
   const [open, setOpen] = useState<number | null>(null);
-  const items = faqItems.filter((f) => f.category === category);
+  const customFaq = usePropertyConfig((s) => s.faq);
+  // Use owner-managed FAQ when populated; otherwise fall back to system defaults.
+  const source =
+    customFaq.length > 0
+      ? customFaq.map((f) => ({ q: f.q, a: f.a, category: f.category }))
+      : faqItems;
+  const items = source.filter((f) => f.category === category);
   if (items.length === 0) return null;
 
   return (
@@ -23,7 +30,7 @@ export function FaqAccordion({ category, title = "常見問題" }: FaqAccordionP
           const isOpen = open === i;
           return (
             <li
-              key={item.q}
+              key={item.q + i}
               className="overflow-hidden rounded-2xl border border-[oklch(0.92_0.04_88)] bg-card"
             >
               <button
