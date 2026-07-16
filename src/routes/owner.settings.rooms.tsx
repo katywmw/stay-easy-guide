@@ -419,11 +419,9 @@ function RoomRow({
             )}
           </div>
           <div className="mt-0.5 flex flex-wrap gap-x-3 text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
-            {showDoorPassword && (
-              <span>密碼 {room.doorPassword || "—"}</span>
-            )}
             {room.note && <span className="truncate">備註 {room.note}</span>}
           </div>
+
         </div>
         <button
           onClick={() => setEditing((v) => !v)}
