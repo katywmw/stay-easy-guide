@@ -83,10 +83,30 @@ function roomsFor(submissionId: string, currentPropertyId: string, allRoomIds: s
 
 function SubmissionDetail() {
   const { submission } = Route.useLoaderData();
-  const { rooms, currentPropertyId, extraFeeCatalog, payment } = usePropertyConfig();
-  const propertyRooms = rooms.filter((r) => r.propertyId === currentPropertyId);
-  const bookedRoomIds = roomsFor(submission.id, currentPropertyId, propertyRooms.map((r) => r.id));
+  const { rooms, properties, extraFeeCatalog, payment } = usePropertyConfig();
+  const submissionPropertyId = submission.propertyId;
+  const submissionProperty = properties.find((p) => p.id === submissionPropertyId);
+  const propertyRooms = rooms.filter((r) => r.propertyId === submissionPropertyId);
+  const bookedRoomIds = roomsFor(submission.id, submissionPropertyId, propertyRooms.map((r) => r.id));
   const bookedRooms = propertyRooms.filter((r) => bookedRoomIds.includes(r.id));
+
+  // Current snapshot of the room info owners would send to the guest
+  const currentSnapshot: SentRoomSnapshot[] = useMemo(
+    () =>
+      bookedRooms.map((r) => ({
+        roomId: r.id,
+        roomNumber: r.roomNumber ?? "",
+        displayName: r.displayName ?? "",
+        doorPassword: r.doorPassword ?? "",
+        gatePassword: r.gatePassword ?? submissionProperty?.gatePassword ?? "",
+      })),
+    [bookedRooms, submissionProperty?.gatePassword],
+  );
+
+  const updates = useSubmissionUpdates();
+  const record = updates.updates[submission.id];
+  const drift = record ? !snapshotEqual(record.snapshot, currentSnapshot) : false;
+
 
   const [releasedRooms, setReleasedRooms] = useState<string[]>([]);
   const [note, setNote] = useState("");
