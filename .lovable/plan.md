@@ -1,133 +1,73 @@
 
-# 業者後台重構：專業儀表板 + 設定中心 + 多房訂單
+# 業者端優化計畫
 
-依照剛才選擇：**單筆訂單 + 多房、單一業者帳號 + 多館切換、額外費用走獨立補款通知、視覺維持暖陳日和但加強層次**。
+依你的九點回饋 + 補充回答落實。所有變更皆為前端 + 本地 store，資料仍在 `src/lib/property-config.ts` / `surcharge-store.ts`。
 
----
+## 1. 視覺：降低白感、加強層次
+- `src/styles.css`：把 `--background` 由近白改為暖米 (`oklch(0.985 0.012 82)`)，`--card` 略高於背景，新增 `--surface-1/2` 與 `--shadow-warm` token。
+- `OwnerShell`：主內容加 `bg-background`（非 white），卡片改用 `bg-card` + 細 `border` + `shadow-warm`；區塊之間加分隔線與 group heading。
+- 側邊欄底色加深一階（`oklch(0.96 0.02 82)`），active 項目左側 3px 主色條。
 
-## 一、儀表板改造 (`owner.dashboard.tsx`)
+## 2. Dashboard 五顆統計卡（手機佔約 1/3）
+- 手機：改為橫向 `snap-x` 一排 5 張迷你卡（h≈72px），只有 icon + 數字 + 兩字標籤；整區高度 ≈ 螢幕 30%。
+- 手機下方直接接「近期入住申請」讓資訊優先呈現。
+- 桌機：維持 5 欄大卡但降高度 20%，避免大留白。
 
-**目前問題**：頂端「歡迎回來」佔太多空間、Stat cards 太扁、視覺太薄。
+## 3. 手動儲存 + 未儲存指示
+- 新增 `src/hooks/useDirtyForm.ts`：`{ dirty, markDirty, save }`。
+- 新增 `src/components/owner/SaveBar.tsx`：sticky 底部條，顯示「未儲存變更 · 儲存 / 捨棄」；乾淨時顯示上次儲存時間。
+- 所有 `owner.settings.*` 頁改成：編輯只更新 local draft，按「儲存」才寫入 `usePropertyConfig`；離開頁面若 dirty 會 `confirm`。
 
-- 頂端 header 縮小為一行：左側「胡桃民宿 · 業者後台 / 歡迎回來 陳先生」細字，右側加入「館別切換 dropdown」＋ 「⚙ 設定」＋「登出」icon button，整體高度 <56px。
-- Stats：改成 5 欄橫向卡片，加入左側細色條 (border-l-4)、tone 對應色的柔和背景、金額字加大 (text-3xl) 並用 tabular-nums；卡片加 hover:shadow 讓資訊感更重。
-- 新增「今日行程」小區塊：今日入住 X 組 / 今日退房 Y 組，用 timeline 樣式。
-- 「近期入住申請」提升為主角：卡片變大、加左側色條顯示狀態 tone、加入「訂單編號」「房間」「金額」欄，右側顯示「押金 pill」「金額 pill」。
-- **移除**：「入住表單設定」卡片（改成獨立 `/owner/settings/*` 頁）。
+## 4. 房型優先結構（依你的補充）
+資料層調整 `property-config.ts`：
+- 新增 `RoomTypeGroup { id, propertyId, name, description, bedType, depositAmount, guideNote, defaultDoorPasswordHint, keyPickupLocation? }`。
+- `Room` 精簡為 `{ id, roomTypeId, roomNumber, doorPassword?, note? }`。
+- 遷移現有 seed：把「101 松風雙人房 / 102 竹影四人房」升為兩個群組，其下各一房。
 
-## 二、搜尋 / 篩選強化 (`owner.submissions.index.tsx`)
+UI（`owner.settings.rooms.tsx` 全面重寫）：
+- 上方：房型群組列表（卡片式，可展開）。動作：新增群組、複製群組（含所有欄位、房間清空）。
+- 展開後：群組共用欄位（名稱、床型、押金、入住指引/取鑰匙位置）+ 房間清單（房號、密碼、備註）。
+- 篩選列：`全部 / 雙人床 / 單人床 / …` 依現有群組動態列出；可多選；下方顯示扁平的房間表可批次編輯密碼與房號。
+- 「複製此房 → 只改房號與密碼」按鈕。
 
-在既有篩選器頂端加：
-- 關鍵字搜尋框（姓名 / 電話 / 訂單編號 debounce 200ms）
-- 「館別」下拉（多館切換用）
-- 日期改為「入住日 range」（from / to）
-- 篩選結果數字放在右上，加「清除全部」
+## 5. 鑰匙 vs 密碼（房型群組層）
+- 群組欄位新增 `accessMode: "password" | "key"`。
+- `password` 模式：房間顯示「房門密碼」欄。
+- `key` 模式：房間僅顯示「房號」；群組顯示「取鑰匙位置 / 指引」單一欄，套用該群組所有房間。
+- 旅客端入住指引依所選房間的群組決定顯示密碼 or 取鑰匙資訊。
 
-## 三、設定中心（全新路由樹）
+## 6. 多館別 UX 與跨館複製
+- `OwnerShell` header 的館別切換由下拉改為明顯的分段控制：`[胡桃民宿] [安平九號] + ⋯` (icon + name)，active 有底色。
+- 頁面 heading 一律顯示「你正在編輯：{館名}」（黃色 pill）。
+- 每個設定頁（rules / payment / guide / house-rules / extra-fees / faq / passwords）加「從其他館別複製…」按鈕 → dialog 選擇來源館別 → 覆寫本館的該區資料（有 `confirm`）。
+- 資料層每項改為 `by propertyId` 的 map，例：`houseRulesByProperty: Record<string,string>`。
 
-新增 `src/routes/owner.settings.tsx` 作為 layout（左側 sub-nav），底下：
+## 7. 入住指引：可插入照片
+- `guide` 從純字串欄位改為 `blocks: Array<{ type:"text"|"image"; content:string; alt?:string }>`（每欄位獨立 blocks 陣列）。
+- 編輯器：每欄位下方「新增段落 / 新增圖片」按鈕；圖片透過 `<input type=file>` 讀為 dataURL 存 `usePropertyConfig`（未接 Cloud，先本地展示；日後可換 storage）。
+- 旅客端 `checkin.demo.guide.tsx`：圖片點擊開全螢幕 lightbox（新元件 `src/components/checkin/ImageLightbox.tsx`）。
 
-```
-/owner/settings/property        3.1 民宿資料 + 3.2 多館別列表
-/owner/settings/rooms           3.3 房間 / 單位
-/owner/settings/house-rules     3.4 入住須知編輯器
-/owner/settings/deposit         3.5 押金規則
-/owner/settings/payments        3.6 付款方式（匯款 + LINE Pay QR）
-/owner/settings/extra-fees      3.7 額外費用項目
-/owner/settings/guide           3.8 入住指引模板
-/owner/settings/passwords       3.9 密碼模板 + 3.10 釋出規則
-/owner/settings/faq             3.11 FAQ 編輯器
-```
+## 8. 設定側欄可用性（手機 + 桌機）
+- 側邊 nav 現有 9 項太長 → 分兩組：`民宿基本`（館別、房型、須知、指引、FAQ）、`交易與釋出`（押金、付款、額外費用、密碼釋出）。
+- 手機：側欄改為頂部 `Sheet`（漢堡開啟）；設定頁另加水平 `Tabs` 快速切換同組內頁。
+- 每項加圖示 + 一行說明，avoid label truncation。
 
-各頁重點：
+## 9. 對話：僅外部導流（簡版）
+- 新增設定頁 `owner.settings.contact.tsx`：欄位含 `contactChannels: Array<{ type:"line"|"whatsapp"|"phone"|"email"|"messenger"|"custom", label, value, enabled }>` 與 `contactNote`。
+- 旅客端：`GuestHome` 底部與 `checkin.demo.submitted` 加「聯絡屋主」區塊，列出啟用的 channel（icon + 一鍵 tel:/mailto:/line:// deep link）。
+- 每館獨立設定；預留 `chatEnabled: false` 旗標，之後要加站內聊天再開。
 
-- **3.1 民宿資料**：名稱、地址、聯絡電話、Email、Check-in / Check-out 時間、Logo。
-- **3.2 多館別**：`properties[]` 列表，可新增/編輯/刪除；每間館別獨立設定；儀表板頂端 dropdown 讀這裡。
-- **3.3 房間 / 單位**：`rooms[]`，欄位：房名、房型（雅房 / 套房 / 整棟）、所屬館別、床數、預設入住指引；旅客訂房頁多一步「選擇房間（可多選）」。
-- **3.4 入住須知**：純文字 + Markdown-lite（粗體、清單），儲存於 `houseRulesContent`；旅客端 `checkin.demo.house-rules.tsx` 讀取。
-- **3.5 押金**：三種模式 — 無押金 (0)、固定押金、按房型；`depositAmount: 0` → 押金頁完全跳過、房間密碼直接進入常規釋出流程。
-- **3.6 付款方式**：匯款帳號（銀行代碼 / 戶名 / 帳號）+ LINE Pay QR 上傳 + 付款說明文字。
-- **3.7 額外費用項目**：業者定義 `extraFeeCatalog: { id, name, unit, defaultAmount }[]`（寵物費、加床、烤肉、訪客、早餐…）；作為「入住申請」補款時的下拉選項。
-- **3.8 入住指引**：地址 / 停車 / 大門 / 房門 / 注意事項 / 緊急聯絡，各段落獨立可編輯。
-- **3.9 密碼模板**：`passwordTemplates[]`（大門 / 房間 / 鑰匙盒），每個房間可掛不同組。
-- **3.10 密碼釋出規則**：手動、定時（入住日 15:00）、條件式（押金已收 + 證件通過）。
-- **3.11 FAQ 編輯器**：分類 + 條目 CRUD，取代目前 hard-coded FAQ。
+## 技術要點（給開發者）
+- **檔案新增**：`src/hooks/useDirtyForm.ts`、`src/components/owner/SaveBar.tsx`、`src/components/owner/PropertySwitcher.tsx`、`src/components/owner/CopyFromPropertyButton.tsx`、`src/components/checkin/ImageLightbox.tsx`、`src/routes/owner.settings.contact.tsx`。
+- **檔案改寫**：`src/lib/property-config.ts`（RoomTypeGroup、blocks、by-property maps、contact channels、migration），`src/routes/owner.settings.rooms.tsx`（房型優先 UI + 篩選 + 複製），`owner.settings.guide.tsx`（blocks + 圖片），`owner.settings.house-rules.tsx` / `payments.tsx` / `deposit.tsx` / `extra-fees.tsx` / `faq.tsx` / `passwords.tsx`（改用 by-property + SaveBar），`owner.settings.tsx`（分組導覽 + mobile sheet），`owner.dashboard.tsx`（手機統計條 snap），`owner.settings.property.tsx`（PropertySwitcher）。
+- **資料遷移**：`property-config.ts` 內加 `migrate()`：偵測舊 `rooms[].name/type/beds` 結構自動建立群組並移轉。
+- **旅客端小改**：`checkin.demo.booking.tsx` 改依 `RoomTypeGroup` 分組顯示可選項；`checkin.demo.guide.tsx` 支援 blocks + lightbox；`GuestHome` / `submitted` 增聯絡屋主。
+- 全部維持在前端 store（zustand persist），本輪不動 Lovable Cloud。
 
-儲存：全部沿用 `zustand/persist`，新增 `src/lib/property-config.ts` 集中管理所有設定型別。
-
-## 四、多房訂單（單筆訂單 + 多房）
-
-**旅客端**：
-- `checkin.demo.booking.tsx` 加「入住房間」多選 checkbox（讀 `rooms[]`，依館別過濾）。
-- Store `checkin-store.ts` 新增 `selectedRoomIds: string[]`。
-- 押金頁：按選中房間數 × 每房押金加總（如 1 房 $1000 / 整棟 $6000 邏輯走「按房型」規則）。
-- 「入住須知」「入住指引」聚合顯示所有選中房間的內容。
-- 密碼寄出：一封信、多個房間密碼列表。
-
-**業者端**：
-- 申請詳情 (`owner.submissions.$id.tsx`) 明確顯示「房間 x N」，每間房獨立 pill 顯示密碼狀態；業者可個別點「釋出此房密碼」或「全部釋出」。
-- 儀表板列表顯示「訂單 A · 3 房」而非拆成 3 筆。
-
-## 五、獨立補款通知（額外費用）
-
-在 `owner.submissions.$id.tsx` 新增「補款項目」區塊：
-- 業者從 `extraFeeCatalog` 選項目、輸入金額 / 數量 / 備註 → 產生一筆 `SurchargeInvoice`（獨立於押金）。
-- 旅客端新增路由 `/checkin/demo/surcharge/$id` 顯示品項明細 + 業者 LINE Pay QR + 匯款資訊。
-- 儀表板 stat 新增「補款待收 N」。
-- 押金頁流程完全不受影響（依你的選擇）。
-
-## 六、視覺升級（維持暖陳日和 + 加強層次）
-
-配色：`#FFF8E7`（背景）/ `#FFD93D`（主色點綴）/ `#2B2B2B`（主字）/ `#8B7355`（次階木色）。
-
-- 業者後台加 `Sidebar`（shadcn sidebar，collapsible="icon"），左側 nav：儀表板 / 入住申請 / 補款 / 設定 / 帳號；主色條在 active item 左側 4px。
-- 卡片：`card-soft` 加 `shadow-[0_1px_0_rgba(139,115,85,0.08),0_8px_24px_-12px_rgba(139,115,85,0.15)]`，`rounded-2xl` → `rounded-xl` 更幹練。
-- 字體：headings 加 tracking-tight、資料類數字用 `font-variant-numeric: tabular-nums`。
-- 加 section divider（細木色線）與 breadcrumb（設定頁）。
-- Stat card icon 從實色圓角方塊改為「淺色底 + 主色 icon + 左細色條」。
-- 旅客端維持既有暖色手感，不動。
-
-## 七、檔案異動清單
-
-**新增**
-- `src/routes/owner.settings.tsx`（layout + sidebar）
-- `src/routes/owner.settings.property.tsx`
-- `src/routes/owner.settings.rooms.tsx`
-- `src/routes/owner.settings.house-rules.tsx`
-- `src/routes/owner.settings.deposit.tsx`
-- `src/routes/owner.settings.payments.tsx`
-- `src/routes/owner.settings.extra-fees.tsx`
-- `src/routes/owner.settings.guide.tsx`
-- `src/routes/owner.settings.passwords.tsx`
-- `src/routes/owner.settings.faq.tsx`
-- `src/routes/owner.settings.index.tsx`（redirect → property）
-- `src/routes/checkin.demo.surcharge.$id.tsx`
-- `src/components/owner/OwnerShell.tsx`（sidebar + header + 館別切換）
-- `src/components/owner/SettingsCard.tsx`
-- `src/lib/property-config.ts`（統一 config store：properties / rooms / passwords / feeCatalog / payment / rules）
-- `src/lib/surcharge-store.ts`
-
-**修改**
-- `src/routes/owner.dashboard.tsx`（縮小 header、放大列表、加今日行程、拆掉表單設定卡）
-- `src/routes/owner.submissions.index.tsx`（關鍵字 / 館別 / 日期 range）
-- `src/routes/owner.submissions.$id.tsx`（多房顯示、補款區塊、密碼分房釋出）
-- `src/lib/checkin-store.ts`（`selectedRoomIds`、`propertyId`）
-- `src/routes/checkin.demo.booking.tsx`（多房選擇）
-- `src/routes/checkin.demo.deposit.tsx`（0 押金跳過、按房型計算）
-- `src/routes/checkin.demo.house-rules.tsx`, `checkin.demo.guide.tsx`, `checkin.demo.faq.tsx`（讀業者設定）
-- `src/lib/property-settings.ts`（保留 backward compat，內部委派給 `property-config`）
-- `src/styles.css`（新增木色 token、shadow token、tabular-nums utility）
-
-## 技術備註
-
-- 全部 config 走 `zustand/persist`，用單一 root store 減少 hydration 問題；預設帶 seed 資料讓 Demo 一開就有內容。
-- 密碼釋出規則為前端邏輯（無 backend），Demo 用 setTimeout 模擬定時釋出。
-- 多館切換用 `currentPropertyId` global state，所有 owner 頁面讀取此值過濾資料。
-- 補款頁走與押金頁相同的 QR / 匯款 UI 元件，抽 `PaymentPanel` 共用。
-- 3.4 / 3.8 / 3.11 富文本先用 `<textarea>` + 簡易 markdown render（避免引入 heavy editor）。
-
-## 未在本輪處理
-
-- 真實後端 / 資料庫（目前仍為 localStorage demo）
-- Email / SMS 實際寄送
-- 訪客登入 / 帳號系統
+## 驗收
+- 手機視窗：五顆卡橫向、佔約 30% 高，近期申請立即可見。
+- 房型頁：可新增群組、複製群組、依房型 tag 篩選、批次改密碼。
+- 每個設定頁：改動後底部出現「未儲存 · 儲存 / 捨棄」；儲存後顯示時間戳。
+- 切換館別：header 高亮 + 頁面 pill 顯示；每頁可「從其他館別複製」。
+- 入住指引：可插圖，旅客端點擊放大。
+- 旅客端 submitted / home：可看到啟用的聯絡管道連結。
