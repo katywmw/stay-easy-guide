@@ -238,6 +238,124 @@ function SubmissionDetail() {
         </div>
       </OwnerCard>
 
+      {/* Info-updated notifier — appears after passwords have been released */}
+      <div className="mt-4">
+        <OwnerCard
+          title="已寄出的入住資訊"
+          desc="若房號或密碼有更動，可重新通知旅客，並追蹤是否已收到最新資訊。"
+          actions={
+            record ? (
+              <span className="rounded-full bg-secondary px-2.5 py-1 text-[10px] font-bold text-foreground">
+                第 {record.lastVersion} 版
+              </span>
+            ) : null
+          }
+        >
+          {/* Drift banner */}
+          {record && drift && (
+            <div className="mb-3 flex flex-wrap items-start gap-3 rounded-lg border border-warning bg-warning-soft/70 p-3">
+              <AlertTriangle className="mt-0.5 h-4 w-4 text-[oklch(0.55_0.13_75)]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-foreground">資訊已變更，尚未通知旅客</p>
+                <p className="mt-0.5 text-[11px] text-muted-foreground">
+                  變更內容：{diffSnapshots(record.snapshot, currentSnapshot)}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  const diff = diffSnapshots(record.snapshot, currentSnapshot);
+                  updates.notify(submission.id, currentSnapshot, diff);
+                  toast.success(`已寄出更新給旅客（第 ${record.lastVersion + 1} 版）`);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                重新寄送更新
+              </button>
+            </div>
+          )}
+
+          {!record && (
+            <div className="mb-3 rounded-lg border border-dashed border-border bg-secondary/30 p-3">
+              <p className="text-xs text-muted-foreground">
+                尚未寄出入住資訊。核准入住並釋出密碼後，點下方按鈕通知旅客。
+              </p>
+            </div>
+          )}
+
+          {/* Current snapshot */}
+          <div className="mb-3 space-y-2">
+            {currentSnapshot.map((r) => {
+              const prevSnap = record?.snapshot.find((x) => x.roomId === r.roomId);
+              const changed = prevSnap && (
+                prevSnap.roomNumber !== r.roomNumber ||
+                prevSnap.displayName !== r.displayName ||
+                prevSnap.doorPassword !== r.doorPassword ||
+                prevSnap.gatePassword !== r.gatePassword
+              );
+              const title = r.displayName || r.roomNumber || "未命名";
+              return (
+                <div key={r.roomId} className="rounded-lg border border-[oklch(0.94_0.02_82)] bg-card p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-sm font-bold text-foreground">{title}</p>
+                    {r.displayName && r.roomNumber && (
+                      <span className="text-[11px] text-muted-foreground">房號 {r.roomNumber}</span>
+                    )}
+                    {changed && (
+                      <span className="rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">已更新</span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-[11px] text-muted-foreground [font-variant-numeric:tabular-nums]">
+                    大門 {r.gatePassword || "—"} · 房門 {r.doorPassword || "—"}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Status + actions */}
+          <div className="flex flex-wrap items-center gap-2">
+            {record ? (
+              <>
+                <StatusPill
+                  label={
+                    record.guestAcknowledgedAt
+                      ? `旅客已收到更新 · ${new Date(record.guestAcknowledgedAt).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })}`
+                      : `已於 ${new Date(record.lastNotifiedAt).toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit" })} 寄出 · 尚未確認`
+                  }
+                  tone={record.guestAcknowledgedAt ? "success" : "warning"}
+                />
+                {!record.guestAcknowledgedAt && (
+                  <button
+                    onClick={() => {
+                      updates.acknowledge(submission.id);
+                      toast.success("已標記旅客已讀（模擬）");
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary"
+                  >
+                    <Eye className="h-3 w-3" />
+                    模擬旅客已讀
+                  </button>
+                )}
+              </>
+            ) : (
+              <button
+                onClick={() => {
+                  updates.notify(submission.id, currentSnapshot, "首次寄出入住資訊");
+                  toast.success("已寄出入住資訊給旅客");
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
+              >
+                <BellRing className="h-3.5 w-3.5" />
+                首次寄出入住資訊
+              </button>
+            )}
+          </div>
+        </OwnerCard>
+      </div>
+
+
+
       <div className="mt-4">
         <OwnerCard
           title="補款 / 額外費用"
