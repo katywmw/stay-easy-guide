@@ -30,6 +30,8 @@ export type AccessMode = "password" | "key";
  * e.g. 「雙人床套房」「單人床」「整棟包棟」. Shared: description, deposit,
  * access mode (password vs key), guide notes.
  */
+export type GatePasswordMode = "sharedProperty" | "sharedGroup" | "perRoom";
+
 export interface RoomTypeGroup {
   id: string;
   propertyId: string;
@@ -40,7 +42,9 @@ export interface RoomTypeGroup {
   accessMode: AccessMode;     // 密碼 / 鑰匙
   keyPickupLocation?: string; // accessMode = key 時使用
   guideNote?: string;         // 該房型的入住指引補充
-  gatePasswordShared?: string; // 大門密碼（同一館別可能相同）
+  gatePasswordShared?: string; // 大門密碼（此房型群組共用，用於 sharedGroup 模式）
+  /** 大門密碼設定模式：整館共用 / 房型群組共用 / 每房獨立。預設 sharedProperty。 */
+  gatePasswordMode?: GatePasswordMode;
 }
 
 export interface Room {
@@ -49,6 +53,8 @@ export interface Room {
   /** Optional — new rooms belong to a group; migrated rooms may not have one initially. */
   groupId?: string;
   roomNumber?: string;
+  /** 房間別名（例：Happy 101 / 松風），未設定則顯示 roomNumber。 */
+  displayName?: string;
   /** Legacy fields kept for backward compatibility. */
   name: string;
   type: RoomType;
