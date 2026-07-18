@@ -388,8 +388,8 @@ function GroupPasswordCard({
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Input
                     label="房門密碼"
-                    value={showAll ? rd.doorPassword : maskValue(rd.doorPassword)}
-                    onChange={(v) => showAll && patchRoom(r.id, { doorPassword: v })}
+                    value={rd.doorPassword}
+                    onChange={(v) => patchRoom(r.id, { doorPassword: v })}
                     placeholder="4-6 位數字"
                   />
                   <Input
