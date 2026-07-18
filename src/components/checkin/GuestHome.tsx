@@ -172,6 +172,7 @@ export function GuestHome() {
           </p>
         </div>
       </div>
+      <GuestChatBubble threadId="guest-demo" counterpartName="胡桃民宿" />
     </div>
   );
 }
