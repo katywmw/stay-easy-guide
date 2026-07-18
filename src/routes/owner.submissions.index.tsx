@@ -35,9 +35,11 @@ function SubmissionsList() {
   const [dateTo, setDateTo] = useState("");
   const [keyword, setKeyword] = useState("");
 
+  const liveItems = useLiveSubmissions((s) => s.items);
   const list = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
-    return demoSubmissions.filter((r) => {
+    const all = [...liveItems, ...demoSubmissions];
+    return all.filter((r) => {
       if (scope !== "all" && r.propertyId !== scope) return false;
       if (status !== "all" && r.status !== status) return false;
       if (platform !== "all" && r.platform !== platform) return false;
