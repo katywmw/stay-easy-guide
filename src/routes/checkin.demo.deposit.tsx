@@ -35,7 +35,12 @@ function DepositPage() {
     settings.petFeeEnabled && s.hasPet === "yes" && settings.petFeePerNight > 0
       ? settings.petFeePerNight * nights
       : 0;
-  const total = deposit + petFee;
+  // Owner-defined extra fees the guest confirmed "yes" to during check-in
+  const confirmedExtras = config.extraFeeCatalog
+    .filter((f) => f.confirmAtCheckin && s.extraFeeAnswers[f.id] === "yes")
+    .map((f) => ({ id: f.id, name: f.name, unit: f.unit, amount: f.defaultAmount }));
+  const extrasSum = confirmedExtras.reduce((sum, x) => sum + x.amount, 0);
+  const total = deposit + petFee + extrasSum;
   const fmt = (n: number) => `NT$ ${n.toLocaleString()}`;
 
   const selectedRooms = config.rooms.filter((r) => s.selectedRoomIds.includes(r.id));
