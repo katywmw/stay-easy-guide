@@ -11,7 +11,7 @@ export const Route = createFileRoute("/owner/settings/extra-fees")({
 });
 
 function emptyFee(): Omit<ExtraFeeItem, "id"> {
-  return { name: "", unit: "每次", defaultAmount: 0 };
+  return { name: "", unit: "每次", defaultAmount: 0, confirmAtCheckin: false };
 }
 
 function ExtraFeesSettings() {
