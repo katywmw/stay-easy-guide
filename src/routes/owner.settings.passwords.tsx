@@ -433,7 +433,7 @@ function GroupPasswordCard({
       ) : (
         <div className="space-y-2">
           {rooms.map((r) => {
-            const rd = draft.rooms[r.id] ?? { doorPassword: "", note: "" };
+            const rd = draft.rooms[r.id] ?? { doorPassword: "", gatePassword: "", note: "" };
             const title = r.displayName?.trim() || r.roomNumber || "未命名";
             return (
               <div
@@ -448,7 +448,15 @@ function GroupPasswordCard({
                     </span>
                   )}
                 </div>
-                <div className="grid gap-2 sm:grid-cols-2">
+                <div className={`grid gap-2 ${showGatePerRoom ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+                  {showGatePerRoom && (
+                    <Input
+                      label="大門密碼"
+                      value={rd.gatePassword}
+                      onChange={(v) => patchRoom(r.id, { gatePassword: v })}
+                      placeholder="例：9945"
+                    />
+                  )}
                   <Input
                     label="房門密碼"
                     value={rd.doorPassword}
