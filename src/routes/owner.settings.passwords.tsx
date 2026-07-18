@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Key, Lock, Save, Check, ChevronDown, ChevronUp, Search, Eye, EyeOff } from "lucide-react";
+import { Key, Lock, Save, Check, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
