@@ -449,44 +449,86 @@ function GroupPasswordCard({
       ) : (
         <div className="space-y-2">
           {rooms.map((r) => {
-            const rd = draft.rooms[r.id] ?? { doorPassword: "", gatePassword: "", note: "" };
+            const rd =
+              draft.rooms[r.id] ?? {
+                doorPassword: "",
+                gatePassword: "",
+                note: "",
+                useKey: false,
+                keyPickupLocation: "",
+                keyPickupMedia: [],
+              };
             const title = r.displayName?.trim() || r.roomNumber || "未命名";
             return (
               <div
                 key={r.id}
                 className="rounded-lg border border-[oklch(0.94_0.02_82)] bg-card p-3"
               >
-                <div className="mb-2 flex flex-wrap items-baseline gap-2">
-                  <p className="text-sm font-bold text-foreground">{title}</p>
-                  {r.displayName && r.roomNumber && (
-                    <span className="text-[11px] text-muted-foreground">
-                      房號 {r.roomNumber}
-                    </span>
-                  )}
-                </div>
-                <div className={`grid gap-2 ${showGatePerRoom ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
-                  {showGatePerRoom && (
-                    <Input
-                      label="大門密碼"
-                      value={rd.gatePassword}
-                      onChange={(v) => patchRoom(r.id, { gatePassword: v })}
-                      placeholder="例：9945"
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <p className="text-sm font-bold text-foreground">{title}</p>
+                    {r.displayName && r.roomNumber && (
+                      <span className="text-[11px] text-muted-foreground">
+                        房號 {r.roomNumber}
+                      </span>
+                    )}
+                  </div>
+                  <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary">
+                    <input
+                      type="checkbox"
+                      checked={rd.useKey}
+                      onChange={(e) => patchRoom(r.id, { useKey: e.target.checked })}
+                      className="h-3.5 w-3.5 accent-[oklch(0.75_0.14_85)]"
                     />
-                  )}
-                  <Input
-                    label="房門密碼"
-                    value={rd.doorPassword}
-                    onChange={(v) => patchRoom(r.id, { doorPassword: v })}
-                    placeholder="4-6 位數字"
-                  />
-                  <Input
-                    label="備註"
-                    full
-                    value={rd.note}
-                    onChange={(v) => patchRoom(r.id, { note: v })}
-                    placeholder="例：提早入住需重設 / 週末不同"
-                  />
+                    <Key className="h-3 w-3" /> 使用鑰匙
+                  </label>
                 </div>
+                {rd.useKey ? (
+                  <div className="space-y-2">
+                    <Input
+                      label="取鑰匙位置與方式"
+                      full
+                      value={rd.keyPickupLocation}
+                      onChange={(v) => patchRoom(r.id, { keyPickupLocation: v })}
+                      placeholder="例：一樓門口鑰匙盒 3 號格（密碼 5588）"
+                    />
+                    <Input
+                      label="備註"
+                      full
+                      value={rd.note}
+                      onChange={(v) => patchRoom(r.id, { note: v })}
+                      placeholder="例：週末改由櫃檯領取"
+                    />
+                    <KeyPickupMedia
+                      media={rd.keyPickupMedia}
+                      onChange={(m) => patchRoom(r.id, { keyPickupMedia: m })}
+                    />
+                  </div>
+                ) : (
+                  <div className={`grid gap-2 ${showGatePerRoom ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+                    {showGatePerRoom && (
+                      <Input
+                        label="大門密碼"
+                        value={rd.gatePassword}
+                        onChange={(v) => patchRoom(r.id, { gatePassword: v })}
+                        placeholder="例：9945"
+                      />
+                    )}
+                    <Input
+                      label="房門密碼"
+                      value={rd.doorPassword}
+                      onChange={(v) => patchRoom(r.id, { doorPassword: v })}
+                      placeholder="4-6 位數字"
+                    />
+                    <Input
+                      label="備註"
+                      full
+                      value={rd.note}
+                      onChange={(v) => patchRoom(r.id, { note: v })}
+                      placeholder="例：提早入住需重設 / 週末不同"
+                    />
+                  </div>
+                )}
               </div>
             );
           })}
