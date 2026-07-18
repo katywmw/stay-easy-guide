@@ -75,13 +75,6 @@ function ReviewPage() {
           <StatusPill label={dp.label} tone={dp.tone} />
         </div>
 
-        <StatusBlock
-          title="常見問題"
-          editTo="/checkin/demo/faq"
-          ok={s.faqRead}
-          okText="已閱讀"
-          failText="尚未閱讀"
-        />
 
         <StatusBlock
           title="入住須知"
