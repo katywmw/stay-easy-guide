@@ -1205,4 +1205,21 @@ function InlinePasswordEditor({
   );
 }
 
+function ChatEnabledToggle() {
+  const { enabled, setEnabled } = useChatStore();
+  return (
+    <button
+      onClick={() => setEnabled(!enabled)}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+        enabled
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+      }`}
+    >
+      {enabled ? "站內訊息：開啟" : "站內訊息：關閉"}
+    </button>
+  );
+}
+
+
 
