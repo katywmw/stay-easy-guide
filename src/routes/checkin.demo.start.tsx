@@ -18,7 +18,7 @@ const steps = [
   { icon: BookOpenCheck, title: "確認訂房資料", desc: "訂房平台、姓名、日期" },
   { icon: Users, title: "填寫入住人資訊", desc: "入住人數、抵達時間、備註" },
   { icon: IdCard, title: "上傳證件資料", desc: "供民宿核對入住身分" },
-  { icon: Wallet, title: "確認押金資訊", desc: "付款方式與說明" },
+  { icon: Wallet, title: "確認押金和尾款資訊 (如適用)", desc: "付款方式與說明" },
   { icon: HelpCircle, title: "閱讀常見問題與入住須知", desc: "並勾選同意" },
   { icon: Send, title: "送出給民宿審核", desc: "民宿確認後開放入住指引" },
 ];
