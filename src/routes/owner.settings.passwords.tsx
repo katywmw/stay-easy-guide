@@ -289,9 +289,18 @@ function PasswordGroupsSection({
   );
 }
 
+type RoomDraft = {
+  doorPassword: string;
+  gatePassword: string;
+  note: string;
+  useKey: boolean;
+  keyPickupLocation: string;
+  keyPickupMedia: string[];
+};
+
 type GroupDraft = {
   keyPickupLocation: string;
-  rooms: Record<string, { doorPassword: string; gatePassword: string; note: string }>;
+  rooms: Record<string, RoomDraft>;
 };
 
 function buildDraft(g: RoomTypeGroup, rooms: Room[]): GroupDraft {
@@ -304,6 +313,9 @@ function buildDraft(g: RoomTypeGroup, rooms: Room[]): GroupDraft {
           doorPassword: r.doorPassword ?? "",
           gatePassword: r.gatePassword ?? "",
           note: r.note ?? "",
+          useKey: !!r.useKey,
+          keyPickupLocation: r.keyPickupLocation ?? "",
+          keyPickupMedia: r.keyPickupMedia ?? [],
         },
       ]),
     ),
