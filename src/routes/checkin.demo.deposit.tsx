@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Upload, Info, CheckCircle2 } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton, ChipGroup } from "@/components/checkin/Fields";
-import { FaqAccordion } from "@/components/checkin/FaqAccordion";
+
 import { useCheckinStore } from "@/lib/checkin-store";
 import { usePropertySettings } from "@/lib/property-settings";
 import { usePropertyConfig, computeDeposit } from "@/lib/property-config";
