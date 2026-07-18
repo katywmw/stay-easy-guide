@@ -358,6 +358,9 @@ function GroupPasswordCard({
         doorPassword: r.doorPassword,
         gatePassword: r.gatePassword,
         note: r.note,
+        useKey: r.useKey,
+        keyPickupLocation: r.keyPickupLocation,
+        keyPickupMedia: r.keyPickupMedia,
       }),
     );
     setSavedAt(new Date());
