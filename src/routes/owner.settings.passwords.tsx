@@ -61,45 +61,92 @@ function PasswordSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propKey]);
 
+  const gateMode: PropertyGateMode = property?.gateMode ?? "shared";
+  const setGateMode = (m: PropertyGateMode) => {
+    if (property) {
+      updateProperty(property.id, { gateMode: m });
+      toast.success("已切換大門密碼模式");
+    }
+  };
+
   return (
     <div className="space-y-4">
       <Toaster position="top-center" richColors />
       <PropertyBadge />
 
-      {/* Property-wide gate password */}
+      {/* Gate mode selector */}
       <OwnerCard
-        title="大門密碼（整館預設）"
-        desc="整館共用一組大門密碼。修改後請按「儲存」。"
+        title="大門密碼模式"
+        desc="選擇整館的大門密碼管理方式。切換後下方欄位會自動變更。"
       >
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="min-w-0 max-w-xs flex-1">
-            <Input
-              label={`${property?.name ?? ""} · 大門密碼`}
-              value={gateDraft}
-              onChange={(v) => setGateDraft(v)}
-              placeholder="例：9945"
-            />
-          </div>
-          <button
-            onClick={() => {
-              if (property) {
-                updateProperty(property.id, { gatePassword: gateDraft });
-                toast.success("已儲存整館大門密碼");
-              }
-            }}
-            disabled={!gateDirty}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
-          >
-            <Save className="h-3.5 w-3.5" />
-            儲存
-          </button>
+        <div className="grid gap-2 sm:grid-cols-3">
+          {(
+            [
+              { v: "shared", label: "整館共用大門密碼", desc: "只需維護一組大門密碼，各房另設房門密碼。" },
+              { v: "individual", label: "各房獨立設定", desc: "每間房間分別設定大門密碼與房門密碼。" },
+              { v: "key", label: "使用鑰匙", desc: "無密碼；填寫取鑰匙位置、照片或影片。" },
+            ] as { v: PropertyGateMode; label: string; desc: string }[]
+          ).map((m) => (
+            <label
+              key={m.v}
+              className={`flex cursor-pointer flex-col gap-1 rounded-lg border p-3 transition ${
+                gateMode === m.v
+                  ? "border-primary bg-primary-soft/40"
+                  : "border-[oklch(0.94_0.02_82)] hover:bg-secondary/40"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  checked={gateMode === m.v}
+                  onChange={() => setGateMode(m.v)}
+                  className="h-4 w-4 accent-[oklch(0.75_0.14_85)]"
+                />
+                <span className="text-sm font-bold text-foreground">{m.label}</span>
+              </div>
+              <p className="pl-6 text-[11px] leading-relaxed text-muted-foreground">{m.desc}</p>
+            </label>
+          ))}
         </div>
       </OwnerCard>
+
+      {/* Property-wide gate password — only in shared mode */}
+      {gateMode === "shared" && (
+        <OwnerCard
+          title="大門密碼（整館預設）"
+          desc="整館共用一組大門密碼。修改後請按「儲存」。"
+        >
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-0 max-w-xs flex-1">
+              <Input
+                label={`${property?.name ?? ""} · 大門密碼`}
+                value={gateDraft}
+                onChange={(v) => setGateDraft(v)}
+                placeholder="例：9945"
+              />
+            </div>
+            <button
+              onClick={() => {
+                if (property) {
+                  updateProperty(property.id, { gatePassword: gateDraft });
+                  toast.success("已儲存整館大門密碼");
+                }
+              }}
+              disabled={!gateDirty}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40"
+            >
+              <Save className="h-3.5 w-3.5" />
+              儲存
+            </button>
+          </div>
+        </OwnerCard>
+      )}
 
       {/* Per-group password cards */}
       <PasswordGroupsSection
         groups={groups}
         rooms={rooms}
+        gateMode={gateMode}
         onSaveGroup={(id, patch) => updateRoomGroup(id, patch)}
         onSaveRoom={(id, patch) => updateRoom(id, patch)}
       />
