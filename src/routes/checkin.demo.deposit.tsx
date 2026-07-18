@@ -219,14 +219,12 @@ function DepositPage() {
         </div>
       </div>
 
-      <FaqAccordion category="deposit" title="常見問題（押金相關）" />
-
       <div className="mt-6">
         <PrimaryButton
           disabled={!canNext}
-          onClick={() => nav({ to: "/checkin/demo/faq" })}
+          onClick={() => nav({ to: "/checkin/demo/house-rules" })}
         >
-          下一步：常見問題與入住須知
+          下一步：入住須知
         </PrimaryButton>
       </div>
     </PhoneShell>
