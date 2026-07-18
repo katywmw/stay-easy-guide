@@ -233,3 +233,152 @@ function QuickLink({
     </Link>
   );
 }
+
+// ---------------- Calendar Panel ----------------
+function CalendarPanel({
+  submissions,
+  properties,
+}: {
+  submissions: typeof demoSubmissions;
+  properties: { id: string; name: string }[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [cursor, setCursor] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+
+  const year = cursor.getFullYear();
+  const month = cursor.getMonth();
+  const first = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const leading = first.getDay(); // 0=Sun
+
+  // Map YYYY-MM-DD -> array of { propertyId, name }
+  const byDay = useMemo(() => {
+    const map = new Map<string, { propertyId: string; name: string }[]>();
+    for (const s of submissions) {
+      const inD = new Date(s.checkIn);
+      const outD = new Date(s.checkOut);
+      for (let d = new Date(inD); d < outD; d.setDate(d.getDate() + 1)) {
+        const key = d.toISOString().slice(0, 10);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push({ propertyId: s.propertyId, name: s.name });
+      }
+    }
+    return map;
+  }, [submissions]);
+
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < leading; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const today = new Date();
+  const todayKey = today.toISOString().slice(0, 10);
+
+  const monthLabel = `${year} 年 ${month + 1} 月`;
+
+  return (
+    <OwnerCard
+      title="入住行事曆"
+      desc="每日入住組數，可依館別顏色辨識"
+      actions={
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+        >
+          {open ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+          {open ? "收合" : "展開"}
+        </button>
+      }
+    >
+      {!open ? (
+        <p className="text-xs text-muted-foreground">
+          <CalendarIcon className="mr-1 inline h-3.5 w-3.5" />
+          點「展開」以檢視 {monthLabel} 入住分布。
+        </p>
+      ) : (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <button
+              onClick={() => setCursor(new Date(year, month - 1, 1))}
+              className="grid h-7 w-7 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+              aria-label="上一月"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <p className="text-sm font-bold text-foreground [font-variant-numeric:tabular-nums]">
+              {monthLabel}
+            </p>
+            <button
+              onClick={() => setCursor(new Date(year, month + 1, 1))}
+              className="grid h-7 w-7 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+              aria-label="下一月"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-muted-foreground">
+            {["日", "一", "二", "三", "四", "五", "六"].map((d) => (
+              <div key={d}>{d}</div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {cells.map((d, i) => {
+              if (d === null) return <div key={i} className="h-14" />;
+              const key = new Date(year, month, d).toISOString().slice(0, 10);
+              const list = byDay.get(key) ?? [];
+              const isToday = key === todayKey;
+              return (
+                <div
+                  key={i}
+                  className={`flex h-14 flex-col rounded-lg border p-1 text-[10px] ${
+                    isToday
+                      ? "border-primary bg-primary-soft/40"
+                      : "border-[oklch(0.94_0.02_82)] bg-card"
+                  }`}
+                >
+                  <span className="font-bold text-foreground [font-variant-numeric:tabular-nums]">
+                    {d}
+                  </span>
+                  <div className="mt-auto flex flex-wrap items-end gap-0.5">
+                    {list.slice(0, 4).map((g, idx) => {
+                      const c = propertyColors(g.propertyId);
+                      return (
+                        <span
+                          key={idx}
+                          className={`h-1.5 w-1.5 rounded-full ${c.dot}`}
+                          title={`${g.name} · ${properties.find((p) => p.id === g.propertyId)?.name ?? ""}`}
+                        />
+                      );
+                    })}
+                    {list.length > 0 && (
+                      <span className="ml-auto text-[9px] font-bold text-foreground [font-variant-numeric:tabular-nums]">
+                        {list.length}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+            <span>圖例：</span>
+            {properties.map((p) => {
+              const c = propertyColors(p.id);
+              return (
+                <span key={p.id} className="inline-flex items-center gap-1">
+                  <span className={`h-1.5 w-1.5 rounded-full ${c.dot}`} />
+                  {p.name}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </OwnerCard>
+  );
+}
