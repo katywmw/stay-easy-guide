@@ -97,6 +97,7 @@ const initial = {
   hasPet: "" as const,
   needParking: "" as const,
   specialNotes: "",
+  extraFeeAnswers: {} as Record<string, "yes" | "no">,
   idUploaded: false,
   idConsent: false,
   depositMethod: "",
