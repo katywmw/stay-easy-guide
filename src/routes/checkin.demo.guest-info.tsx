@@ -9,6 +9,7 @@ import {
 } from "@/components/checkin/Fields";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { usePropertySettings } from "@/lib/property-settings";
+import { usePropertyConfig } from "@/lib/property-config";
 import { StepBar } from "./checkin.demo.booking";
 
 export const Route = createFileRoute("/checkin/demo/guest-info")({
