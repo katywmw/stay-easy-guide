@@ -439,13 +439,66 @@ function GroupPasswordCard({
           )}
         </div>
       ) : isKey ? (
-        <Input
-          label="取鑰匙位置與方式"
-          full
-          value={draft.keyPickupLocation}
-          onChange={(v) => setDraft((d) => ({ ...d, keyPickupLocation: v }))}
-          placeholder="例：民宿門口右側鑰匙盒（密碼 5588）"
-        />
+        <div className="space-y-2">
+          <Input
+            label="此房型共用取鑰匙位置（可在下方各房另設）"
+            full
+            value={draft.keyPickupLocation}
+            onChange={(v) => setDraft((d) => ({ ...d, keyPickupLocation: v }))}
+            placeholder="例：民宿門口右側鑰匙盒（密碼 5588）"
+          />
+          {rooms.map((r) => {
+            const rd = draft.rooms[r.id] ?? {
+              doorPassword: "",
+              gatePassword: "",
+              note: "",
+              useKey: true,
+              keyPickupLocation: "",
+              keyPickupMedia: [],
+            };
+            const title = r.displayName?.trim() || r.roomNumber || "未命名";
+            return (
+              <div
+                key={r.id}
+                className="rounded-lg border border-[oklch(0.94_0.02_82)] bg-card p-3"
+              >
+                <div className="mb-2 flex flex-wrap items-baseline gap-2">
+                  <p className="text-sm font-bold text-foreground">{title}</p>
+                  {r.displayName && r.roomNumber && (
+                    <span className="text-[11px] text-muted-foreground">
+                      房號 {r.roomNumber}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Input
+                    label="取鑰匙位置（此房，可留白沿用房型共用）"
+                    full
+                    value={rd.keyPickupLocation}
+                    onChange={(v) => patchRoom(r.id, { keyPickupLocation: v })}
+                    placeholder="例：一樓門口鑰匙盒 3 號格"
+                  />
+                  <Input
+                    label="備註"
+                    full
+                    value={rd.note}
+                    onChange={(v) => patchRoom(r.id, { note: v })}
+                    placeholder="例：週末改由櫃檯領取"
+                  />
+                  <KeyPickupMedia
+                    media={rd.keyPickupMedia}
+                    onChange={(m) => patchRoom(r.id, { keyPickupMedia: m })}
+                  />
+                </div>
+              </div>
+            );
+          })}
+          {rooms.length === 0 && (
+            <p className="rounded-lg border border-dashed border-border bg-card p-6 text-center text-xs text-muted-foreground">
+              此房型尚未新增房間，請至「房型與房間」頁面新增。
+            </p>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           {rooms.map((r) => {
