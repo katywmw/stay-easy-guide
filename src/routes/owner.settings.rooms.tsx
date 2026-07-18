@@ -497,7 +497,7 @@ function RoomRow({
 }
 
 
-function KeyPickupMedia({
+export function KeyPickupMedia({
   media,
   onChange,
 }: {

@@ -74,6 +74,12 @@ export interface Room {
   doorPassword?: string;
   gatePassword?: string;
   note?: string;
+  /** 此房間單獨改用實體鑰匙（覆寫房型設定）。 */
+  useKey?: boolean;
+  /** 此房間的取鑰匙位置說明（useKey = true 時使用）。 */
+  keyPickupLocation?: string;
+  /** 此房間的取鑰匙照片 / 影片 (data URLs)。 */
+  keyPickupMedia?: string[];
 }
 
 export type DepositMode = "none" | "fixed" | "perRoom";
