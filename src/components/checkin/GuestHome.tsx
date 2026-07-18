@@ -3,6 +3,7 @@ import { Star, MapPin, ShieldCheck, Wifi, Car, Coffee, Wind, ArrowRight } from "
 import heroImg from "@/assets/hero-minsu.jpg";
 import { usePropertyConfig } from "@/lib/property-config";
 import { channelIcon, channelHref } from "@/routes/owner.settings.contact";
+import { GuestChatBubble } from "@/components/chat/ChatPanel";
 
 const AMENITIES = [
   { icon: Wifi, label: "無線網路" },
