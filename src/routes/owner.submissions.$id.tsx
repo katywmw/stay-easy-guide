@@ -508,6 +508,22 @@ function SubmissionDetail() {
         </OwnerCard>
       </div>
 
+      {/* Guest ↔ Owner chat */}
+      <div className="mt-4">
+        <OwnerCard
+          title="與旅客訊息"
+          desc="站內即時聯絡；若使用外部通訊軟體可於下方關閉。"
+          actions={<ChatEnabledToggle />}
+        >
+          <ChatPanel
+            threadId="guest-demo"
+            viewerRole="owner"
+            counterpartName={submission.name}
+            fallbackNote="站內訊息已關閉，旅客會看到您提供的外部聯絡方式。"
+          />
+        </OwnerCard>
+      </div>
+
       {/* 補款 / 額外費用 / 要求補件 — placed right under ID/payment */}
       <div className="mt-4">
         <OwnerCard
