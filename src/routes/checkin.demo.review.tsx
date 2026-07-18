@@ -28,8 +28,8 @@ function ReviewPage() {
   };
 
   return (
-    <PhoneShell title="檢查資料" subtitle="步驟 6 / 6" backTo="/checkin/demo/house-rules">
-      <StepBar current={6} />
+    <PhoneShell title="檢查資料" subtitle="步驟 5 / 5" backTo="/checkin/demo/house-rules">
+      <StepBar current={5} />
 
       <div className="mt-4 space-y-3">
         <SummaryBlock

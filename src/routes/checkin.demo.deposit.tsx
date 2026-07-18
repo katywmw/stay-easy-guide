@@ -51,7 +51,7 @@ function DepositPage() {
     return (
       <PhoneShell
         title="押金資訊"
-        subtitle="步驟 4 / 6"
+        subtitle="步驟 4 / 5"
         backTo="/checkin/demo/id-upload"
       >
         <StepBar current={4} />
@@ -63,7 +63,7 @@ function DepositPage() {
           </p>
         </div>
         <div className="mt-6">
-          <PrimaryButton onClick={() => nav({ to: "/checkin/demo/faq" })}>
+          <PrimaryButton onClick={() => nav({ to: "/checkin/demo/house-rules" })}>
             下一步:常見問題與入住須知
           </PrimaryButton>
         </div>
@@ -76,7 +76,7 @@ function DepositPage() {
   return (
     <PhoneShell
       title="押金資訊"
-      subtitle="步驟 4 / 6"
+      subtitle="步驟 4 / 5"
       backTo="/checkin/demo/id-upload"
     >
       <StepBar current={4} />
