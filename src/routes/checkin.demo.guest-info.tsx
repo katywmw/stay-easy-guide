@@ -21,11 +21,15 @@ function GuestInfoPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
   const { askParking, askPet } = usePropertySettings();
+  const { extraFeeCatalog } = usePropertyConfig();
+  const checkinFees = extraFeeCatalog.filter((f) => f.confirmAtCheckin);
+  const allFeesAnswered = checkinFees.every((f) => s.extraFeeAnswers[f.id]);
   const canNext =
     s.guestCount &&
     s.arrivalTime &&
     (!askPet || s.hasPet) &&
-    (!askParking || s.needParking);
+    (!askParking || s.needParking) &&
+    allFeesAnswered;
 
   return (
     <PhoneShell
