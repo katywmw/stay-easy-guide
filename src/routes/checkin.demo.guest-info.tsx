@@ -29,7 +29,7 @@ function GuestInfoPage() {
   return (
     <PhoneShell
       title="入住人資訊"
-      subtitle="步驟 2 / 6"
+      subtitle="步驟 2 / 5"
       backTo="/checkin/demo/booking"
     >
       <StepBar current={2} />
