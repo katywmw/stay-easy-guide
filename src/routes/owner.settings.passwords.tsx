@@ -4,6 +4,7 @@ import { Key, Lock, Save, Check, ChevronDown, ChevronUp, Search } from "lucide-r
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
+import { KeyPickupMedia } from "./owner.settings.rooms";
 import {
   usePropertyConfig,
   type PasswordReleaseMode,
