@@ -13,6 +13,7 @@ import { useLiveSubmissions } from "@/lib/live-submissions";
 import { useSurchargeStore } from "@/lib/surcharge-store";
 import { useRoomAssignments } from "@/lib/room-assignments";
 import { useSubmissionUpdates } from "@/lib/submission-updates";
+import { useChatStore } from "@/lib/chat-store";
 
 const stores = [
   useCheckinStore,
@@ -22,6 +23,7 @@ const stores = [
   useSurchargeStore,
   useRoomAssignments,
   useSubmissionUpdates,
+  useChatStore,
 ] as const;
 
 export function useCrossTabSync() {

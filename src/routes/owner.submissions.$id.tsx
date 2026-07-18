@@ -23,6 +23,8 @@ import {
 import { useRoomAssignments } from "@/lib/room-assignments";
 import { propertyColors } from "@/lib/property-colors";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
+import { ChatPanel } from "@/components/chat/ChatPanel";
+import { useChatStore } from "@/lib/chat-store";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { useLiveSubmissions } from "@/lib/live-submissions";
 import { platformLabels } from "@/lib/checkin-store";
@@ -503,6 +505,22 @@ function SubmissionDetail() {
               />
             ))}
           </div>
+        </OwnerCard>
+      </div>
+
+      {/* Guest ↔ Owner chat */}
+      <div className="mt-4">
+        <OwnerCard
+          title="與旅客訊息"
+          desc="站內即時聯絡；若使用外部通訊軟體可於下方關閉。"
+          actions={<ChatEnabledToggle />}
+        >
+          <ChatPanel
+            threadId="guest-demo"
+            viewerRole="owner"
+            counterpartName={submission.name}
+            fallbackNote="站內訊息已關閉，旅客會看到您提供的外部聯絡方式。"
+          />
         </OwnerCard>
       </div>
 
@@ -1186,5 +1204,22 @@ function InlinePasswordEditor({
     </div>
   );
 }
+
+function ChatEnabledToggle() {
+  const { enabled, setEnabled } = useChatStore();
+  return (
+    <button
+      onClick={() => setEnabled(!enabled)}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold transition ${
+        enabled
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "border border-border bg-card text-muted-foreground hover:bg-secondary"
+      }`}
+    >
+      {enabled ? "站內訊息：開啟" : "站內訊息：關閉"}
+    </button>
+  );
+}
+
 
 
