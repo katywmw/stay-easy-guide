@@ -422,7 +422,12 @@ export const usePropertyConfig = create<PropertyConfigState>()(
         houseRules: "",
         guide: seedGuideWalnut,
         guidePhotos: emptyPhotos(),
-        faq: [],
+        faq: systemFaqSeed.map((f, i) => ({
+          id: `seed-${i}`,
+          category: f.category,
+          q: f.q,
+          a: f.a,
+        })),
         contactChannels: seedContactWalnut,
 
         passwordReleaseMode: "manual",
