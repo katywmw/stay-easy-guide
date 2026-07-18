@@ -59,6 +59,28 @@ function GuestInfoPage() {
           onChange={(e) => s.update({ arrivalTime: e.target.value })}
         />
 
+        {checkinFees.map((f) => (
+          <div key={f.id} className="mb-3">
+            <ChipGroup<"yes" | "no">
+              label={`${f.name}（${f.unit} NT$ ${f.defaultAmount}）`}
+              value={s.extraFeeAnswers[f.id] ?? ""}
+              onChange={(v) =>
+                s.update({ extraFeeAnswers: { ...s.extraFeeAnswers, [f.id]: v } })
+              }
+              options={[
+                { value: "yes", label: "是" },
+                { value: "no", label: "否" },
+              ]}
+            />
+            {s.extraFeeAnswers[f.id] === "yes" && (
+              <p className="-mt-2 rounded-lg bg-warning-soft/60 px-3 py-2 text-[11px] leading-relaxed text-foreground/80">
+                本項將於押金頁自動加入應付金額。
+              </p>
+            )}
+          </div>
+        ))}
+
+
         {askPet && (
           <>
             <ChipGroup<"yes" | "no">
