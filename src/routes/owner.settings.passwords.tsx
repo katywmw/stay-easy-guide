@@ -275,6 +275,7 @@ function PasswordGroupsSection({
           key={g.id}
           group={g}
           rooms={gRooms}
+          gateMode={gateMode}
           collapsed={!!collapsed[g.id]}
           onToggle={() =>
             setCollapsed((c) => ({ ...c, [g.id]: !c[g.id] }))
