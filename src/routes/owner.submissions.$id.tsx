@@ -93,8 +93,23 @@ function defaultRoomsFor(submissionId: string, allRoomIds: string[]) {
 }
 
 function SubmissionDetail() {
-  const { submission } = Route.useLoaderData();
+  const { submission: loaded } = Route.useLoaderData();
+  const params = Route.useParams();
+  const liveItems = useLiveSubmissions((s) => s.items);
+  const submission =
+    loaded ?? liveItems.find((x) => x.id === params.id) ?? null;
   const { rooms, roomGroups, properties, extraFeeCatalog, payment, updateRoom, updateProperty } = usePropertyConfig();
+  if (!submission) {
+    return (
+      <OwnerShell title="入住申請" subtitle="Submission">
+        <OwnerCard title="找不到此申請">
+          <p className="text-sm text-muted-foreground">
+            此申請可能已被刪除或尚未同步至此裝置。
+          </p>
+        </OwnerCard>
+      </OwnerShell>
+    );
+  }
   const submissionPropertyId = submission.propertyId;
   const submissionProperty = properties.find((p) => p.id === submissionPropertyId);
   const propertyRooms = rooms.filter((r) => r.propertyId === submissionPropertyId);
