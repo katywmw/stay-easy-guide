@@ -4,6 +4,8 @@ import { faqItems as systemFaqSeed } from "./checkin-content";
 
 // ============ Types ============
 
+export type PropertyGateMode = "shared" | "individual" | "key";
+
 export interface Property {
   id: string;
   name: string;
@@ -14,6 +16,11 @@ export interface Property {
   checkOutTime: string;
   /** Gate password shared across the whole property (used when a group's gatePasswordMode = 'sharedProperty'). */
   gatePassword?: string;
+  /** How the property handles gate access:
+   *  - shared: one property-wide gate password; each room has its own room password
+   *  - individual: each room has both its own gate + room passwords
+   *  - key: physical key pickup; no passwords */
+  gateMode?: PropertyGateMode;
 }
 
 /** Legacy — used by existing UI for backward compat while UI migrates to groups. */
