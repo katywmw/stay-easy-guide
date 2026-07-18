@@ -99,7 +99,6 @@ function PasswordSettings() {
       <PasswordGroupsSection
         groups={groups}
         rooms={rooms}
-        showAll={showAll}
         onSaveGroup={(id, patch) => updateRoomGroup(id, patch)}
         onSaveRoom={(id, patch) => updateRoom(id, patch)}
       />
