@@ -263,7 +263,6 @@ function buildDraft(g: RoomTypeGroup, rooms: Room[]): GroupDraft {
 function GroupPasswordCard({
   group,
   rooms,
-  showAll,
   collapsed = false,
   onToggle,
   onSaveGroup,
@@ -271,7 +270,6 @@ function GroupPasswordCard({
 }: {
   group: RoomTypeGroup;
   rooms: Room[];
-  showAll: boolean;
   collapsed?: boolean;
   onToggle?: () => void;
   onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
