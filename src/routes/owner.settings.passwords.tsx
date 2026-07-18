@@ -152,9 +152,6 @@ function PasswordSettings() {
   );
 }
 
-function maskValue(v: string) {
-  return v ? "•".repeat(Math.max(4, v.length)) : "";
-}
 
 // -------------------------------------------------------------------
 function PasswordGroupsSection({
