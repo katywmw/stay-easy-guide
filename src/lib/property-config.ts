@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { faqItems as systemFaqSeed } from "./checkin-content";
 
 // ============ Types ============
 
