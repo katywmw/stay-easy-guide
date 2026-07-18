@@ -53,6 +53,9 @@ function ExtraFeesSettings() {
               <th className="px-3 py-2">項目</th>
               <th className="px-3 py-2">單位</th>
               <th className="px-3 py-2 text-right">預設金額</th>
+              <th className="px-3 py-2 text-center" title="旅客填寫入住資料時詢問是否需要，選『是』會自動加入押金合計">
+                入住時確認
+              </th>
               <th className="px-3 py-2 w-10"></th>
             </tr>
           </thead>
