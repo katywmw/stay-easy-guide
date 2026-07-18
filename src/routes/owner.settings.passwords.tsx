@@ -160,13 +160,11 @@ function maskValue(v: string) {
 function PasswordGroupsSection({
   groups,
   rooms,
-  showAll,
   onSaveGroup,
   onSaveRoom,
 }: {
   groups: RoomTypeGroup[];
   rooms: Room[];
-  showAll: boolean;
   onSaveGroup: (id: string, patch: Partial<RoomTypeGroup>) => void;
   onSaveRoom: (id: string, patch: Partial<Room>) => void;
 }) {
