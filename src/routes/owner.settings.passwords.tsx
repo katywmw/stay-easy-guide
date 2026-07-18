@@ -74,8 +74,8 @@ function PasswordSettings() {
           <div className="min-w-0 max-w-xs flex-1">
             <Input
               label={`${property?.name ?? ""} · 大門密碼`}
-              value={showAll ? gateDraft : maskValue(gateDraft)}
-              onChange={(v) => showAll && setGateDraft(v)}
+              value={gateDraft}
+              onChange={(v) => setGateDraft(v)}
               placeholder="例：9945"
             />
           </div>
