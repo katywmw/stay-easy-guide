@@ -55,15 +55,24 @@ function GuestInfoPage() {
         />
 
         {askPet && (
-          <ChipGroup<"yes" | "no">
-            label="是否攜帶寵物"
-            value={s.hasPet}
-            onChange={(v) => s.update({ hasPet: v })}
-            options={[
-              { value: "yes", label: "是" },
-              { value: "no", label: "否" },
-            ]}
-          />
+          <>
+            <ChipGroup<"yes" | "no">
+              label="是否攜帶寵物"
+              value={s.hasPet}
+              onChange={(v) => s.update({ hasPet: v })}
+              options={[
+                { value: "yes", label: "是" },
+                { value: "no", label: "否" },
+              ]}
+            />
+            {s.hasPet === "yes" &&
+              usePropertySettings.getState().petFeeEnabled &&
+              usePropertySettings.getState().petFeePerNight > 0 && (
+                <p className="-mt-2 mb-3 rounded-lg bg-warning-soft/60 px-3 py-2 text-[11px] leading-relaxed text-foreground/80">
+                  攜帶寵物需加收寵物清潔費 NT$ {usePropertySettings.getState().petFeePerNight} / 每晚每隻，將於押金頁自動加總。
+                </p>
+              )}
+          </>
         )}
 
         {askParking && (
