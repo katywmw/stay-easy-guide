@@ -67,7 +67,7 @@ function BookingPage() {
   return (
     <PhoneShell
       title="訂房資料"
-      subtitle="步驟 1 / 6"
+      subtitle="步驟 1 / 5"
       backTo="/checkin/demo/start"
     >
       <StepBar current={1} />
