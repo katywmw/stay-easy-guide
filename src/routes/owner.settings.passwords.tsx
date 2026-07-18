@@ -205,11 +205,13 @@ function PasswordSettings() {
 function PasswordGroupsSection({
   groups,
   rooms,
+  gateMode,
   onSaveGroup,
   onSaveRoom,
 }: {
   groups: RoomTypeGroup[];
   rooms: Room[];
+  gateMode: PropertyGateMode;
   onSaveGroup: (id: string, patch: Partial<RoomTypeGroup>) => void;
   onSaveRoom: (id: string, patch: Partial<Room>) => void;
 }) {
