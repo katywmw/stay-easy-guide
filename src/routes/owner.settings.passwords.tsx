@@ -356,9 +356,19 @@ function GroupPasswordCard({
       }
     >
       {collapsed ? (
-        <p className="text-[11px] text-muted-foreground">
-          房間清單已收合。共 {rooms.length} 間。
-        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {rooms.map((r) => (
+            <span
+              key={r.id}
+              className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] font-semibold text-foreground"
+            >
+              {r.displayName?.trim() || r.roomNumber || "未命名"}
+            </span>
+          ))}
+          {rooms.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">尚無房間。</p>
+          )}
+        </div>
       ) : isKey ? (
         <Input
           label="取鑰匙位置與方式"
