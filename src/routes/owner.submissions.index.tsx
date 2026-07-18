@@ -51,7 +51,7 @@ function SubmissionsList() {
       }
       return true;
     });
-  }, [scope, status, platform, dateFrom, dateTo, keyword]);
+  }, [scope, status, platform, dateFrom, dateTo, keyword, liveItems]);
 
   const anyFilter = status !== "all" || platform !== "all" || dateFrom || dateTo || keyword;
 
