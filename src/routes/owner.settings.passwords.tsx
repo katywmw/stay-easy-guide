@@ -365,6 +365,7 @@ function GroupPasswordCard({
     Object.entries(draft.rooms).forEach(([id, r]) =>
       onSaveRoom(id, {
         doorPassword: r.doorPassword,
+        gatePassword: r.gatePassword,
         note: r.note,
       }),
     );
