@@ -76,6 +76,9 @@ export interface ExtraFeeItem {
   name: string;
   unit: string;
   defaultAmount: number;
+  /** If true, guest sees a yes/no question during check-in; a "yes" answer
+   *  auto-adds this fee to the deposit total. */
+  confirmAtCheckin?: boolean;
 }
 
 export type PasswordReleaseMode = "manual" | "scheduled" | "conditional";
