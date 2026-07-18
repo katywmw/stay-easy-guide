@@ -11,7 +11,7 @@ export const Route = createFileRoute("/owner/settings/extra-fees")({
 });
 
 function emptyFee(): Omit<ExtraFeeItem, "id"> {
-  return { name: "", unit: "每次", defaultAmount: 0 };
+  return { name: "", unit: "每次", defaultAmount: 0, confirmAtCheckin: false };
 }
 
 function ExtraFeesSettings() {
@@ -53,6 +53,9 @@ function ExtraFeesSettings() {
               <th className="px-3 py-2">項目</th>
               <th className="px-3 py-2">單位</th>
               <th className="px-3 py-2 text-right">預設金額</th>
+              <th className="px-3 py-2 text-center" title="旅客填寫入住資料時詢問是否需要，選『是』會自動加入押金合計">
+                入住時確認
+              </th>
               <th className="px-3 py-2 w-10"></th>
             </tr>
           </thead>
@@ -81,6 +84,19 @@ function ExtraFeesSettings() {
                     className="w-24 rounded border border-transparent bg-transparent px-1 py-1 text-right text-sm outline-none focus:border-input focus:bg-card"
                   />
                 </td>
+                <td className="px-3 py-2 text-center">
+                  <label className="inline-flex cursor-pointer items-center gap-1.5">
+                    <input
+                      type="checkbox"
+                      checked={!!f.confirmAtCheckin}
+                      onChange={(e) => updateExtraFee(f.id, { confirmAtCheckin: e.target.checked })}
+                      className="h-4 w-4 accent-[oklch(0.75_0.14_85)]"
+                    />
+                    <span className="text-[11px] font-semibold text-foreground">
+                      {f.confirmAtCheckin ? "是" : "否"}
+                    </span>
+                  </label>
+                </td>
                 <td className="px-3 py-2">
                   <button
                     onClick={() => removeExtraFee(f.id)}
@@ -93,7 +109,7 @@ function ExtraFeesSettings() {
             ))}
             {extraFeeCatalog.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-3 py-6 text-center text-sm text-muted-foreground">
+                <td colSpan={5} className="px-3 py-6 text-center text-sm text-muted-foreground">
                   尚無項目
                 </td>
               </tr>

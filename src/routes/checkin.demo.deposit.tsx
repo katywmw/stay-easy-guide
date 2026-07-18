@@ -35,7 +35,12 @@ function DepositPage() {
     settings.petFeeEnabled && s.hasPet === "yes" && settings.petFeePerNight > 0
       ? settings.petFeePerNight * nights
       : 0;
-  const total = deposit + petFee;
+  // Owner-defined extra fees the guest confirmed "yes" to during check-in
+  const confirmedExtras = config.extraFeeCatalog
+    .filter((f) => f.confirmAtCheckin && s.extraFeeAnswers[f.id] === "yes")
+    .map((f) => ({ id: f.id, name: f.name, unit: f.unit, amount: f.defaultAmount }));
+  const extrasSum = confirmedExtras.reduce((sum, x) => sum + x.amount, 0);
+  const total = deposit + petFee + extrasSum;
   const fmt = (n: number) => `NT$ ${n.toLocaleString()}`;
 
   const selectedRooms = config.rooms.filter((r) => s.selectedRoomIds.includes(r.id));
@@ -114,6 +119,14 @@ function DepositPage() {
               <span className="font-semibold [font-variant-numeric:tabular-nums]">{fmt(petFee)}</span>
             </div>
           )}
+          {confirmedExtras.map((x) => (
+            <div key={x.id} className="flex items-center justify-between">
+              <span>{x.name}（{x.unit}）</span>
+              <span className="font-semibold [font-variant-numeric:tabular-nums]">
+                {fmt(x.amount)}
+              </span>
+            </div>
+          ))}
         </div>
         <div className="mt-3 flex items-end justify-between border-t border-foreground/15 pt-3">
           <span className="text-xs font-semibold text-foreground/70">合計</span>

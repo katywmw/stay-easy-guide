@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { Input } from "./owner.settings.property";
 import { usePropertyConfig, type FaqEntry } from "@/lib/property-config";
@@ -24,33 +24,26 @@ function emptyFaq(): Omit<FaqEntry, "id"> {
 function FaqSettings() {
   const { faq, addFaq, updateFaq, removeFaq, update } = usePropertyConfig();
 
-  const restoreDefaults = () => {
-    const existingQs = new Set(faq.map((f) => f.q));
-    const toAdd = faqItems
-      .filter((f) => !existingQs.has(f.q))
-      .map((f) => ({ ...f, id: Math.random().toString(36).slice(2, 9) }));
-    if (toAdd.length === 0) {
-      toast("系統預設題庫已全部匯入");
-      return;
+  // Seed system defaults automatically if the list is empty.
+  useEffect(() => {
+    if (faq.length === 0) {
+      const seeded = faqItems.map((f, i) => ({
+        id: `seed-${Date.now()}-${i}`,
+        category: f.category,
+        q: f.q,
+        a: f.a,
+      }));
+      update({ faq: seeded });
     }
-    update({ faq: [...faq, ...toAdd] });
-    toast.success(`已匯入 ${toAdd.length} 題預設題庫，可於下方編輯或刪除`);
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const [draft, setDraft] = useState(emptyFaq());
 
   return (
     <OwnerCard
       title="常見問答編輯器"
-      desc="旅客的證件、押金、入住等頁面會顯示這些問答。可匯入系統預設題庫後再自由編輯或刪除。"
-      actions={
-        <button
-          onClick={restoreDefaults}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
-        >
-          <RotateCcw className="h-3.5 w-3.5" />
-          匯入系統預設題庫
-        </button>
-      }
+      desc="旅客的證件、押金、入住等頁面會顯示這些問答。系統預設題庫會自動載入，可自由編輯或刪除。"
     >
       <Toaster position="top-center" richColors />
       <div className="mb-5 rounded-lg border border-dashed border-primary bg-primary-soft/30 p-4">

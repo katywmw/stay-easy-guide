@@ -9,6 +9,7 @@ import {
 } from "@/components/checkin/Fields";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { usePropertySettings } from "@/lib/property-settings";
+import { usePropertyConfig } from "@/lib/property-config";
 import { StepBar } from "./checkin.demo.booking";
 
 export const Route = createFileRoute("/checkin/demo/guest-info")({
@@ -20,11 +21,15 @@ function GuestInfoPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
   const { askParking, askPet } = usePropertySettings();
+  const { extraFeeCatalog } = usePropertyConfig();
+  const checkinFees = extraFeeCatalog.filter((f) => f.confirmAtCheckin);
+  const allFeesAnswered = checkinFees.every((f) => s.extraFeeAnswers[f.id]);
   const canNext =
     s.guestCount &&
     s.arrivalTime &&
     (!askPet || s.hasPet) &&
-    (!askParking || s.needParking);
+    (!askParking || s.needParking) &&
+    allFeesAnswered;
 
   return (
     <PhoneShell
@@ -53,6 +58,28 @@ function GuestInfoPage() {
           value={s.arrivalTime}
           onChange={(e) => s.update({ arrivalTime: e.target.value })}
         />
+
+        {checkinFees.map((f) => (
+          <div key={f.id} className="mb-3">
+            <ChipGroup<"yes" | "no">
+              label={`${f.name}（${f.unit} NT$ ${f.defaultAmount}）`}
+              value={s.extraFeeAnswers[f.id] ?? ""}
+              onChange={(v) =>
+                s.update({ extraFeeAnswers: { ...s.extraFeeAnswers, [f.id]: v } })
+              }
+              options={[
+                { value: "yes", label: "是" },
+                { value: "no", label: "否" },
+              ]}
+            />
+            {s.extraFeeAnswers[f.id] === "yes" && (
+              <p className="-mt-2 rounded-lg bg-warning-soft/60 px-3 py-2 text-[11px] leading-relaxed text-foreground/80">
+                本項將於押金頁自動加入應付金額。
+              </p>
+            )}
+          </div>
+        ))}
+
 
         {askPet && (
           <>

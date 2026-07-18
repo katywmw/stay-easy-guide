@@ -55,6 +55,11 @@ export interface CheckinState {
   needParking: "yes" | "no" | "";
   specialNotes: string;
 
+  /** Answers to owner-defined extra fees marked confirmAtCheckin.
+   *  key = fee id, value = "yes" | "no" */
+  extraFeeAnswers: Record<string, "yes" | "no">;
+
+
   // ID
   idUploaded: boolean;
   idConsent: boolean;
@@ -92,6 +97,7 @@ const initial = {
   hasPet: "" as const,
   needParking: "" as const,
   specialNotes: "",
+  extraFeeAnswers: {} as Record<string, "yes" | "no">,
   idUploaded: false,
   idConsent: false,
   depositMethod: "",

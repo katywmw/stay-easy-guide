@@ -56,10 +56,15 @@ function BookingPage() {
     s.update(patch);
   };
 
+  // Phone: default +886, validate E.164-ish Taiwan mobile / general 8-15 digits
+  const phoneDigits = s.phone.replace(/[^\d]/g, "");
+  const phoneValid =
+    /^\+?[0-9]{8,15}$/.test(s.phone.trim()) && phoneDigits.length >= 8;
+
   const canNext =
     !!s.platform &&
     !!s.bookingName &&
-    !!s.phone &&
+    phoneValid &&
     !!s.checkInDate &&
     !!s.checkOutDate &&
     s.checkOutDate > s.checkInDate;
@@ -99,10 +104,24 @@ function BookingPage() {
           label="手機號碼"
           required
           type="tel"
-          placeholder="09XX-XXX-XXX"
+          placeholder="+886 912 345 678"
           value={s.phone}
-          onChange={(e) => s.update({ phone: e.target.value })}
+          hint="預設台灣 +886，請輸入含國碼的完整號碼。"
+          onChange={(e) => {
+            const v = e.target.value;
+            // Auto-prepend +886 for local 09xxxxxxxx entries once length >= 4
+            if (/^09\d{2,}/.test(v) && !v.startsWith("+")) {
+              s.update({ phone: "+886" + v.slice(1) });
+            } else {
+              s.update({ phone: v });
+            }
+          }}
         />
+        {s.phone && !phoneValid && (
+          <p className="-mt-2 mb-3 text-xs font-semibold text-destructive">
+            請輸入有效的電話號碼（例：+886 912 345 678）。
+          </p>
+        )}
 
         <TextField
           label="Email"

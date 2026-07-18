@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Key, Lock, Save, Check, ChevronDown, ChevronUp, Search, Eye, EyeOff } from "lucide-react";
+import { Key, Lock, Save, Check, ChevronDown, ChevronUp, Search } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
@@ -60,22 +60,10 @@ function PasswordSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propKey]);
 
-  const [showAll, setShowAll] = useState(true);
-
   return (
     <div className="space-y-4">
       <Toaster position="top-center" richColors />
       <PropertyBadge />
-
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => setShowAll((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
-        >
-          {showAll ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          {showAll ? "隱藏全部密碼" : "顯示全部密碼"}
-        </button>
-      </div>
 
       {/* Property-wide gate password */}
       <OwnerCard
@@ -86,8 +74,8 @@ function PasswordSettings() {
           <div className="min-w-0 max-w-xs flex-1">
             <Input
               label={`${property?.name ?? ""} · 大門密碼`}
-              value={showAll ? gateDraft : maskValue(gateDraft)}
-              onChange={(v) => showAll && setGateDraft(v)}
+              value={gateDraft}
+              onChange={(v) => setGateDraft(v)}
               placeholder="例：9945"
             />
           </div>
@@ -111,7 +99,6 @@ function PasswordSettings() {
       <PasswordGroupsSection
         groups={groups}
         rooms={rooms}
-        showAll={showAll}
         onSaveGroup={(id, patch) => updateRoomGroup(id, patch)}
         onSaveRoom={(id, patch) => updateRoom(id, patch)}
       />
@@ -165,21 +152,16 @@ function PasswordSettings() {
   );
 }
 
-function maskValue(v: string) {
-  return v ? "•".repeat(Math.max(4, v.length)) : "";
-}
 
 // -------------------------------------------------------------------
 function PasswordGroupsSection({
   groups,
   rooms,
-  showAll,
   onSaveGroup,
   onSaveRoom,
 }: {
   groups: RoomTypeGroup[];
   rooms: Room[];
-  showAll: boolean;
   onSaveGroup: (id: string, patch: Partial<RoomTypeGroup>) => void;
   onSaveRoom: (id: string, patch: Partial<Room>) => void;
 }) {
@@ -243,7 +225,6 @@ function PasswordGroupsSection({
           key={g.id}
           group={g}
           rooms={gRooms}
-          showAll={showAll}
           collapsed={!!collapsed[g.id]}
           onToggle={() =>
             setCollapsed((c) => ({ ...c, [g.id]: !c[g.id] }))
@@ -279,7 +260,6 @@ function buildDraft(g: RoomTypeGroup, rooms: Room[]): GroupDraft {
 function GroupPasswordCard({
   group,
   rooms,
-  showAll,
   collapsed = false,
   onToggle,
   onSaveGroup,
@@ -287,7 +267,6 @@ function GroupPasswordCard({
 }: {
   group: RoomTypeGroup;
   rooms: Room[];
-  showAll: boolean;
   collapsed?: boolean;
   onToggle?: () => void;
   onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
@@ -374,9 +353,19 @@ function GroupPasswordCard({
       }
     >
       {collapsed ? (
-        <p className="text-[11px] text-muted-foreground">
-          房間清單已收合。共 {rooms.length} 間。
-        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {rooms.map((r) => (
+            <span
+              key={r.id}
+              className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] font-semibold text-foreground"
+            >
+              {r.displayName?.trim() || r.roomNumber || "未命名"}
+            </span>
+          ))}
+          {rooms.length === 0 && (
+            <p className="text-[11px] text-muted-foreground">尚無房間。</p>
+          )}
+        </div>
       ) : isKey ? (
         <Input
           label="取鑰匙位置與方式"
@@ -406,8 +395,8 @@ function GroupPasswordCard({
                 <div className="grid gap-2 sm:grid-cols-2">
                   <Input
                     label="房門密碼"
-                    value={showAll ? rd.doorPassword : maskValue(rd.doorPassword)}
-                    onChange={(v) => showAll && patchRoom(r.id, { doorPassword: v })}
+                    value={rd.doorPassword}
+                    onChange={(v) => patchRoom(r.id, { doorPassword: v })}
                     placeholder="4-6 位數字"
                   />
                   <Input
