@@ -32,7 +32,9 @@ export function StatusPill({
                 ? "bg-destructive"
                 : tone === "primary"
                   ? "bg-primary"
-                  : "bg-muted-foreground"
+                  : tone === "info"
+                    ? "bg-[oklch(0.55_0.15_250)]"
+                    : "bg-muted-foreground"
         }`}
       />
       {label}
