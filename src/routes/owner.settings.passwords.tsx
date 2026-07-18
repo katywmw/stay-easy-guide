@@ -326,28 +326,6 @@ function GroupPasswordCard({
   onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
   onSaveRoom: (id: string, patch: Partial<Room>) => void;
 }) {
-          note: r.note ?? "",
-        },
-      ]),
-    ),
-  };
-}
-
-function GroupPasswordCard({
-  group,
-  rooms,
-  collapsed = false,
-  onToggle,
-  onSaveGroup,
-  onSaveRoom,
-}: {
-  group: RoomTypeGroup;
-  rooms: Room[];
-  collapsed?: boolean;
-  onToggle?: () => void;
-  onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
-  onSaveRoom: (id: string, patch: Partial<Room>) => void;
-}) {
   const initial = useMemo(() => buildDraft(group, rooms), [group, rooms]);
   const [draft, setDraft] = useState<GroupDraft>(initial);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
