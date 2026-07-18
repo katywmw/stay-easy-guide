@@ -235,6 +235,13 @@ function QuickLink({
 }
 
 // ---------------- Calendar Panel ----------------
+const pad2 = (n: number) => String(n).padStart(2, "0");
+const dayKey = (y: number, m: number, d: number) => `${y}-${pad2(m + 1)}-${pad2(d)}`;
+const parseKey = (s: string) => {
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
+};
+
 function CalendarPanel({
   submissions,
   properties,
@@ -247,23 +254,41 @@ function CalendarPanel({
     const d = new Date();
     return new Date(d.getFullYear(), d.getMonth(), 1);
   });
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   const year = cursor.getFullYear();
   const month = cursor.getMonth();
   const first = new Date(year, month, 1);
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const leading = first.getDay(); // 0=Sun
+  const leading = first.getDay();
 
-  // Map YYYY-MM-DD -> array of { propertyId, name }
+  type DayEntry = {
+    id: string;
+    name: string;
+    propertyId: string;
+    checkIn: string;
+    checkOut: string;
+    status: string;
+  };
+
   const byDay = useMemo(() => {
-    const map = new Map<string, { propertyId: string; name: string }[]>();
+    const map = new Map<string, DayEntry[]>();
     for (const s of submissions) {
-      const inD = new Date(s.checkIn);
-      const outD = new Date(s.checkOut);
-      for (let d = new Date(inD); d < outD; d.setDate(d.getDate() + 1)) {
-        const key = d.toISOString().slice(0, 10);
+      const inD = parseKey(s.checkIn);
+      const outD = parseKey(s.checkOut);
+      const d = new Date(inD);
+      while (d < outD) {
+        const key = dayKey(d.getFullYear(), d.getMonth(), d.getDate());
         if (!map.has(key)) map.set(key, []);
-        map.get(key)!.push({ propertyId: s.propertyId, name: s.name });
+        map.get(key)!.push({
+          id: s.id,
+          name: s.name,
+          propertyId: s.propertyId,
+          checkIn: s.checkIn,
+          checkOut: s.checkOut,
+          status: s.status,
+        });
+        d.setDate(d.getDate() + 1);
       }
     }
     return map;
@@ -275,14 +300,24 @@ function CalendarPanel({
   while (cells.length % 7 !== 0) cells.push(null);
 
   const today = new Date();
-  const todayKey = today.toISOString().slice(0, 10);
-
+  const todayKey = dayKey(today.getFullYear(), today.getMonth(), today.getDate());
   const monthLabel = `${year} 年 ${month + 1} 月`;
+
+  const selectedList = selectedDay ? (byDay.get(selectedDay) ?? []) : [];
+
+  const statusLabel = (s: string) =>
+    ({
+      submitted: "待審核",
+      need_more_info: "需補件",
+      approved: "已核准",
+      completed: "已完成",
+      rejected: "已拒絕",
+    })[s] ?? s;
 
   return (
     <OwnerCard
       title="入住行事曆"
-      desc="每日入住組數，可依館別顏色辨識"
+      desc="點選日期可查看當日入住旅客"
       actions={
         <button
           onClick={() => setOpen((v) => !v)}
@@ -302,71 +337,92 @@ function CalendarPanel({
         <div>
           <div className="mb-2 flex items-center justify-between">
             <button
-              onClick={() => setCursor(new Date(year, month - 1, 1))}
-              className="grid h-7 w-7 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+              onClick={() => {
+                setCursor(new Date(year, month - 1, 1));
+                setSelectedDay(null);
+              }}
+              className="grid h-8 w-8 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
               aria-label="上一月"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
             <p className="text-sm font-bold text-foreground [font-variant-numeric:tabular-nums]">
               {monthLabel}
             </p>
             <button
-              onClick={() => setCursor(new Date(year, month + 1, 1))}
-              className="grid h-7 w-7 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
+              onClick={() => {
+                setCursor(new Date(year, month + 1, 1));
+                setSelectedDay(null);
+              }}
+              className="grid h-8 w-8 place-items-center rounded-full border border-border bg-card hover:bg-secondary"
               aria-label="下一月"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-muted-foreground">
+          <div className="mb-1 grid grid-cols-7 gap-0.5 text-center text-[10px] font-bold text-muted-foreground sm:gap-1">
             {["日", "一", "二", "三", "四", "五", "六"].map((d) => (
               <div key={d}>{d}</div>
             ))}
           </div>
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {cells.map((d, i) => {
-              if (d === null) return <div key={i} className="h-14" />;
-              const key = new Date(year, month, d).toISOString().slice(0, 10);
+              if (d === null) return <div key={i} className="aspect-square" />;
+              const key = dayKey(year, month, d);
               const list = byDay.get(key) ?? [];
               const isToday = key === todayKey;
+              const isSelected = key === selectedDay;
+              const hasGuests = list.length > 0;
               return (
-                <div
+                <button
                   key={i}
-                  className={`flex h-14 flex-col rounded-lg border p-1 text-[10px] ${
-                    isToday
-                      ? "border-primary bg-primary-soft/40"
-                      : "border-[oklch(0.94_0.02_82)] bg-card"
+                  onClick={() => setSelectedDay(isSelected ? null : key)}
+                  disabled={!hasGuests}
+                  className={`relative flex aspect-square flex-col items-center justify-start rounded-md border p-0.5 text-[10px] transition sm:rounded-lg sm:p-1 ${
+                    isSelected
+                      ? "border-primary bg-primary text-primary-foreground shadow"
+                      : isToday
+                        ? "border-primary bg-primary-soft/40"
+                        : hasGuests
+                          ? "border-[oklch(0.94_0.02_82)] bg-card hover:bg-secondary"
+                          : "border-transparent bg-transparent text-muted-foreground/60"
                   }`}
                 >
-                  <span className="font-bold text-foreground [font-variant-numeric:tabular-nums]">
+                  <span className="text-[11px] font-bold [font-variant-numeric:tabular-nums] sm:text-xs">
                     {d}
                   </span>
-                  <div className="mt-auto flex flex-wrap items-end gap-0.5">
-                    {list.slice(0, 4).map((g, idx) => {
-                      const c = propertyColors(g.propertyId);
-                      return (
-                        <span
-                          key={idx}
-                          className={`h-1.5 w-1.5 rounded-full ${c.dot}`}
-                          title={`${g.name} · ${properties.find((p) => p.id === g.propertyId)?.name ?? ""}`}
-                        />
-                      );
-                    })}
-                    {list.length > 0 && (
-                      <span className="ml-auto text-[9px] font-bold text-foreground [font-variant-numeric:tabular-nums]">
+                  {hasGuests && (
+                    <>
+                      <div className="mt-auto flex flex-wrap items-center justify-center gap-0.5">
+                        {list.slice(0, 3).map((g, idx) => {
+                          const c = propertyColors(g.propertyId);
+                          return (
+                            <span
+                              key={idx}
+                              className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-primary-foreground" : c.dot}`}
+                            />
+                          );
+                        })}
+                      </div>
+                      <span
+                        className={`absolute right-0.5 top-0.5 rounded-full px-1 text-[9px] font-bold leading-tight [font-variant-numeric:tabular-nums] ${
+                          isSelected
+                            ? "bg-primary-foreground text-primary"
+                            : "bg-primary/10 text-primary"
+                        }`}
+                      >
                         {list.length}
                       </span>
-                    )}
-                  </div>
-                </div>
+                    </>
+                  )}
+                </button>
               );
             })}
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-            <span>圖例：</span>
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+            <span className="font-semibold">圖例：</span>
             {properties.map((p) => {
               const c = propertyColors(p.id);
               return (
@@ -377,6 +433,53 @@ function CalendarPanel({
               );
             })}
           </div>
+
+          {selectedDay && (
+            <div className="mt-3 rounded-xl border border-[oklch(0.94_0.02_82)] bg-secondary/40 p-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-sm font-bold text-foreground">
+                  {selectedDay.replaceAll("-", "/")} · {selectedList.length} 組入住
+                </p>
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className="rounded-full border border-border bg-card px-2 py-0.5 text-[10px] font-semibold text-muted-foreground hover:bg-secondary"
+                >
+                  關閉
+                </button>
+              </div>
+              {selectedList.length === 0 ? (
+                <p className="text-xs text-muted-foreground">當日無入住紀錄。</p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {selectedList.map((g) => {
+                    const c = propertyColors(g.propertyId);
+                    const propName =
+                      properties.find((p) => p.id === g.propertyId)?.name ?? "";
+                    return (
+                      <li key={g.id}>
+                        <Link
+                          to="/owner/submissions/$id"
+                          params={{ id: g.id }}
+                          className="flex items-center gap-2 rounded-lg border border-[oklch(0.94_0.02_82)] bg-card p-2 hover:bg-secondary"
+                        >
+                          <span className={`h-2 w-2 shrink-0 rounded-full ${c.dot}`} />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-bold text-foreground">
+                              {g.name}
+                            </p>
+                            <p className="truncate text-[11px] text-muted-foreground">
+                              {propName} · {g.checkIn.slice(5)} → {g.checkOut.slice(5)} · {statusLabel(g.status)}
+                            </p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
       )}
     </OwnerCard>
