@@ -7,6 +7,7 @@ import { Input } from "./owner.settings.property";
 import {
   usePropertyConfig,
   type PasswordReleaseMode,
+  type PropertyGateMode,
   type RoomTypeGroup,
   type Room,
 } from "@/lib/property-config";
