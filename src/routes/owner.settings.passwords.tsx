@@ -351,7 +351,8 @@ function GroupPasswordCard({
     toast.success(`已儲存：${group.name}`);
   };
 
-  const isKey = group.accessMode === "key";
+  const isKey = gateMode === "key" || group.accessMode === "key";
+  const showGatePerRoom = gateMode === "individual";
 
   return (
     <OwnerCard
