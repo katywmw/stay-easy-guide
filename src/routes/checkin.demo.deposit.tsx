@@ -119,6 +119,14 @@ function DepositPage() {
               <span className="font-semibold [font-variant-numeric:tabular-nums]">{fmt(petFee)}</span>
             </div>
           )}
+          {confirmedExtras.map((x) => (
+            <div key={x.id} className="flex items-center justify-between">
+              <span>{x.name}（{x.unit}）</span>
+              <span className="font-semibold [font-variant-numeric:tabular-nums]">
+                {fmt(x.amount)}
+              </span>
+            </div>
+          ))}
         </div>
         <div className="mt-3 flex items-end justify-between border-t border-foreground/15 pt-3">
           <span className="text-xs font-semibold text-foreground/70">合計</span>
