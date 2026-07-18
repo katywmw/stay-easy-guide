@@ -60,22 +60,10 @@ function PasswordSettings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propKey]);
 
-  const [showAll, setShowAll] = useState(true);
-
   return (
     <div className="space-y-4">
       <Toaster position="top-center" richColors />
       <PropertyBadge />
-
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => setShowAll((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
-        >
-          {showAll ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          {showAll ? "隱藏全部密碼" : "顯示全部密碼"}
-        </button>
-      </div>
 
       {/* Property-wide gate password */}
       <OwnerCard
