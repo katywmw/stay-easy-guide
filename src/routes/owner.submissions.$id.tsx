@@ -50,18 +50,20 @@ import {
 
 export const Route = createFileRoute("/owner/submissions/$id")({
   loader: ({ params }) => {
+    // Live submissions (id starts with "live-") are hydrated client-side, so
+    // we don't fail the loader for them. Demo submissions still resolve here.
     const s = demoSubmissions.find((x) => x.id === params.id);
-    if (!s) throw notFound();
-    return { submission: s };
+    if (!s && !params.id.startsWith("live-")) throw notFound();
+    return { submission: s ?? null };
   },
   component: SubmissionDetail,
   notFoundComponent: NotFound,
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: loaderData
+        title: loaderData?.submission
           ? `${loaderData.submission.name} · 入住申請 · 胡桃民宿`
-          : "找不到申請",
+          : "入住申請 · 胡桃民宿",
       },
     ],
   }),
