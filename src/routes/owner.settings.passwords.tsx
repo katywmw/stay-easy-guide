@@ -220,7 +220,10 @@ function PasswordGroupsSection({
   const [q, setQ] = useState("");
   const kw = q.trim().toLowerCase();
 
-  const filtered = groups
+  const visibleGroups = groups.filter(
+    (g) => !(g.bedType?.includes("包棟") || g.name.includes("包棟")),
+  );
+  const filtered = visibleGroups
     .map((g) => {
       const gRooms = rooms.filter((r) => r.groupId === g.id);
       if (!kw) return { g, gRooms, matches: true };
