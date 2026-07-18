@@ -20,7 +20,7 @@ function HouseRulesPage() {
   const blocks = isHtml ? [] : parseMd(raw);
 
   return (
-    <PhoneShell title="入住須知" backTo="/checkin/demo/faq">
+    <PhoneShell title="入住須知" backTo="/checkin/demo/deposit">
       <div className="card-soft p-5">
         {isHtml ? (
           <div

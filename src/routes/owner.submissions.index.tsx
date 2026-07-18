@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { ChevronRight, Filter, Search, X, Building2 } from "lucide-react";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { platformLabels, type BookingPlatform, type CheckinStatus } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
@@ -34,9 +35,11 @@ function SubmissionsList() {
   const [dateTo, setDateTo] = useState("");
   const [keyword, setKeyword] = useState("");
 
+  const liveItems = useLiveSubmissions((s) => s.items);
   const list = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
-    return demoSubmissions.filter((r) => {
+    const all = [...liveItems, ...demoSubmissions];
+    return all.filter((r) => {
       if (scope !== "all" && r.propertyId !== scope) return false;
       if (status !== "all" && r.status !== status) return false;
       if (platform !== "all" && r.platform !== platform) return false;
@@ -48,7 +51,7 @@ function SubmissionsList() {
       }
       return true;
     });
-  }, [scope, status, platform, dateFrom, dateTo, keyword]);
+  }, [scope, status, platform, dateFrom, dateTo, keyword, liveItems]);
 
   const anyFilter = status !== "all" || platform !== "all" || dateFrom || dateTo || keyword;
 

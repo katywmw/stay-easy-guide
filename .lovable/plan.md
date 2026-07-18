@@ -1,93 +1,118 @@
-# Plan — Guest booking simplification, FAQ sync, password/approval overhaul
+## Scope
 
-## 1. Guest booking: drop 入住館別 & 入住房間 selection
+Nine changes across guest flow, approval page, password page, FAQ seeding, pet-fee sync, status banners, and adding a live guest↔owner sync channel for demo testing.
 
-`src/routes/checkin.demo.booking.tsx`
+---
 
-- Remove the `入住館別` `<select>` block (lines ~84–103) and the `入住房間` selector block (lines ~105–213).
-- Auto-assign `propertyId` on mount: if `s.propertyId` is empty, default to `properties[0].id` (guest-facing side only needs a property context for downstream copy; owner assigns actual rooms).
-- Clear `selectedRoomIds` from the guest flow: the guest no longer picks rooms — the owner assigns rooms via the approval page (already introduced in prior turn). Drop `selectedRoomIds.length > 0` from `canNext`.
-- Guest just fills 訂房平台 → 訂房姓名 → 手機 → Email → 入住/退房 → 訂單編號. StepBar remains.
-- Downstream screens that referenced `selectedRoomIds` (submitted page, review) already read from the room-assignments store — verify they gracefully render "由民宿安排中" when unassigned.
+### 1. Remove FAQ from guest flow
 
-## 2. FAQ editor: expose default seed for edit/delete
+- `src/routes/checkin.demo.deposit.tsx`, `checkin.demo.id-upload.tsx`: remove the `<FaqAccordion …>` blocks.
+- Reroute the flow: skip the standalone `/checkin/demo/faq` step. Change deposit → `house-rules` directly. Keep the file for now but no page links to it. Adjust `StepBar` labels (drop "常見問題", keep 6 steps → 5).
+- Keep the FAQ store/editor (still used by owner settings; may be re-exposed elsewhere later).
 
-Guest 常見問題 currently reads from `faqItems` in `src/lib/checkin-content.ts` (hardcoded system default), while `owner.settings.faq.tsx` reads/writes `faq` from `usePropertyConfig` (empty by default). They are disconnected.
+### 2. Approval page: drop the 4-item checklist
 
-- Change `FaqAccordion` (`src/components/checkin/FaqAccordion.tsx`) to read the merged list from `usePropertyConfig().faq`; fall back to the default seed only when the store is empty (backwards-compat).
-- Seed `property-config` store's `faq` on first load with the built-in `faqItems` (migrate on rehydrate: if `faq.length === 0`, populate from defaults, tag each entry with a `source: "system" | "custom"` field so we can reset later if desired).
-- FAQ editor page renders all entries (system + custom) with edit + delete controls. Add a "還原系統預設題庫" button that repopulates missing defaults.
-- Filter by category dropdown stays.
+`src/routes/owner.submissions.$id.tsx`
 
-## 3. Password page: remove "此房型共用" mode, keep only 整館預設
+- Delete the `checks` state and `CheckRow` block (訂房/證件/押金/入住須知 已確認).
+- Rename card from "內部備註 / Checklist" to just **"內部備註"** and keep only the textarea.
+- 核准入住 button: remove `disabled={!allChecked}` — always enabled unless already `approved`. Drop the "請先勾選 checklist" helper text.
 
-`src/routes/owner.settings.passwords.tsx` + `property-config` room-group mode.
+### 3. Status banner color system + fix 林大成 approve button
 
-- Drop the `共用 / 各房獨立` toggle at the room-group level. All front-door password logic collapses to a single "整館大門密碼" section shown at the very top of the page.
-- Each room row shows only 房門密碼 (+備註). Room groups list becomes a compact accordion of 房門密碼 rows.
-- Migration: any group currently in `shared` mode is coerced to `per-property` on load; the shared value is discarded (or, if non-empty, promoted to the property default when empty).
-- Update `checkin.demo.*` screens that read `group.frontDoorPassword` to fall back to property-level default.
+Approved submissions (like `s3` 林大成) still show a disabled 核准入住 button because it also required `allChecked`. After change (2), the button becomes enabled again — but if `status === "approved"` we should show a **positive completed state** instead of an active button.
 
-## 4. Hide toggle behavior on password rows
+- Add a helper `bannerTone(status, deposit, released)`:
+  - **yellow (warning)**: `submitted` — 等待審核
+  - **red (destructive)**: `need_more_info` OR deposit `unpaid` with outstanding surcharge
+  - **green (success)**: `approved` AND password released (any `releasedRooms.length > 0` or `record` exists)
+  - **blue (primary/info)**: `draft` — 尚未送出
+- Apply the tone to the top status-pill row (`已核准`, `押金 · 已確認`, etc.) and to submissions-list row badges.
+- Add a new "blue" tone to `StatusPill` (`src/components/checkin/StatusPill.tsx`): `bg-[oklch(0.94_0.04_240)] text-[oklch(0.38_0.15_250)]` + dot.
+- When `status === "approved"`, replace the 核准入住 button with a green completed pill `已核准並釋出密碼 · {time}` and hide the disabled button.
+- For approved submissions where the passwords were never released in this session (e.g. seed data), auto-seed `releasedRooms` from the current assignment on mount so the "已寄出的入住資訊" box appears correctly for 林大成.
 
-In the password list, the eye/hide toggle currently masks the whole password including the room number label. Change so 房號/別名 stays visible and only the password value is masked (`••••••`) when hidden. Applies to per-row and 全部隱藏 bulk toggle.
+### 4. Password page: front-door mode flexibility + key-mode media
 
-## 5. 取鑰匙 房型: photos/videos per room-type
+`src/lib/property-config.ts` and `src/routes/owner.settings.passwords.tsx`
 
-For any room group whose `accessMode === "key"`:
+- Restore per-group `gatePasswordMode` selector at the top of each group card with 3 options: **整館共用預設 / 此房型獨立設定 / 每房獨立 / 使用鑰匙**. When 使用鑰匙 selected, treat it as `accessMode = "key"` for the gate and hide the password field.
+- Add `keyPickupMedia?: string[]` (already exists in the type). Add an uploader block inside the group card when the group's front-door is key mode OR the group's `accessMode === "key"`. Reuse `fileToMediaDataUrl` from `src/lib/media-upload.ts`.
+- Remove the key-pickup media uploader from `owner.settings.rooms.tsx` and from `owner.settings.guide.tsx` (item: "which currently 進門方式 and 取鑰匙照片 / 影片 is placed at another section") — the passwords page becomes the single source for password/key material.
+- Guest-side `checkin.demo.guide.tsx` continues reading from `keyPickupMedia` on the assigned room's group.
 
-- Add a `keyPickupMedia: MediaItem[]` field to `RoomGroup` in `property-config` (image/video URLs; reuse `fileToMediaDataUrl`).
-- Room settings page (`owner.settings.rooms.tsx`) adds a media uploader block visible only when the group is 取鑰匙 mode, with drag reorder + delete (mirrors existing guide media uploader).
-- Guest 入住指引 page renders the group's key-pickup media when the guest's assigned room belongs to a key-mode group.
+### 5. Password page: mask password only, keep room number
 
-## 6. Approval page: multi-select same-category rooms, live sync, auto-save
+Currently `Input` renders both label and value; when `showAll=false`, `value={maskValue(rd.doorPassword)}` masks only the value — good. But the room title `雙人床套房 · 101` should always remain visible. **The current code already keeps the title visible**; the only masked field is the input value. Confirmed reading the code — the title `<p>{title}</p>` renders unconditionally. However the property-wide gate password input's *label* includes the property name — that's fine. Change to make explicit:
 
-`src/routes/owner.submissions.$id.tsx` + `src/lib/room-assignments.ts`.
+- Ensure both group name (`{group.name}`) and per-room title (`房號 101 / Happy 101`) stay visible unconditionally.
+- Only the password value characters are replaced with `••••••` when hidden. Verify by reading the render tree; no code change expected here beyond adding a "房號永遠可見" note in the card description.
 
-- Room assignment card: allow selecting multiple rooms in the SAME room-type (e.g. 2× 標準雙人). Remove any "one per group" guard; keep only the overlap-with-other-submissions guard.
-- 訂購房間與密碼釋出 list auto-derives from `useRoomAssignments` — already the case; add an effect that re-computes released-rooms diff when assignment changes so drift banner updates.
-- Replace manual `SaveBar` on this page with **auto-save**: on every mutation, debounce 400ms then persist. Header status pill shows `儲存中…` (spinner) → `已儲存 · HH:MM` (check). No 儲存 button. Same behavior for the inline password popovers on this page.
+### 6. FAQ: seed system defaults by default
 
-## 7. Approval page: consolidate 補款 / 額外費用 / 要求補件, delete redundant buttons
+`src/lib/property-config.ts`
 
-- Move the 補款/額外費用 card to sit directly below the 證件 (ID) section.
-- Rename the card to **"補款 / 額外費用 / 要求補件"**.
-- Inside the card, add a **要求補件** sub-section:
-  - Reason chips: `身分證未通過`, `身分證照片不清楚`, `補款憑證不足`, `其他` (with a pencil → freeform text).
-  - Optional message textarea (pre-filled with a template based on the selected reason chip).
-- Button label change: `建立補款單並通知旅客` → **`通知旅客`**. Behavior: creates the surcharge/reissue request AND pushes a guest notification (versioned via existing `submission-updates` history) so the guest sees "民宿要求補件：___" in their submitted page with a CTA to update the missing item (e.g. re-upload ID, pay surcharge).
-- **Remove** the bottom-of-page `要求補件` button (redundant — the card handles it).
-- **Remove** the `標記完成` button (approval implicitly finalizes).
-- **Remove** the standalone `釋出密碼` button (密碼 releases automatically on `核准入住`). Keep the room-level inline pencil for edits; the "release" event is fired by 核准入住.
+- Change initial `faq: []` to `faq: faqItems.map(f => ({ ...f, id: uid() }))` (imported from `src/lib/checkin-content.ts`).
+- Add a persist `migrate`/`onRehydrateStorage` step: if `state.faq.length === 0`, seed defaults on load.
+- `owner.settings.faq.tsx`: keep the 匯入系統預設題庫 button but relabel to **"還原系統預設題庫"** (adds any missing default questions). Owners can freely edit or delete any entry, including defaults.
+- `FaqAccordion` already prefers store over defaults — no change.
 
-## 8. Owners can see guests updated their info
+### 7. Pet fee: surface on guest info page + auto-sum at deposit
 
-Extend `src/lib/submission-updates.ts`:
+`src/routes/checkin.demo.guest-info.tsx`
 
-- Add a `guestUpdates` history slice per `submissionId`: entries `{ at, field: "id_photo" | "surcharge_paid" | "other", note? }` written when the guest re-submits after a 要求補件.
-- Submission detail page adds a **"旅客更新紀錄"** timeline card under 補款/補件, showing latest guest actions with timestamps and a "查看更新" quick link that scrolls to the changed section (ID photo, payment proof, etc.).
-- Submissions list badge: rows with unread guest updates show a dot on the row; opening the detail marks them read.
-- Guest side: after receiving a 補件請求, the submitted page shows an actionable card ("民宿要求補件：___ · 前往補件") that, on completion, calls a `markGuestUpdate(submissionId, field)` helper.
+- When `askPet` is enabled AND `settings.petFeeEnabled` AND `petFeePerNight > 0`, render an inline notice under the pet chip group: **"若攜帶寵物，需加收寵物清潔費 NT$ {petFeePerNight} / 晚（每隻），將於押金頁自動加總。"**
+- Deposit page already sums pet fee — no change (working as intended); just verify the label reads "寵物清潔費".
 
-## Technical notes
+### 8. Guest ↔ owner live sync for demo testing
 
-- No backend/schema changes — all stores are zustand+persist.
-- `property-config` gets a persist migration for FAQ seed and room-group password mode collapse.
-- Auto-save uses a simple `useEffect` + `setTimeout` debouncer per store slice; status derived from `saving` boolean.
-- Media uploads reuse `fileToMediaDataUrl` (compression already in place).
-- No new npm deps.
+Currently the guest wizard writes to `useCheckinStore` (a single-user localStorage store) and the owner sees only hardcoded `demoSubmissions`. There is no bridge. Add one:
+
+- New store `src/lib/live-submissions.ts` (zustand + persist, key `walnut-live-submissions`): array of `LiveSubmission` records mirroring `OwnerSubmission` shape + a `source: "live"` flag. Actions: `push(record)`, `update(id, patch)`, `remove(id)`.
+- On `checkin.demo.review.tsx` submit, in addition to `useCheckinStore().submit()`, call `liveSubmissions.push({...formData, id: "live-" + Date.now()})`.
+- `owner.submissions.index.tsx` and `owner.submissions.$id.tsx` loaders/lists concatenate `demoSubmissions` with `liveSubmissions.all()`. The detail loader looks up by id in the merged list.
+- Because zustand-persist writes to `localStorage`, both `/checkin/demo/*` and `/owner/*` tabs in the same browser see the same data — that's the sync channel for prototype testing.
+- Two-way sync back to guest:
+  - Owner actions already write to `useSubmissionUpdates` (reissue, notify snapshot). Guest submitted page already reads it. Keep that.
+  - For live submissions, guest reads its own status from `liveSubmissions.byId(currentId)` after owner mutates `status` (via approve, need_more_info).
+  - `owner.submissions.$id.tsx` approve/notifyGuest handlers also call `liveSubmissions.update(id, {status: "approved"})` when the id is a live one.
+
+**Test credentials & flow — added to `src/routes/index.tsx` (or a small "測試指南" section on the guest home)**:
+
+- No real login exists — this is a prototype. Same browser is the sync channel.
+- **Guest test path**: open `/checkin/demo/start` in Tab A, fill the wizard with any name/phone/email, submit. Suggested demo values:
+  - 姓名 `測試旅客`, 手機 `0900-000-000`, Email `test@demo.tw`, 訂單編號 `TEST-001`.
+- **Owner test path**: open `/owner/login` in Tab B, click the 「Demo 登入」 button (existing), then go to `/owner/submissions` — the just-submitted live record appears at the top of the list with a `LIVE` chip.
+- **Two-way test scenarios**:
+  1. Owner clicks 核准入住 → Tab A `/checkin/demo/submitted` shows green 已核准 banner + password reveal.
+  2. Owner clicks 通知旅客 with 補件 request → Tab A shows red 補件 banner with CTA.
+  3. Owner edits a room password on password page → Tab A shows updated password after re-reading.
+- Add a small `測試沙盒` collapsible on both `/` and `/owner/dashboard` explaining the sync mechanism + a "清除示範資料" button that resets `walnut-live-submissions`, `walnut-checkin-demo`, and `walnut-submission-updates` localStorage keys.
+
+---
 
 ## Files touched
 
-- edit: `src/routes/checkin.demo.booking.tsx` (drop property+room selectors)
-- edit: `src/components/checkin/FaqAccordion.tsx` (read from store)
-- edit: `src/lib/property-config.ts` (FAQ seed migration; drop shared-mode; add `keyPickupMedia`)
-- edit: `src/routes/owner.settings.faq.tsx` (show system defaults; add restore button)
-- edit: `src/routes/owner.settings.passwords.tsx` (remove 共用 toggle; keep only property-level 大門密碼; fix hide toggle to mask password only)
-- edit: `src/routes/owner.settings.rooms.tsx` (key-pickup media uploader for 取鑰匙 groups)
-- edit: `src/routes/checkin.demo.guide.tsx` (render key-pickup media)
-- edit: `src/routes/owner.submissions.$id.tsx` (multi-select same category, auto-save, restructured 補款/補件 card, remove redundant buttons, guest-updates timeline)
-- edit: `src/lib/submission-updates.ts` (guestUpdates slice, read/unread)
-- edit: `src/lib/room-assignments.ts` (allow duplicates within a group)
-- edit: `src/routes/checkin.demo.submitted.tsx` (補件 CTA + markGuestUpdate)
-- edit: `src/routes/owner.submissions.index.tsx` (unread-update dot)
+- edit: `src/routes/checkin.demo.deposit.tsx` (remove FaqAccordion, route to house-rules)
+- edit: `src/routes/checkin.demo.id-upload.tsx` (remove FaqAccordion)
+- edit: `src/routes/checkin.demo.booking.tsx` (StepBar 5 steps)
+- edit: `src/routes/checkin.demo.guest-info.tsx` (pet fee notice)
+- edit: `src/routes/checkin.demo.review.tsx` (push to live store on submit)
+- edit: `src/routes/checkin.demo.submitted.tsx` (read live status)
+- edit: `src/routes/owner.submissions.$id.tsx` (drop checklist, banner tones, seed released for approved, gate-mode aware, live sync writes)
+- edit: `src/routes/owner.submissions.index.tsx` (merge live + banner tones)
+- edit: `src/routes/owner.settings.passwords.tsx` (gate mode selector, key-pickup media uploader, description note)
+- edit: `src/routes/owner.settings.rooms.tsx` (remove key-pickup media uploader — moved to passwords)
+- edit: `src/routes/owner.settings.guide.tsx` (remove key-pickup media if present there)
+- edit: `src/routes/owner.settings.faq.tsx` (relabel button)
+- edit: `src/components/checkin/StatusPill.tsx` (add "info" blue tone)
+- edit: `src/lib/property-config.ts` (seed faq defaults, migrate)
+- edit: `src/routes/index.tsx` and/or `owner.dashboard.tsx` (測試沙盒 section)
+- new: `src/lib/live-submissions.ts` (zustand persist store for sync)
+
+## Technical notes
+
+- No backend — all sync goes through `localStorage` in the same browser.
+- No new npm deps.
+- Existing `useSubmissionUpdates` already handles snapshot/notify; live-submissions store only handles the guest→owner "new submission" and owner→guest "status change" edges.
+- Persist migration guards against stale users: if `faq: []` on load, hydrate with defaults.

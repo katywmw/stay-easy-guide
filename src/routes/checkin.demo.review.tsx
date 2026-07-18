@@ -10,6 +10,7 @@ import {
   platformLabels,
   useCheckinStore,
 } from "@/lib/checkin-store";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { StepBar } from "./checkin.demo.booking";
 
 export const Route = createFileRoute("/checkin/demo/review")({
@@ -21,15 +22,47 @@ function ReviewPage() {
   const nav = useNavigate();
   const s = useCheckinStore();
   const dp = depositPill(s.depositStatus);
+  const push = useLiveSubmissions((st) => st.push);
 
   const submit = () => {
     s.submit();
+    const id = `live-${Date.now().toString(36)}`;
+    push({
+      source: "live",
+      id,
+      propertyId: s.propertyId || "walnut",
+      name: s.bookingName || "測試旅客",
+      platform: (s.platform || "other") as never,
+      checkIn: s.checkInDate,
+      checkOut: s.checkOutDate,
+      guests: Number(s.guestCount) || 1,
+      status: "submitted",
+      deposit: s.depositStatus,
+      phone: s.phone,
+      email: s.email,
+      arrivalTime: s.arrivalTime,
+      hasPet: s.hasPet === "yes",
+      needParking: s.needParking === "yes",
+      notes: s.specialNotes,
+      idUploaded: s.idUploaded,
+      proofUploaded: s.depositProofUploaded,
+      faqRead: s.faqRead,
+      rulesAgreed: s.rulesAgreed,
+      submittedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+    });
+    // Remember the id so the submitted page reads the live record
+    try {
+      localStorage.setItem("walnut-live-current-id", id);
+    } catch {
+      /* ignore */
+    }
     nav({ to: "/checkin/demo/submitted" });
   };
 
+
   return (
-    <PhoneShell title="檢查資料" subtitle="步驟 6 / 6" backTo="/checkin/demo/house-rules">
-      <StepBar current={6} />
+    <PhoneShell title="檢查資料" subtitle="步驟 5 / 5" backTo="/checkin/demo/house-rules">
+      <StepBar current={5} />
 
       <div className="mt-4 space-y-3">
         <SummaryBlock
@@ -75,13 +108,6 @@ function ReviewPage() {
           <StatusPill label={dp.label} tone={dp.tone} />
         </div>
 
-        <StatusBlock
-          title="常見問題"
-          editTo="/checkin/demo/faq"
-          ok={s.faqRead}
-          okText="已閱讀"
-          failText="尚未閱讀"
-        />
 
         <StatusBlock
           title="入住須知"

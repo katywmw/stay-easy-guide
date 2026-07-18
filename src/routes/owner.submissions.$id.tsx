@@ -24,6 +24,7 @@ import { useRoomAssignments } from "@/lib/room-assignments";
 import { propertyColors } from "@/lib/property-colors";
 import { OwnerShell, OwnerCard } from "@/components/owner/OwnerShell";
 import { demoSubmissions } from "@/lib/owner-demo";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { platformLabels } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
@@ -50,18 +51,20 @@ import {
 
 export const Route = createFileRoute("/owner/submissions/$id")({
   loader: ({ params }) => {
+    // Live submissions (id starts with "live-") are hydrated client-side, so
+    // we don't fail the loader for them. Demo submissions still resolve here.
     const s = demoSubmissions.find((x) => x.id === params.id);
-    if (!s) throw notFound();
-    return { submission: s };
+    if (!s && !params.id.startsWith("live-")) throw notFound();
+    return { submission: s ?? null };
   },
   component: SubmissionDetail,
   notFoundComponent: NotFound,
   head: ({ loaderData }) => ({
     meta: [
       {
-        title: loaderData
+        title: loaderData?.submission
           ? `${loaderData.submission.name} · 入住申請 · 胡桃民宿`
-          : "找不到申請",
+          : "入住申請 · 胡桃民宿",
       },
     ],
   }),
@@ -91,8 +94,23 @@ function defaultRoomsFor(submissionId: string, allRoomIds: string[]) {
 }
 
 function SubmissionDetail() {
-  const { submission } = Route.useLoaderData();
+  const { submission: loaded } = Route.useLoaderData();
+  const params = Route.useParams();
+  const liveItems = useLiveSubmissions((s) => s.items);
+  const submission =
+    loaded ?? liveItems.find((x) => x.id === params.id) ?? null;
   const { rooms, roomGroups, properties, extraFeeCatalog, payment, updateRoom, updateProperty } = usePropertyConfig();
+  if (!submission) {
+    return (
+      <OwnerShell title="入住申請" subtitle="Submission">
+        <OwnerCard title="找不到此申請">
+          <p className="text-sm text-muted-foreground">
+            此申請可能已被刪除或尚未同步至此裝置。
+          </p>
+        </OwnerCard>
+      </OwnerShell>
+    );
+  }
   const submissionPropertyId = submission.propertyId;
   const submissionProperty = properties.find((p) => p.id === submissionPropertyId);
   const propertyRooms = rooms.filter((r) => r.propertyId === submissionPropertyId);

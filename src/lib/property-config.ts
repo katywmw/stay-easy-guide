@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { faqItems as systemFaqSeed } from "./checkin-content";
 
 // ============ Types ============
 
@@ -421,7 +422,12 @@ export const usePropertyConfig = create<PropertyConfigState>()(
         houseRules: "",
         guide: seedGuideWalnut,
         guidePhotos: emptyPhotos(),
-        faq: [],
+        faq: systemFaqSeed.map((f, i) => ({
+          id: `seed-${i}`,
+          category: f.category,
+          q: f.q,
+          a: f.a,
+        })),
         contactChannels: seedContactWalnut,
 
         passwordReleaseMode: "manual",
@@ -672,7 +678,19 @@ export const usePropertyConfig = create<PropertyConfigState>()(
     },
     {
       name: "walnut-property-config-v2",
-      version: 2,
+      version: 3,
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as Partial<PropertyConfigState> | undefined;
+        if (state && version < 3 && (!state.faq || state.faq.length === 0)) {
+          state.faq = systemFaqSeed.map((f, i) => ({
+            id: `seed-${i}`,
+            category: f.category,
+            q: f.q,
+            a: f.a,
+          }));
+        }
+        return state as PropertyConfigState;
+      },
     },
   ),
 );

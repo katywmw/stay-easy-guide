@@ -67,7 +67,7 @@ function BookingPage() {
   return (
     <PhoneShell
       title="訂房資料"
-      subtitle="步驟 1 / 6"
+      subtitle="步驟 1 / 5"
       backTo="/checkin/demo/start"
     >
       <StepBar current={1} />
@@ -157,8 +157,7 @@ function BookingPage() {
   );
 }
 
-export function StepBar({ current }: { current: number }) {
-  const total = 6;
+export function StepBar({ current, total = 5 }: { current: number; total?: number }) {
   return (
     <div className="flex items-center gap-1.5">
       {Array.from({ length: total }).map((_, i) => (

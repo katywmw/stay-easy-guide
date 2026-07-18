@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Upload, Info, CheckCircle2 } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton, ChipGroup } from "@/components/checkin/Fields";
-import { FaqAccordion } from "@/components/checkin/FaqAccordion";
+
 import { useCheckinStore } from "@/lib/checkin-store";
 import { usePropertySettings } from "@/lib/property-settings";
 import { usePropertyConfig, computeDeposit } from "@/lib/property-config";
@@ -51,7 +51,7 @@ function DepositPage() {
     return (
       <PhoneShell
         title="押金資訊"
-        subtitle="步驟 4 / 6"
+        subtitle="步驟 4 / 5"
         backTo="/checkin/demo/id-upload"
       >
         <StepBar current={4} />
@@ -63,7 +63,7 @@ function DepositPage() {
           </p>
         </div>
         <div className="mt-6">
-          <PrimaryButton onClick={() => nav({ to: "/checkin/demo/faq" })}>
+          <PrimaryButton onClick={() => nav({ to: "/checkin/demo/house-rules" })}>
             下一步:常見問題與入住須知
           </PrimaryButton>
         </div>
@@ -76,7 +76,7 @@ function DepositPage() {
   return (
     <PhoneShell
       title="押金資訊"
-      subtitle="步驟 4 / 6"
+      subtitle="步驟 4 / 5"
       backTo="/checkin/demo/id-upload"
     >
       <StepBar current={4} />
@@ -219,14 +219,12 @@ function DepositPage() {
         </div>
       </div>
 
-      <FaqAccordion category="deposit" title="常見問題（押金相關）" />
-
       <div className="mt-6">
         <PrimaryButton
           disabled={!canNext}
-          onClick={() => nav({ to: "/checkin/demo/faq" })}
+          onClick={() => nav({ to: "/checkin/demo/house-rules" })}
         >
-          下一步：常見問題與入住須知
+          下一步：入住須知
         </PrimaryButton>
       </div>
     </PhoneShell>

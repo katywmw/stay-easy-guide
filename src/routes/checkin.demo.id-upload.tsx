@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Camera, ShieldCheck, Info, CheckCircle2 } from "lucide-react";
+import { Camera, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { PrimaryButton } from "@/components/checkin/Fields";
-import { FaqAccordion } from "@/components/checkin/FaqAccordion";
 import { useCheckinStore } from "@/lib/checkin-store";
 import { StepBar } from "./checkin.demo.booking";
 
@@ -19,10 +18,11 @@ function IdUploadPage() {
   return (
     <PhoneShell
       title="上傳身分證件"
-      subtitle="步驟 3 / 6"
+      subtitle="步驟 3 / 5"
       backTo="/checkin/demo/guest-info"
     >
       <StepBar current={3} />
+
 
       <div className="mt-4">
         <h2 className="text-lg font-black text-foreground">上傳身分證件</h2>
@@ -121,7 +121,7 @@ function IdUploadPage() {
         完整入住指引與門鎖密碼將於民宿審核通過後開放。
       </p>
 
-      <FaqAccordion category="id" title="常見問題（證件相關）" />
+
 
       <div className="mt-6">
         <PrimaryButton

@@ -1,6 +1,6 @@
 import type { CheckinStatus, DepositStatus } from "@/lib/checkin-store";
 
-type Tone = "success" | "warning" | "muted" | "destructive" | "primary";
+type Tone = "success" | "warning" | "muted" | "destructive" | "primary" | "info";
 
 const toneClasses: Record<Tone, string> = {
   success: "bg-success-soft text-success",
@@ -8,6 +8,7 @@ const toneClasses: Record<Tone, string> = {
   muted: "bg-secondary text-muted-foreground",
   destructive: "bg-destructive-soft text-destructive",
   primary: "bg-primary-soft text-foreground",
+  info: "bg-[oklch(0.94_0.04_240)] text-[oklch(0.38_0.15_250)]",
 };
 
 export function StatusPill({
@@ -31,7 +32,9 @@ export function StatusPill({
                 ? "bg-destructive"
                 : tone === "primary"
                   ? "bg-primary"
-                  : "bg-muted-foreground"
+                  : tone === "info"
+                    ? "bg-[oklch(0.55_0.15_250)]"
+                    : "bg-muted-foreground"
         }`}
       />
       {label}
