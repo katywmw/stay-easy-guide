@@ -56,10 +56,15 @@ function BookingPage() {
     s.update(patch);
   };
 
+  // Phone: default +886, validate E.164-ish Taiwan mobile / general 8-15 digits
+  const phoneDigits = s.phone.replace(/[^\d]/g, "");
+  const phoneValid =
+    /^\+?[0-9]{8,15}$/.test(s.phone.trim()) && phoneDigits.length >= 8;
+
   const canNext =
     !!s.platform &&
     !!s.bookingName &&
-    !!s.phone &&
+    phoneValid &&
     !!s.checkInDate &&
     !!s.checkOutDate &&
     s.checkOutDate > s.checkInDate;
