@@ -84,15 +84,17 @@ function OwnerDashboard() {
 
 
 
+      <CalendarPanel submissions={filtered} properties={properties} />
+
       {/* Stats — mobile: compact horizontal snap row */}
-      <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:hidden -mx-4 px-4">
+      <div className="mt-3 flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 sm:hidden -mx-4 px-4">
         <StatPill label="今日入住" value={stats.today} icon={CalendarDays} tone="primary" />
         <StatPill label="等待審核" value={stats.awaitingReview} icon={Clock} tone="warning" />
         <StatPill label="需補件" value={stats.needMoreInfo} icon={AlertCircle} tone="destructive" />
         <StatPill label="已核准" value={stats.approved} icon={CheckCircle2} tone="success" />
         <StatPill label="押金待確認" value={stats.depositPending} icon={Wallet} tone="warning" />
       </div>
-      <div className="mt-1 hidden grid-cols-3 gap-3 sm:grid xl:grid-cols-5">
+      <div className="mt-3 hidden grid-cols-3 gap-3 sm:grid xl:grid-cols-5">
         <StatMini label="今日入住" value={stats.today} icon={CalendarDays} tone="primary" />
         <StatMini label="等待審核" value={stats.awaitingReview} icon={Clock} tone="warning" />
         <StatMini label="需補件" value={stats.needMoreInfo} icon={AlertCircle} tone="destructive" />
