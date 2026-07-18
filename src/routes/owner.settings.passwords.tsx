@@ -290,7 +290,7 @@ function PasswordGroupsSection({
 
 type GroupDraft = {
   keyPickupLocation: string;
-  rooms: Record<string, { doorPassword: string; note: string }>;
+  rooms: Record<string, { doorPassword: string; gatePassword: string; note: string }>;
 };
 
 function buildDraft(g: RoomTypeGroup, rooms: Room[]): GroupDraft {
@@ -301,6 +301,31 @@ function buildDraft(g: RoomTypeGroup, rooms: Room[]): GroupDraft {
         r.id,
         {
           doorPassword: r.doorPassword ?? "",
+          gatePassword: r.gatePassword ?? "",
+          note: r.note ?? "",
+        },
+      ]),
+    ),
+  };
+}
+
+function GroupPasswordCard({
+  group,
+  rooms,
+  gateMode,
+  collapsed = false,
+  onToggle,
+  onSaveGroup,
+  onSaveRoom,
+}: {
+  group: RoomTypeGroup;
+  rooms: Room[];
+  gateMode: PropertyGateMode;
+  collapsed?: boolean;
+  onToggle?: () => void;
+  onSaveGroup: (patch: Partial<RoomTypeGroup>) => void;
+  onSaveRoom: (id: string, patch: Partial<Room>) => void;
+}) {
           note: r.note ?? "",
         },
       ]),
