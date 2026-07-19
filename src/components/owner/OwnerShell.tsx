@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useOwnerAuth, useOwnerAuthHydrated } from "@/lib/owner-auth";
-import { usePropertyConfig } from "@/lib/property-config";
+import { usePropertyConfig, usePropertyConfigHydrated } from "@/lib/property-config";
 
 const navItems = [
   { to: "/owner/dashboard", label: "儀表板", icon: LayoutDashboard },
