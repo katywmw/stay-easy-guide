@@ -53,9 +53,9 @@ function SettingsLayout() {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   return (
     <OwnerShell title="民宿設定" subtitle="Settings">
-      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
-        <nav className="rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-3 lg:sticky lg:top-16 lg:self-start">
-          <div className="space-y-4">
+      <div className="grid min-w-0 gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
+        <nav className="min-w-0 overflow-hidden rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-3 lg:sticky lg:top-16 lg:self-start">
+          <div className="min-w-0 space-y-4">
             {groups.map((g) => (
               <div key={g.title}>
                 <p className="mb-1.5 px-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
