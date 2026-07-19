@@ -39,12 +39,16 @@ export function OwnerShell({
 }) {
   const nav = useNavigate();
   const { loggedIn, logout } = useOwnerAuth();
+  const authHydrated = useOwnerAuthHydrated();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!loggedIn) nav({ to: "/owner/login" });
-  }, [loggedIn, nav]);
+    // Only redirect after persisted auth has finished rehydrating — otherwise
+    // the initial `loggedIn=false` default would boot signed-in owners back
+    // to the login page and lose their unsaved edits.
+    if (authHydrated && !loggedIn) nav({ to: "/owner/login" });
+  }, [authHydrated, loggedIn, nav]);
 
   return (
     <div className="min-h-screen bg-[oklch(0.965_0.024_86)]">
