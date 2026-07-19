@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash2, MessageCircle, Phone, Mail, MessageSquare } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
+import { SaveBar } from "@/components/owner/SaveBar";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { CopyFromPropertyButton } from "@/components/owner/CopyFromPropertyButton";
 import { Input } from "./owner.settings.property";
@@ -72,7 +73,33 @@ function ContactSettings() {
     removeContactChannel,
   } = usePropertyConfig();
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState(emptyChannel());
+  const [addDraft, setAddDraft] = useState(emptyChannel());
+
+  const [draft, setDraft] = useState<ContactChannel[]>(contactChannels);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setDraft(contactChannels);
+  }, [contactChannels.map((c) => c.id).join(",")]);
+
+  const dirty = JSON.stringify(draft) !== JSON.stringify(contactChannels);
+  const patch = (id: string, p: Partial<ContactChannel>) =>
+    setDraft((d) => d.map((c) => (c.id === id ? { ...c, ...p } : c)));
+
+  const save = () => {
+    draft.forEach((c) => {
+      const orig = contactChannels.find((o) => o.id === c.id);
+      if (!orig) return;
+      const changes: Partial<ContactChannel> = {};
+      (Object.keys(c) as (keyof ContactChannel)[]).forEach((k) => {
+        if (c[k] !== orig[k]) (changes as any)[k] = c[k];
+      });
+      if (Object.keys(changes).length) updateContactChannel(c.id, changes);
+    });
+    setSavedAt(new Date());
+    toast.success("已儲存聯絡方式");
+  };
+  const reset = () => setDraft(contactChannels);
 
   return (
     <div className="space-y-4">
@@ -81,14 +108,14 @@ function ContactSettings() {
 
       <OwnerCard
         title="旅客聯絡方式"
-        desc="旅客可在入住頁面直接一鍵聯絡屋主。目前為外部導流模式（LINE、電話、Email…），未來將加入站內聊天。"
+        desc="旅客可在入住頁面直接一鍵聯絡屋主。編輯後請按下方「儲存變更」。"
         actions={
           <div className="flex items-center gap-2">
             <CopyFromPropertyButton kinds={["contact"]} />
             <button
               onClick={() => {
                 setAdding((v) => !v);
-                setDraft(emptyChannel());
+                setAddDraft(emptyChannel());
               }}
               className="inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground"
             >
@@ -102,17 +129,17 @@ function ContactSettings() {
           <div className="mb-5 rounded-lg border border-dashed border-primary bg-primary-soft/30 p-4">
             <div className="grid gap-3 sm:grid-cols-3">
               <TypeSelect
-                value={draft.type}
-                onChange={(v) => setDraft({ ...draft, type: v })}
+                value={addDraft.type}
+                onChange={(v) => setAddDraft({ ...addDraft, type: v })}
               />
-              <Input label="顯示名稱" value={draft.label} onChange={(v) => setDraft({ ...draft, label: v })} />
-              <Input label="值（ID / 電話 / URL）" value={draft.value} onChange={(v) => setDraft({ ...draft, value: v })} />
+              <Input label="顯示名稱" value={addDraft.label} onChange={(v) => setAddDraft({ ...addDraft, label: v })} />
+              <Input label="值（ID / 電話 / URL）" value={addDraft.value} onChange={(v) => setAddDraft({ ...addDraft, value: v })} />
             </div>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => {
-                  if (!draft.value.trim()) return toast.error("請填入聯絡值");
-                  addContactChannel(draft);
+                  if (!addDraft.value.trim()) return toast.error("請填入聯絡值");
+                  addContactChannel(addDraft);
                   setAdding(false);
                   toast.success("已新增");
                 }}
@@ -130,13 +157,13 @@ function ContactSettings() {
           </div>
         )}
 
-        {contactChannels.length === 0 ? (
+        {draft.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border bg-secondary/30 p-8 text-center text-sm text-muted-foreground">
             尚未新增聯絡管道，旅客端將不顯示「聯絡屋主」區塊。
           </p>
         ) : (
           <div className="space-y-3">
-            {contactChannels.map((c) => {
+            {draft.map((c) => {
               const Icon = channelIcon(c.type);
               return (
                 <div
@@ -152,9 +179,7 @@ function ContactSettings() {
                       <input
                         type="checkbox"
                         checked={c.enabled}
-                        onChange={(e) =>
-                          updateContactChannel(c.id, { enabled: e.target.checked })
-                        }
+                        onChange={(e) => patch(c.id, { enabled: e.target.checked })}
                         className="h-3.5 w-3.5 accent-[oklch(0.75_0.14_85)]"
                       />
                       啟用
@@ -174,17 +199,17 @@ function ContactSettings() {
                   <div className="grid gap-3 sm:grid-cols-3">
                     <TypeSelect
                       value={c.type}
-                      onChange={(v) => updateContactChannel(c.id, { type: v })}
+                      onChange={(v) => patch(c.id, { type: v })}
                     />
                     <Input
                       label="顯示名稱"
                       value={c.label}
-                      onChange={(v) => updateContactChannel(c.id, { label: v })}
+                      onChange={(v) => patch(c.id, { label: v })}
                     />
                     <Input
                       label="值"
                       value={c.value}
-                      onChange={(v) => updateContactChannel(c.id, { value: v })}
+                      onChange={(v) => patch(c.id, { value: v })}
                     />
                   </div>
                 </div>
@@ -193,6 +218,7 @@ function ContactSettings() {
           </div>
         )}
       </OwnerCard>
+      <SaveBar dirty={dirty} savedAt={savedAt} onSave={save} onReset={reset} />
     </div>
   );
 }

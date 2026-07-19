@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Trash2, ArrowLeft, ArrowRight, Play } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
+import { SaveBar } from "@/components/owner/SaveBar";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { CopyFromPropertyButton } from "@/components/owner/CopyFromPropertyButton";
 import { ImageLightbox, isVideoUrl } from "@/components/checkin/ImageLightbox";
@@ -22,8 +23,22 @@ function GuideSettings() {
   const { guide, guidePhotos, update } = usePropertyConfig();
   const [lightbox, setLightbox] = useState<string | null>(null);
 
+  const [draftGuide, setDraftGuide] = useState(guide);
+  const [draftPhotos, setDraftPhotos] = useState(guidePhotos);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setDraftGuide(guide);
+    setDraftPhotos(guidePhotos);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(guideFieldOrder)]);
+
+  const dirty =
+    JSON.stringify(draftGuide) !== JSON.stringify(guide) ||
+    JSON.stringify(draftPhotos) !== JSON.stringify(guidePhotos);
+
   const setField = (k: GuideField, v: string) =>
-    update({ guide: { ...guide, [k]: v } });
+    setDraftGuide((d) => ({ ...d, [k]: v }));
 
   const onFile =
     (k: GuideField) => async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -32,29 +47,37 @@ function GuideSettings() {
       if (!files.length) return;
       try {
         const urls = await Promise.all(files.map(fileToMediaDataUrl));
-        update({
-          guidePhotos: {
-            ...guidePhotos,
-            [k]: [...(guidePhotos[k] ?? []), ...urls],
-          },
-        });
+        setDraftPhotos((d) => ({
+          ...d,
+          [k]: [...(d[k] ?? []), ...urls],
+        }));
       } catch {
         toast.error("上傳失敗，請重試或選擇較小的檔案。");
       }
     };
 
   const setList = (k: GuideField, list: string[]) =>
-    update({ guidePhotos: { ...guidePhotos, [k]: list } });
+    setDraftPhotos((d) => ({ ...d, [k]: list }));
 
   const removeAt = (k: GuideField, idx: number) =>
-    setList(k, (guidePhotos[k] ?? []).filter((_, i) => i !== idx));
+    setList(k, (draftPhotos[k] ?? []).filter((_, i) => i !== idx));
 
   const move = (k: GuideField, from: number, to: number) => {
-    const list = [...(guidePhotos[k] ?? [])];
+    const list = [...(draftPhotos[k] ?? [])];
     if (to < 0 || to >= list.length) return;
     const [item] = list.splice(from, 1);
     list.splice(to, 0, item);
     setList(k, list);
+  };
+
+  const save = () => {
+    update({ guide: draftGuide, guidePhotos: draftPhotos });
+    setSavedAt(new Date());
+    toast.success("已儲存入住指引");
+  };
+  const reset = () => {
+    setDraftGuide(guide);
+    setDraftPhotos(guidePhotos);
   };
 
   return (
@@ -63,7 +86,7 @@ function GuideSettings() {
       <PropertyBadge />
       <OwnerCard
         title="入住指引模板 + 相片 / 影片"
-        desc="審核通過後旅客可看到。每個欄位可附上多張照片或短影片；拖曳縮圖可調整順序，點擊可放大檢視。"
+        desc="審核通過後旅客可看到。編輯後請按下方「儲存變更」。拖曳縮圖可調整順序，點擊可放大檢視。"
         actions={<CopyFromPropertyButton kinds={["guide"]} label="複製指引" />}
       >
         <div className="space-y-5">
@@ -78,14 +101,14 @@ function GuideSettings() {
                 </span>
                 <textarea
                   rows={2}
-                  value={guide[k]}
+                  value={draftGuide[k]}
                   onChange={(e) => setField(k, e.target.value)}
                   className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/30"
                 />
               </label>
               <div className="mt-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  {(guidePhotos[k] ?? []).map((url, i, arr) => (
+                  {(draftPhotos[k] ?? []).map((url, i, arr) => (
                     <MediaTile
                       key={`${k}-${i}-${url.slice(0, 24)}`}
                       url={url}
@@ -114,10 +137,8 @@ function GuideSettings() {
             </div>
           ))}
         </div>
-        <p className="mt-4 text-xs text-muted-foreground">
-          變更會即時儲存至本地設定；旅客端於審核通過後看得到。
-        </p>
       </OwnerCard>
+      <SaveBar dirty={dirty} savedAt={savedAt} onSave={save} onReset={reset} />
       <ImageLightbox src={lightbox} onClose={() => setLightbox(null)} />
     </div>
   );
