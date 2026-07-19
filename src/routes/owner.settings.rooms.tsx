@@ -225,7 +225,7 @@ function RoomsSettings() {
 
         <div className="space-y-3">
           {filteredGroups.map((g) => {
-            const groupRooms = propertyRooms.filter((r) => r.groupId === g.id);
+            const groupRooms = roomDrafts.filter((r) => r.groupId === g.id);
             const isOpen = openIds.has(g.id);
             return (
               <GroupCard
@@ -234,7 +234,7 @@ function RoomsSettings() {
                 rooms={groupRooms}
                 isOpen={isOpen}
                 onToggle={() => toggle(g.id)}
-                onUpdate={(patch) => updateRoomGroup(g.id, patch)}
+                onUpdate={(patch) => patchGroup(g.id, patch)}
                 onDelete={() => {
                   if (
                     confirm(
@@ -260,7 +260,7 @@ function RoomsSettings() {
                     depositAmount: g.depositAmount,
                   })
                 }
-                onUpdateRoom={updateRoom}
+                onUpdateRoom={patchRoom}
                 onRemoveRoom={(id) => {
                   if (confirm("刪除此房間？")) {
                     removeRoom(id);
@@ -276,6 +276,7 @@ function RoomsSettings() {
           })}
         </div>
       </OwnerCard>
+      <SaveBar dirty={dirty} savedAt={savedAt} onSave={save} onReset={reset} />
     </div>
   );
 }
