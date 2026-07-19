@@ -12,7 +12,7 @@ import {
   KeyRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useOwnerAuth } from "@/lib/owner-auth";
+import { useOwnerAuth, useOwnerAuthHydrated } from "@/lib/owner-auth";
 import { usePropertyConfig } from "@/lib/property-config";
 
 const navItems = [
