@@ -22,7 +22,7 @@ export function SaveBar({
 
   return (
     <div
-      className={`sticky bottom-3 z-20 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border p-3 shadow-lg backdrop-blur transition ${
+      className={`sticky bottom-3 z-40 mt-6 flex flex-col items-stretch gap-3 rounded-2xl border p-3 shadow-lg backdrop-blur transition sm:flex-row sm:items-center sm:justify-between ${
         dirty
           ? "border-warning bg-warning-soft/95"
           : "border-[oklch(0.92_0.02_80)] bg-card/95"
@@ -46,12 +46,12 @@ export function SaveBar({
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex w-full items-center gap-2 sm:w-auto">
         {dirty && (
           <button
             type="button"
             onClick={onReset}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+            className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground hover:bg-secondary sm:min-h-0 sm:flex-none sm:py-1.5"
           >
             <RotateCcw className="h-3 w-3" />
             捨棄
@@ -61,7 +61,7 @@ export function SaveBar({
           type="button"
           onClick={onSave}
           disabled={!dirty || saving}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground disabled:opacity-40"
+          className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-primary-foreground disabled:opacity-40 sm:min-h-0 sm:flex-none sm:py-1.5"
         >
           儲存變更
         </button>
