@@ -1,5 +1,5 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
-import { useOwnerAuth } from "@/lib/owner-auth";
+import { useOwnerAuth, useOwnerAuthHydrated } from "@/lib/owner-auth";
 
 export const Route = createFileRoute("/owner/")({
   component: OwnerEntry,
@@ -8,5 +8,9 @@ export const Route = createFileRoute("/owner/")({
 
 function OwnerEntry() {
   const loggedIn = useOwnerAuth((s) => s.loggedIn);
+  const hydrated = useOwnerAuthHydrated();
+  // Wait for zustand persist to rehydrate; otherwise a signed-in owner
+  // briefly reads loggedIn=false and gets bounced to /owner/login.
+  if (!hydrated) return null;
   return <Navigate to={loggedIn ? "/owner/dashboard" : "/owner/login"} />;
 }
