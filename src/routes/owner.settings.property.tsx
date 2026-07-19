@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
+import { SaveBar } from "@/components/owner/SaveBar";
 import { usePropertyConfig, type Property } from "@/lib/property-config";
 import { toast, Toaster } from "sonner";
 
@@ -30,14 +31,47 @@ function PropertySettings() {
     update,
   } = usePropertyConfig();
   const [adding, setAdding] = useState(false);
-  const [draft, setDraft] = useState(emptyProperty());
+  const [newDraft, setNewDraft] = useState(emptyProperty());
+
+  // Local draft of all properties for manual save
+  const [draft, setDraft] = useState<Property[]>(properties);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  // Re-sync when store list identity changes (add/remove)
+  useEffect(() => {
+    setDraft(properties);
+  }, [properties.map((p) => p.id).join(",")]);
+
+  const dirty = JSON.stringify(draft) !== JSON.stringify(properties);
+
+  const patchDraft = (id: string, patch: Partial<Property>) =>
+    setDraft((d) => d.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+
+  const save = () => {
+    draft.forEach((p) => {
+      const orig = properties.find((o) => o.id === p.id);
+      if (!orig) return;
+      const changes: Partial<Property> = {};
+      (Object.keys(p) as (keyof Property)[]).forEach((k) => {
+        if (p[k] !== orig[k]) (changes as any)[k] = p[k];
+      });
+      if (Object.keys(changes).length) updateProperty(p.id, changes);
+    });
+    setSavedAt(new Date());
+    toast.success("已儲存館別資料");
+  };
+
+  const reset = () => {
+    setDraft(properties);
+    setSavedAt(null);
+  };
 
   return (
     <div className="space-y-5">
       <Toaster position="top-center" richColors />
       <OwnerCard
         title="館別管理"
-        desc="適合多館別業者，例如安平九號、胡桃等。每館獨立房間、押金與付款設定。"
+        desc="適合多館別業者，例如安平九號、胡桃等。每館獨立房間、押金與付款設定。編輯後請按下方「儲存變更」。"
         actions={
           <button
             onClick={() => setAdding((v) => !v)}
@@ -52,19 +86,19 @@ function PropertySettings() {
           <div className="mb-5 rounded-lg border border-dashed border-primary bg-primary-soft/40 p-4">
             <p className="mb-3 text-sm font-bold text-foreground">新增館別</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              <Input label="民宿名稱" value={draft.name} onChange={(v) => setDraft({ ...draft, name: v })} />
-              <Input label="聯絡電話" value={draft.phone} onChange={(v) => setDraft({ ...draft, phone: v })} />
-              <Input label="地址" value={draft.address} onChange={(v) => setDraft({ ...draft, address: v })} full />
-              <Input label="Email" value={draft.email} onChange={(v) => setDraft({ ...draft, email: v })} />
-              <Input label="入住時間" value={draft.checkInTime} onChange={(v) => setDraft({ ...draft, checkInTime: v })} />
-              <Input label="退房時間" value={draft.checkOutTime} onChange={(v) => setDraft({ ...draft, checkOutTime: v })} />
+              <Input label="民宿名稱" value={newDraft.name} onChange={(v) => setNewDraft({ ...newDraft, name: v })} />
+              <Input label="聯絡電話" value={newDraft.phone} onChange={(v) => setNewDraft({ ...newDraft, phone: v })} />
+              <Input label="地址" value={newDraft.address} onChange={(v) => setNewDraft({ ...newDraft, address: v })} full />
+              <Input label="Email" value={newDraft.email} onChange={(v) => setNewDraft({ ...newDraft, email: v })} />
+              <Input label="入住時間" value={newDraft.checkInTime} onChange={(v) => setNewDraft({ ...newDraft, checkInTime: v })} />
+              <Input label="退房時間" value={newDraft.checkOutTime} onChange={(v) => setNewDraft({ ...newDraft, checkOutTime: v })} />
             </div>
             <div className="mt-3 flex gap-2">
               <button
                 onClick={() => {
-                  if (!draft.name.trim()) return toast.error("請輸入民宿名稱");
-                  addProperty(draft);
-                  setDraft(emptyProperty());
+                  if (!newDraft.name.trim()) return toast.error("請輸入民宿名稱");
+                  addProperty(newDraft);
+                  setNewDraft(emptyProperty());
                   setAdding(false);
                   toast.success("已新增");
                 }}
@@ -75,7 +109,7 @@ function PropertySettings() {
               <button
                 onClick={() => {
                   setAdding(false);
-                  setDraft(emptyProperty());
+                  setNewDraft(emptyProperty());
                 }}
                 className="rounded-lg border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground"
               >
@@ -86,7 +120,7 @@ function PropertySettings() {
         )}
 
         <div className="space-y-4">
-          {properties.map((p) => (
+          {draft.map((p) => (
             <div
               key={p.id}
               className={`rounded-lg border p-4 ${
@@ -105,7 +139,7 @@ function PropertySettings() {
                   />
                   設為目前操作館別
                 </label>
-                {properties.length > 1 && (
+                {draft.length > 1 && (
                   <button
                     onClick={() => {
                       if (confirm(`刪除「${p.name}」？`)) {
@@ -120,17 +154,19 @@ function PropertySettings() {
                 )}
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Input label="民宿名稱" value={p.name} onChange={(v) => updateProperty(p.id, { name: v })} />
-                <Input label="聯絡電話" value={p.phone} onChange={(v) => updateProperty(p.id, { phone: v })} />
-                <Input label="地址" full value={p.address} onChange={(v) => updateProperty(p.id, { address: v })} />
-                <Input label="Email" value={p.email} onChange={(v) => updateProperty(p.id, { email: v })} />
-                <Input label="入住時間" value={p.checkInTime} onChange={(v) => updateProperty(p.id, { checkInTime: v })} />
-                <Input label="退房時間" value={p.checkOutTime} onChange={(v) => updateProperty(p.id, { checkOutTime: v })} />
+                <Input label="民宿名稱" value={p.name} onChange={(v) => patchDraft(p.id, { name: v })} />
+                <Input label="聯絡電話" value={p.phone} onChange={(v) => patchDraft(p.id, { phone: v })} />
+                <Input label="地址" full value={p.address} onChange={(v) => patchDraft(p.id, { address: v })} />
+                <Input label="Email" value={p.email} onChange={(v) => patchDraft(p.id, { email: v })} />
+                <Input label="入住時間" value={p.checkInTime} onChange={(v) => patchDraft(p.id, { checkInTime: v })} />
+                <Input label="退房時間" value={p.checkOutTime} onChange={(v) => patchDraft(p.id, { checkOutTime: v })} />
               </div>
             </div>
           ))}
         </div>
       </OwnerCard>
+
+      <SaveBar dirty={dirty} savedAt={savedAt} onSave={save} onReset={reset} />
     </div>
   );
 }
