@@ -730,3 +730,28 @@ export function computeDeposit(
 export function currentProperty(s: PropertyConfigState): Property | undefined {
   return s.properties.find((p) => p.id === s.currentPropertyId);
 }
+
+// ============ Hydration helper ============
+import { useEffect, useState } from "react";
+
+/**
+ * Zustand persist rehydrates from localStorage asynchronously (and is skipped
+ * during SSR). If a form renders + accepts input BEFORE rehydration finishes,
+ * the user's edits are applied to the default in-memory state and then
+ * overwritten when persisted data arrives — the classic "my changes vanished"
+ * bug. Gate any editable settings screen on this hook.
+ */
+export function usePropertyConfigHydrated() {
+  const [hydrated, setHydrated] = useState(() =>
+    usePropertyConfig.persist.hasHydrated(),
+  );
+  useEffect(() => {
+    if (hydrated) return;
+    const unsub = usePropertyConfig.persist.onFinishHydration(() =>
+      setHydrated(true),
+    );
+    if (usePropertyConfig.persist.hasHydrated()) setHydrated(true);
+    return () => unsub();
+  }, [hydrated]);
+  return hydrated;
+}

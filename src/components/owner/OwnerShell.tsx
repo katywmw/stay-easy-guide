@@ -12,8 +12,8 @@ import {
   KeyRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useOwnerAuth } from "@/lib/owner-auth";
-import { usePropertyConfig } from "@/lib/property-config";
+import { useOwnerAuth, useOwnerAuthHydrated } from "@/lib/owner-auth";
+import { usePropertyConfig, usePropertyConfigHydrated } from "@/lib/property-config";
 
 const navItems = [
   { to: "/owner/dashboard", label: "儀表板", icon: LayoutDashboard },
@@ -39,12 +39,29 @@ export function OwnerShell({
 }) {
   const nav = useNavigate();
   const { loggedIn, logout } = useOwnerAuth();
+  const authHydrated = useOwnerAuthHydrated();
+  const configHydrated = usePropertyConfigHydrated();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!loggedIn) nav({ to: "/owner/login" });
-  }, [loggedIn, nav]);
+    // Only redirect after persisted auth has finished rehydrating — otherwise
+    // the initial `loggedIn=false` default would boot signed-in owners back
+    // to the login page and lose their unsaved edits.
+    if (authHydrated && !loggedIn) nav({ to: "/owner/login" });
+  }, [authHydrated, loggedIn, nav]);
+
+  // Hold rendering until persisted stores finish loading. Without this, forms
+  // may briefly render against defaults, accept keystrokes, and then get
+  // clobbered by the rehydrated state — the "my inputs disappear" bug.
+  if (!authHydrated || !configHydrated) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-[oklch(0.965_0.024_86)]">
+        <p className="text-xs font-semibold text-muted-foreground">載入中…</p>
+      </div>
+    );
+  }
+
 
   return (
     <div className="min-h-screen bg-[oklch(0.965_0.024_86)]">
