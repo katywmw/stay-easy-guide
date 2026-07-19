@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Trash2, Copy, ChevronDown, ChevronRight, Key, Lock, Pencil, Check, ImagePlus, Play } from "lucide-react";
 import { OwnerCard } from "@/components/owner/OwnerShell";
+import { SaveBar } from "@/components/owner/SaveBar";
 import { PropertyBadge } from "@/components/owner/PropertyBadge";
 import { Input } from "./owner.settings.property";
 import {
