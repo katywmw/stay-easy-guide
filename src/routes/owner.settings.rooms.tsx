@@ -49,6 +49,59 @@ function RoomsSettings() {
   const propertyGroups = roomGroups.filter((g) => g.propertyId === currentPropertyId);
   const propertyRooms = rooms.filter((r) => r.propertyId === currentPropertyId);
 
+  // Local drafts for manual save
+  const [groupDrafts, setGroupDrafts] = useState<RoomTypeGroup[]>(propertyGroups);
+  const [roomDrafts, setRoomDrafts] = useState<Room[]>(propertyRooms);
+  const [savedAt, setSavedAt] = useState<Date | null>(null);
+
+  // Resync when structure changes (add/remove/duplicate/property switch)
+  useEffect(() => {
+    setGroupDrafts(propertyGroups);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyGroups.map((g) => g.id).join(","), currentPropertyId]);
+  useEffect(() => {
+    setRoomDrafts(propertyRooms);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyRooms.map((r) => r.id).join(","), currentPropertyId]);
+
+  const dirty =
+    JSON.stringify(groupDrafts) !== JSON.stringify(propertyGroups) ||
+    JSON.stringify(roomDrafts) !== JSON.stringify(propertyRooms);
+
+  const patchGroup = (id: string, p: Partial<RoomTypeGroup>) =>
+    setGroupDrafts((d) => d.map((g) => (g.id === id ? { ...g, ...p } : g)));
+  const patchRoom = (id: string, p: Partial<Room>) =>
+    setRoomDrafts((d) => d.map((r) => (r.id === id ? { ...r, ...p } : r)));
+
+  const save = () => {
+    groupDrafts.forEach((g) => {
+      const orig = propertyGroups.find((o) => o.id === g.id);
+      if (!orig) return;
+      const changes: Partial<RoomTypeGroup> = {};
+      (Object.keys(g) as (keyof RoomTypeGroup)[]).forEach((k) => {
+        if (JSON.stringify(g[k]) !== JSON.stringify(orig[k]))
+          (changes as any)[k] = g[k];
+      });
+      if (Object.keys(changes).length) updateRoomGroup(g.id, changes);
+    });
+    roomDrafts.forEach((r) => {
+      const orig = propertyRooms.find((o) => o.id === r.id);
+      if (!orig) return;
+      const changes: Partial<Room> = {};
+      (Object.keys(r) as (keyof Room)[]).forEach((k) => {
+        if (JSON.stringify(r[k]) !== JSON.stringify(orig[k]))
+          (changes as any)[k] = r[k];
+      });
+      if (Object.keys(changes).length) updateRoom(r.id, changes);
+    });
+    setSavedAt(new Date());
+    toast.success("已儲存房型與房間");
+  };
+  const reset = () => {
+    setGroupDrafts(propertyGroups);
+    setRoomDrafts(propertyRooms);
+  };
+
   const [addingGroup, setAddingGroup] = useState(false);
   const [groupDraft, setGroupDraft] = useState(emptyGroup(currentPropertyId));
   const [openIds, setOpenIds] = useState<Set<string>>(new Set(propertyGroups.map((g) => g.id)));
@@ -56,13 +109,13 @@ function RoomsSettings() {
 
   const bedTags = useMemo(() => {
     const set = new Set<string>();
-    propertyGroups.forEach((g) => g.bedType && set.add(g.bedType));
+    groupDrafts.forEach((g) => g.bedType && set.add(g.bedType));
     return Array.from(set);
-  }, [propertyGroups]);
+  }, [groupDrafts]);
 
   const filteredGroups = filterTags.size
-    ? propertyGroups.filter((g) => g.bedType && filterTags.has(g.bedType))
-    : propertyGroups;
+    ? groupDrafts.filter((g) => g.bedType && filterTags.has(g.bedType))
+    : groupDrafts;
 
   const toggle = (id: string) => {
     const n = new Set(openIds);
