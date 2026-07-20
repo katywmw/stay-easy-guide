@@ -27,7 +27,7 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 import { useChatStore } from "@/lib/chat-store";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { useLiveSubmissions } from "@/lib/live-submissions";
-import { platformLabels } from "@/lib/checkin-store";
+import { platformLabels, useCheckinStore } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
   depositPill,
