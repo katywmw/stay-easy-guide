@@ -94,7 +94,7 @@ function SubmittedPage() {
           <div className="mt-5 card-soft w-full max-w-sm p-4">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">目前狀態</span>
-              <StatusPill label="等待審核" tone="warning" />
+              <StatusPill label={statusDisplay.label} tone={statusDisplay.tone} />
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-3.5 w-3.5" />
