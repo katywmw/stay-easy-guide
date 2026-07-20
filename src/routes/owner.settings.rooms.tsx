@@ -371,9 +371,8 @@ function GroupCard({
         <div className="border-t border-[oklch(0.94_0.02_82)] p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <Input label="房型名稱" value={group.name} onChange={(v) => onUpdate({ name: v })} />
-            <Input label="床型 tag" value={group.bedType ?? ""} onChange={(v) => onUpdate({ bedType: v })} placeholder="雙人床 / 單人床 / 加大床" />
+            <Input label="床型" value={group.bedType ?? ""} onChange={(v) => onUpdate({ bedType: v })} placeholder="雙人床 / 單人床 / 加大床" />
             <Input label="押金金額（NT$）" type="number" value={group.depositAmount} onChange={(v) => onUpdate({ depositAmount: Number(v) || 0 })} />
-            <AccessSelect value={group.accessMode} onChange={(v) => onUpdate({ accessMode: v })} />
             <Input label="房型描述" full value={group.description} onChange={(v) => onUpdate({ description: v })} />
             <Input label="入住指引補充" full value={group.guideNote ?? ""} onChange={(v) => onUpdate({ guideNote: v })} />
           </div>
