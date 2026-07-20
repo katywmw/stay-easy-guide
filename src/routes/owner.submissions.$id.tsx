@@ -792,7 +792,7 @@ function SubmissionDetail() {
           核准入住並釋出密碼
         </button>
         <span className="text-xs text-muted-foreground">
-          {allChecked ? "確認完 checklist 後即可核准，密碼將自動釋出。" : "請先勾選 checklist。"}
+          核准後密碼將自動釋出給旅客。
         </span>
         <span className="ml-auto text-xs text-muted-foreground">
           付款帳戶：{payment.accountName}
