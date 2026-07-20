@@ -12,6 +12,8 @@ import {
   type BookingPlatform,
 } from "@/lib/checkin-store";
 import { usePropertyConfig } from "@/lib/property-config";
+import { PhoneField, splitPhone } from "@/components/checkin/PhoneField";
+import { DateField } from "@/components/checkin/DateField";
 
 export const Route = createFileRoute("/checkin/demo/booking")({
   component: BookingPage,
