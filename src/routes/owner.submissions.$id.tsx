@@ -27,7 +27,7 @@ import { ChatPanel } from "@/components/chat/ChatPanel";
 import { useChatStore } from "@/lib/chat-store";
 import { demoSubmissions } from "@/lib/owner-demo";
 import { useLiveSubmissions } from "@/lib/live-submissions";
-import { platformLabels } from "@/lib/checkin-store";
+import { platformLabels, useCheckinStore } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
   depositPill,
@@ -99,6 +99,8 @@ function SubmissionDetail() {
   const { submission: loaded } = Route.useLoaderData();
   const params = Route.useParams();
   const liveItems = useLiveSubmissions((s) => s.items);
+  const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
+  const updateCheckin = useCheckinStore((s) => s.update);
   const submission =
     loaded ?? liveItems.find((x) => x.id === params.id) ?? null;
   const { rooms, roomGroups, properties, extraFeeCatalog, payment, updateRoom, updateProperty } = usePropertyConfig();
@@ -210,6 +212,8 @@ function SubmissionDetail() {
         message: reissueMessage,
       });
       setStatus("need_more_info");
+      updateLiveSubmission(submission.id, { status: "need_more_info" });
+      syncCurrentGuestCheckinStatus("need_more_info");
       setReissueField("");
       setReissueReason("");
       setReissueMessage("");
@@ -217,9 +221,22 @@ function SubmissionDetail() {
     }
   };
 
+  const syncCurrentGuestCheckinStatus = (nextStatus: "submitted" | "need_more_info" | "approved" | "completed") => {
+    try {
+      const currentLiveId = localStorage.getItem("walnut-live-current-id");
+      if (currentLiveId === submission.id) {
+        updateCheckin({ status: nextStatus });
+      }
+    } catch {
+      // ignore localStorage errors
+    }
+  };
+
   // Approving auto-releases room passwords + first-time notify.
   const approveAndRelease = () => {
     setStatus("approved");
+    updateLiveSubmission(submission.id, { status: "approved" });
+    syncCurrentGuestCheckinStatus("approved");
     setReleasedRooms(bookedRooms.map((r) => r.id));
     if (bookedRooms.length > 0 && !record) {
       updates.notify(submission.id, currentSnapshot, "首次寄出入住資訊");
