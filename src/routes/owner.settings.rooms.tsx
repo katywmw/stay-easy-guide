@@ -188,9 +188,8 @@ function RoomsSettings() {
             <p className="mb-3 text-sm font-bold text-foreground">新增房型群組</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input label="房型名稱（自訂）" value={groupDraft.name} onChange={(v) => setGroupDraft({ ...groupDraft, name: v })} placeholder="例：雙人床套房 / 單人床 / 整棟" />
-              <Input label="床型 tag" value={groupDraft.bedType ?? ""} onChange={(v) => setGroupDraft({ ...groupDraft, bedType: v })} placeholder="用於快速篩選：雙人床、單人床…" />
+              <Input label="床型" value={groupDraft.bedType ?? ""} onChange={(v) => setGroupDraft({ ...groupDraft, bedType: v })} placeholder="用於快速篩選：雙人床、單人床…" />
               <Input label="押金金額（NT$，每間）" type="number" value={groupDraft.depositAmount} onChange={(v) => setGroupDraft({ ...groupDraft, depositAmount: Number(v) || 0 })} />
-              <AccessSelect value={groupDraft.accessMode} onChange={(v) => setGroupDraft({ ...groupDraft, accessMode: v })} />
               <Input label="房型描述" full value={groupDraft.description} onChange={(v) => setGroupDraft({ ...groupDraft, description: v })} />
             </div>
             <div className="mt-3 flex gap-2">
