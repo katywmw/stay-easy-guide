@@ -212,6 +212,8 @@ function SubmissionDetail() {
         message: reissueMessage,
       });
       setStatus("need_more_info");
+      updateLiveSubmission(submission.id, { status: "need_more_info" });
+      syncCurrentGuestCheckinStatus("need_more_info");
       setReissueField("");
       setReissueReason("");
       setReissueMessage("");
@@ -219,9 +221,22 @@ function SubmissionDetail() {
     }
   };
 
+  const syncCurrentGuestCheckinStatus = (nextStatus: "submitted" | "need_more_info" | "approved" | "completed") => {
+    try {
+      const currentLiveId = localStorage.getItem("walnut-live-current-id");
+      if (currentLiveId === submission.id) {
+        updateCheckin({ status: nextStatus });
+      }
+    } catch {
+      // ignore localStorage errors
+    }
+  };
+
   // Approving auto-releases room passwords + first-time notify.
   const approveAndRelease = () => {
     setStatus("approved");
+    updateLiveSubmission(submission.id, { status: "approved" });
+    syncCurrentGuestCheckinStatus("approved");
     setReleasedRooms(bookedRooms.map((r) => r.id));
     if (bookedRooms.length > 0 && !record) {
       updates.notify(submission.id, currentSnapshot, "首次寄出入住資訊");
