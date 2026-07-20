@@ -61,7 +61,7 @@ export function ChatPanel({
   return (
     <div
       className={`flex flex-col overflow-hidden rounded-xl border border-[oklch(0.94_0.02_82)] bg-card ${
-        compact ? "h-72" : "h-96"
+        compact ? "h-56" : "h-72"
       }`}
     >
       <div className="flex items-center gap-2 border-b border-[oklch(0.94_0.02_82)] bg-secondary/40 px-3 py-2">
