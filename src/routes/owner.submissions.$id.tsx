@@ -99,6 +99,8 @@ function SubmissionDetail() {
   const { submission: loaded } = Route.useLoaderData();
   const params = Route.useParams();
   const liveItems = useLiveSubmissions((s) => s.items);
+  const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
+  const updateCheckin = useCheckinStore((s) => s.update);
   const submission =
     loaded ?? liveItems.find((x) => x.id === params.id) ?? null;
   const { rooms, roomGroups, properties, extraFeeCatalog, payment, updateRoom, updateProperty } = usePropertyConfig();
