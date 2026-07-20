@@ -505,6 +505,7 @@ function SubmissionDetail() {
             threadId="guest-demo"
             viewerRole="owner"
             counterpartName={submission.name}
+            compact
             fallbackNote="站內訊息已關閉，旅客會看到您提供的外部聯絡方式。"
           />
         </OwnerCard>
