@@ -482,29 +482,14 @@ function SubmissionDetail() {
           </div>
         </OwnerCard>
 
-        <OwnerCard title="內部備註 / Checklist">
+        <OwnerCard title="內部備註">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            rows={3}
+            rows={5}
             placeholder="僅民宿內部可見。"
-            className="mb-3 w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+            className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary"
           />
-          <div className="space-y-2">
-            {(["booking","id","deposit","rules"] as const).map((k) => (
-              <CheckRow
-                key={k}
-                label={{
-                  booking: "訂房資料已確認",
-                  id: "證件資料已確認",
-                  deposit: "押金已確認",
-                  rules: "入住須知已確認",
-                }[k]}
-                checked={checks[k]}
-                onChange={(v) => setChecks({ ...checks, [k]: v })}
-              />
-            ))}
-          </div>
         </OwnerCard>
       </div>
 
