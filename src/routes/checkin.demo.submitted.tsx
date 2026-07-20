@@ -27,25 +27,46 @@ const nextSteps = [
 function SubmittedPage() {
   const { contactChannels } = usePropertyConfig();
   const active = contactChannels.filter((c) => c.enabled && c.value.trim());
-  const record = useSubmissionUpdates((s) => s.updates["demo"]);
-  const reissue = useSubmissionUpdates((s) => s.reissue["demo"]);
+  const [currentSubmissionId, setCurrentSubmissionId] = useState("demo");
+
+  useEffect(() => {
+    try {
+      const id = localStorage.getItem("walnut-live-current-id");
+      if (id) setCurrentSubmissionId(id);
+    } catch {
+      // ignore localStorage errors
+    }
+  }, []);
+
+  const record = useSubmissionUpdates((s) => s.updates[currentSubmissionId]);
+  const reissue = useSubmissionUpdates((s) => s.reissue[currentSubmissionId]);
   const acknowledge = useSubmissionUpdates((s) => s.acknowledge);
   const markGuestUpdate = useSubmissionUpdates((s) => s.markGuestUpdate);
   const resolveReissue = useSubmissionUpdates((s) => s.resolveReissue);
+  const checkinStatus = useCheckinStore((s) => s.status);
+
+  const statusDisplay =
+    checkinStatus === "approved"
+      ? { label: "審核通過", tone: "success" as const }
+      : checkinStatus === "need_more_info"
+        ? { label: "需補件", tone: "warning" as const }
+        : checkinStatus === "completed"
+          ? { label: "已完成", tone: "success" as const }
+          : { label: "等待審核", tone: "warning" as const };
 
   // Auto-acknowledge when guest visits after an update
   useEffect(() => {
     if (record && !record.guestAcknowledgedAt) {
-      const t = setTimeout(() => acknowledge("demo"), 800);
+      const t = setTimeout(() => acknowledge(currentSubmissionId), 800);
       return () => clearTimeout(t);
     }
-  }, [record, acknowledge]);
+  }, [record, acknowledge, currentSubmissionId]);
 
   const activeReissue = reissue && !reissue.resolvedAt ? reissue : null;
   const simulateReupload = () => {
     if (!activeReissue) return;
-    markGuestUpdate("demo", activeReissue.field, "旅客已重新上傳（模擬）");
-    resolveReissue("demo");
+    markGuestUpdate(currentSubmissionId, activeReissue.field, "旅客已重新上傳（模擬）");
+    resolveReissue(currentSubmissionId);
   };
 
 
