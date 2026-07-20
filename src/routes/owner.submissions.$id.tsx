@@ -153,7 +153,8 @@ function SubmissionDetail() {
     deposit: false,
     rules: false,
   });
-  const allChecked = Object.values(checks).every(Boolean);
+  void checks; void setChecks;
+  const allChecked = true;
   const st = checkinStatusPill(status);
   const dp = depositPill(submission.deposit);
 
