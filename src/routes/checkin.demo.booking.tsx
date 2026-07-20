@@ -12,6 +12,8 @@ import {
   type BookingPlatform,
 } from "@/lib/checkin-store";
 import { usePropertyConfig } from "@/lib/property-config";
+import { PhoneField, splitPhone } from "@/components/checkin/PhoneField";
+import { DateField } from "@/components/checkin/DateField";
 
 export const Route = createFileRoute("/checkin/demo/booking")({
   component: BookingPage,
@@ -56,10 +58,10 @@ function BookingPage() {
     s.update(patch);
   };
 
-  // Phone: default +886, validate E.164-ish Taiwan mobile / general 8-15 digits
-  const phoneDigits = s.phone.replace(/[^\d]/g, "");
-  const phoneValid =
-    /^\+?[0-9]{8,15}$/.test(s.phone.trim()) && phoneDigits.length >= 8;
+  // Phone validation: parse local part, require 7-14 digits
+  const { local: phoneLocal } = splitPhone(s.phone);
+  const phoneDigits = phoneLocal.replace(/[^\d]/g, "");
+  const phoneValid = phoneDigits.length >= 7 && phoneDigits.length <= 14;
 
   const canNext =
     !!s.platform &&
@@ -100,28 +102,18 @@ function BookingPage() {
           onChange={(e) => s.update({ bookingName: e.target.value })}
         />
 
-        <TextField
+        <PhoneField
           label="手機號碼"
           required
-          type="tel"
-          placeholder="+886 912 345 678"
           value={s.phone}
-          hint="預設台灣 +886，請輸入含國碼的完整號碼。"
-          onChange={(e) => {
-            const v = e.target.value;
-            // Auto-prepend +886 for local 09xxxxxxxx entries once length >= 4
-            if (/^09\d{2,}/.test(v) && !v.startsWith("+")) {
-              s.update({ phone: "+886" + v.slice(1) });
-            } else {
-              s.update({ phone: v });
-            }
-          }}
+          onChange={(v) => s.update({ phone: v })}
+          hint="選擇國碼後輸入號碼即可（預設台灣 +886）。"
+          error={
+            s.phone && !phoneValid
+              ? "請輸入有效的電話號碼。"
+              : undefined
+          }
         />
-        {s.phone && !phoneValid && (
-          <p className="-mt-2 mb-3 text-xs font-semibold text-destructive">
-            請輸入有效的電話號碼（例：+886 912 345 678）。
-          </p>
-        )}
 
         <TextField
           label="Email"
@@ -132,29 +124,21 @@ function BookingPage() {
         />
 
         <div className="grid grid-cols-2 gap-3">
-          <TextField
+          <DateField
             label="入住日期"
             required
-            type="date"
-            min={today}
             value={s.checkInDate}
-            onChange={(e) => handleCheckIn(e.target.value)}
+            onChange={handleCheckIn}
+            min={today}
           />
-          <TextField
+          <DateField
             label="退房日期"
             required
-            type="date"
-            min={minCheckout}
             value={s.checkOutDate}
-            onChange={(e) => s.update({ checkOutDate: e.target.value })}
+            onChange={(v) => s.update({ checkOutDate: v })}
+            min={minCheckout}
           />
         </div>
-
-        {s.checkInDate && s.checkOutDate && s.checkOutDate <= s.checkInDate && (
-          <p className="-mt-2 mb-3 text-xs font-semibold text-destructive">
-            退房日期需晚於入住日期。
-          </p>
-        )}
 
         <TextField
           label="訂單編號（可選）"
