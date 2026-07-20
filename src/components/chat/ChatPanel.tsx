@@ -25,8 +25,13 @@ export function ChatPanel({
   compact?: boolean;
   fallbackNote?: string;
 }) {
-  const { enabled, send, markRead, byThread } = useChatStore();
-  const messages = useMemo(() => byThread(threadId), [byThread, threadId]);
+  const enabled = useChatStore((s) => s.enabled);
+  const allMessages = useChatStore((s) => s.messages);
+  const markRead = useChatStore((s) => s.markRead);
+  const send = useChatStore((s) => s.send);
+  const messages = allMessages
+    .filter((m) => m.threadId === threadId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
