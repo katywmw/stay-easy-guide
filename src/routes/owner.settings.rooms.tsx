@@ -188,9 +188,8 @@ function RoomsSettings() {
             <p className="mb-3 text-sm font-bold text-foreground">新增房型群組</p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Input label="房型名稱（自訂）" value={groupDraft.name} onChange={(v) => setGroupDraft({ ...groupDraft, name: v })} placeholder="例：雙人床套房 / 單人床 / 整棟" />
-              <Input label="床型 tag" value={groupDraft.bedType ?? ""} onChange={(v) => setGroupDraft({ ...groupDraft, bedType: v })} placeholder="用於快速篩選：雙人床、單人床…" />
+              <Input label="床型" value={groupDraft.bedType ?? ""} onChange={(v) => setGroupDraft({ ...groupDraft, bedType: v })} placeholder="用於快速篩選：雙人床、單人床…" />
               <Input label="押金金額（NT$，每間）" type="number" value={groupDraft.depositAmount} onChange={(v) => setGroupDraft({ ...groupDraft, depositAmount: Number(v) || 0 })} />
-              <AccessSelect value={groupDraft.accessMode} onChange={(v) => setGroupDraft({ ...groupDraft, accessMode: v })} />
               <Input label="房型描述" full value={groupDraft.description} onChange={(v) => setGroupDraft({ ...groupDraft, description: v })} />
             </div>
             <div className="mt-3 flex gap-2">
@@ -372,9 +371,8 @@ function GroupCard({
         <div className="border-t border-[oklch(0.94_0.02_82)] p-4">
           <div className="grid gap-3 sm:grid-cols-2">
             <Input label="房型名稱" value={group.name} onChange={(v) => onUpdate({ name: v })} />
-            <Input label="床型 tag" value={group.bedType ?? ""} onChange={(v) => onUpdate({ bedType: v })} placeholder="雙人床 / 單人床 / 加大床" />
+            <Input label="床型" value={group.bedType ?? ""} onChange={(v) => onUpdate({ bedType: v })} placeholder="雙人床 / 單人床 / 加大床" />
             <Input label="押金金額（NT$）" type="number" value={group.depositAmount} onChange={(v) => onUpdate({ depositAmount: Number(v) || 0 })} />
-            <AccessSelect value={group.accessMode} onChange={(v) => onUpdate({ accessMode: v })} />
             <Input label="房型描述" full value={group.description} onChange={(v) => onUpdate({ description: v })} />
             <Input label="入住指引補充" full value={group.guideNote ?? ""} onChange={(v) => onUpdate({ guideNote: v })} />
           </div>

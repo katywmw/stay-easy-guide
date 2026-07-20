@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useChatStore, type ChatAuthor } from "@/lib/chat-store";
 
@@ -25,8 +25,13 @@ export function ChatPanel({
   compact?: boolean;
   fallbackNote?: string;
 }) {
-  const { enabled, send, markRead, byThread } = useChatStore();
-  const messages = useMemo(() => byThread(threadId), [byThread, threadId]);
+  const enabled = useChatStore((s) => s.enabled);
+  const allMessages = useChatStore((s) => s.messages);
+  const markRead = useChatStore((s) => s.markRead);
+  const send = useChatStore((s) => s.send);
+  const messages = allMessages
+    .filter((m) => m.threadId === threadId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
   const [input, setInput] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -56,7 +61,7 @@ export function ChatPanel({
   return (
     <div
       className={`flex flex-col overflow-hidden rounded-xl border border-[oklch(0.94_0.02_82)] bg-card ${
-        compact ? "h-72" : "h-96"
+        compact ? "h-56" : "h-72"
       }`}
     >
       <div className="flex items-center gap-2 border-b border-[oklch(0.94_0.02_82)] bg-secondary/40 px-3 py-2">

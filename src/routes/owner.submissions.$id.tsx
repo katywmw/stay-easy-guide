@@ -153,7 +153,8 @@ function SubmissionDetail() {
     deposit: false,
     rules: false,
   });
-  const allChecked = Object.values(checks).every(Boolean);
+  void checks; void setChecks;
+  const allChecked = true;
   const st = checkinStatusPill(status);
   const dp = depositPill(submission.deposit);
 
@@ -482,29 +483,14 @@ function SubmissionDetail() {
           </div>
         </OwnerCard>
 
-        <OwnerCard title="內部備註 / Checklist">
+        <OwnerCard title="內部備註">
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            rows={3}
+            rows={5}
             placeholder="僅民宿內部可見。"
-            className="mb-3 w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary"
+            className="w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary"
           />
-          <div className="space-y-2">
-            {(["booking","id","deposit","rules"] as const).map((k) => (
-              <CheckRow
-                key={k}
-                label={{
-                  booking: "訂房資料已確認",
-                  id: "證件資料已確認",
-                  deposit: "押金已確認",
-                  rules: "入住須知已確認",
-                }[k]}
-                checked={checks[k]}
-                onChange={(v) => setChecks({ ...checks, [k]: v })}
-              />
-            ))}
-          </div>
         </OwnerCard>
       </div>
 
@@ -519,6 +505,7 @@ function SubmissionDetail() {
             threadId="guest-demo"
             viewerRole="owner"
             counterpartName={submission.name}
+            compact
             fallbackNote="站內訊息已關閉，旅客會看到您提供的外部聯絡方式。"
           />
         </OwnerCard>
@@ -806,7 +793,7 @@ function SubmissionDetail() {
           核准入住並釋出密碼
         </button>
         <span className="text-xs text-muted-foreground">
-          {allChecked ? "確認完 checklist 後即可核准，密碼將自動釋出。" : "請先勾選 checklist。"}
+          核准後密碼將自動釋出給旅客。
         </span>
         <span className="ml-auto text-xs text-muted-foreground">
           付款帳戶：{payment.accountName}
