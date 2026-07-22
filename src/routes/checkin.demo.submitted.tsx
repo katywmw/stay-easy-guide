@@ -53,7 +53,9 @@ function SubmittedPage() {
     () => allInvoices.filter((x) => x.submissionId === currentSubmissionId),
     [allInvoices, currentSubmissionId],
   );
-  const pendingInvoices = invoices.filter((i) => i.status === "pending");
+  const pendingInvoices = invoices.filter(
+    (i) => i.status === "pending" || i.status === "reported",
+  );
 
   const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
 
