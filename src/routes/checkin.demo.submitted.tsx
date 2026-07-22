@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload } from "lucide-react";
+import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload, Receipt } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
 import { usePropertyConfig } from "@/lib/property-config";
@@ -9,6 +9,8 @@ import {
   reissueFieldLabels,
 } from "@/lib/submission-updates";
 import { useCheckinStore } from "@/lib/checkin-store";
+import { useLiveSubmissions } from "@/lib/live-submissions";
+import { useSurchargeStore, surchargeTotal } from "@/lib/surcharge-store";
 import { channelIcon, channelHref } from "./owner.settings.contact";
 
 export const Route = createFileRoute("/checkin/demo/submitted")({
@@ -44,6 +46,12 @@ function SubmittedPage() {
   const markGuestUpdate = useSubmissionUpdates((s) => s.markGuestUpdate);
   const resolveReissue = useSubmissionUpdates((s) => s.resolveReissue);
   const checkinStatus = useCheckinStore((s) => s.status);
+  const updateCheckin = useCheckinStore((s) => s.update);
+  const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
+  const invoices = useSurchargeStore((s) => s.bySubmission(currentSubmissionId));
+  const pendingInvoices = invoices.filter((i) => i.status === "pending");
+
+  const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
 
   const statusDisplay =
     checkinStatus === "approved"
@@ -62,11 +70,14 @@ function SubmittedPage() {
     }
   }, [record, acknowledge, currentSubmissionId]);
 
-  const activeReissue = reissue && !reissue.resolvedAt ? reissue : null;
+  const activeReissue = reissue && !reissue.resolvedAt && !isApproved ? reissue : null;
+  const canShowAccessInfo = isApproved && !!record;
   const simulateReupload = () => {
     if (!activeReissue) return;
     markGuestUpdate(currentSubmissionId, activeReissue.field, "旅客已重新上傳（模擬）");
     resolveReissue(currentSubmissionId);
+    updateLiveSubmission(currentSubmissionId, { status: "submitted" });
+    updateCheckin({ status: "submitted" });
   };
 
 
@@ -135,21 +146,54 @@ function SubmittedPage() {
         )}
 
 
-        {record && (
+        {pendingInvoices.length > 0 && (
+          <div className="mt-6 rounded-2xl border-2 border-warning bg-warning-soft/60 p-5 shadow-md">
+            <div className="flex items-center gap-2">
+              <Receipt className="h-4 w-4 text-[oklch(0.55_0.13_75)]" />
+              <p className="text-sm font-black text-foreground">待補款項</p>
+            </div>
+            <div className="mt-3 space-y-2">
+              {pendingInvoices.map((inv) => (
+                <Link
+                  key={inv.id}
+                  to="/checkin/demo/surcharge/$id"
+                  params={{ id: inv.id }}
+                  className="block rounded-lg bg-card p-3"
+                >
+                  <div className="flex items-center gap-2">
+                    <p className="text-xs font-bold text-foreground">#{inv.id}</p>
+                    <span className="ml-auto rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
+                      待付款
+                    </span>
+                  </div>
+                  <ul className="mt-2 space-y-0.5 text-[11px] text-foreground/80 [font-variant-numeric:tabular-nums]">
+                    {inv.lines.map((l) => (
+                      <li key={l.id}>
+                        {l.name} × {l.quantity} · NT$ {l.unitAmount}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-xs font-bold text-foreground [font-variant-numeric:tabular-nums]">
+                    合計 NT$ {surchargeTotal(inv)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {canShowAccessInfo && record && (
           <div
-            className="mt-6 rounded-2xl border-2 border-warning bg-warning-soft/60 p-5 shadow-md"
+            className="mt-6 rounded-2xl border-2 border-success bg-success-soft/60 p-5 shadow-md"
             role="alert"
           >
             <div className="flex items-center gap-2">
-              <BellRing className="h-4 w-4 text-[oklch(0.55_0.13_75)]" />
-              <p className="text-sm font-black text-foreground">入住資訊已更新</p>
+              <CheckCircle2 className="h-4 w-4 text-success" />
+              <p className="text-sm font-black text-foreground">入住已核准，門鎖密碼已開放</p>
               <span className="ml-auto rounded-full bg-card px-2 py-0.5 text-[10px] font-bold text-foreground">
                 第 {record.lastVersion} 版
               </span>
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-foreground/85">
-              請以下方最新資訊為準，舊資訊已失效。
-            </p>
             <p className="mt-1 text-[11px] text-muted-foreground">
               更新時間：{new Date(record.lastNotifiedAt).toLocaleString("zh-TW", { hour: "2-digit", minute: "2-digit", month: "2-digit", day: "2-digit" })}
             </p>
@@ -163,9 +207,6 @@ function SubmittedPage() {
                       {r.displayName && r.roomNumber && (
                         <span className="text-[11px] text-muted-foreground">房號 {r.roomNumber}</span>
                       )}
-                      <span className="ml-auto rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
-                        最新
-                      </span>
                     </div>
                     <p className="mt-1 text-[11px] text-foreground/80 [font-variant-numeric:tabular-nums]">
                       大門密碼 <span className="font-bold text-foreground">{r.gatePassword || "—"}</span>
@@ -177,6 +218,7 @@ function SubmittedPage() {
             </div>
           </div>
         )}
+
 
 
 
@@ -224,14 +266,16 @@ function SubmittedPage() {
           </div>
         )}
 
-        <div className="mt-4 rounded-2xl bg-warning-soft p-4">
-          <div className="flex items-start gap-2">
-            <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
-            <p className="text-xs leading-relaxed text-foreground/80">
-              門鎖密碼將於審核通過後開放，請耐心等候。
-            </p>
+        {!isApproved && (
+          <div className="mt-4 rounded-2xl bg-warning-soft p-4">
+            <div className="flex items-start gap-2">
+              <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
+              <p className="text-xs leading-relaxed text-foreground/80">
+                門鎖密碼將於審核通過後開放，請耐心等候。
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Link
