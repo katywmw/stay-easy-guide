@@ -55,6 +55,19 @@ export const useSurchargeStore = create<SurchargeStoreState>()(
         set((s) => ({
           invoices: s.invoices.map((x) => (x.id === id ? { ...x, status } : x)),
         })),
+      markReported: (id, guestNote) =>
+        set((s) => ({
+          invoices: s.invoices.map((x) =>
+            x.id === id
+              ? {
+                  ...x,
+                  status: "reported",
+                  reportedAt: new Date().toISOString(),
+                  ...(guestNote !== undefined ? { guestNote } : {}),
+                }
+              : x,
+          ),
+        })),
       remove: (id) =>
         set((s) => ({ invoices: s.invoices.filter((x) => x.id !== id) })),
       byId: (id) => get().invoices.find((x) => x.id === id),
