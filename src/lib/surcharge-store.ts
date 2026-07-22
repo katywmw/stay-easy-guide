@@ -29,6 +29,7 @@ interface SurchargeStoreState {
     inv: Omit<SurchargeInvoice, "id" | "createdAt" | "status">,
   ) => SurchargeInvoice;
   updateStatus: (id: string, status: SurchargeStatus) => void;
+  markReported: (id: string, guestNote?: string) => void;
   remove: (id: string) => void;
   byId: (id: string) => SurchargeInvoice | undefined;
   bySubmission: (submissionId: string) => SurchargeInvoice[];
