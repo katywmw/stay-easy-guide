@@ -239,6 +239,7 @@ function SubmissionDetail() {
     updateLiveSubmission(submission.id, { status: "approved" });
     syncCurrentGuestCheckinStatus("approved");
     setReleasedRooms(bookedRooms.map((r) => r.id));
+    updates.resolveReissue(submission.id);
     if (bookedRooms.length > 0 && !record) {
       updates.notify(submission.id, currentSnapshot, "首次寄出入住資訊");
     }
