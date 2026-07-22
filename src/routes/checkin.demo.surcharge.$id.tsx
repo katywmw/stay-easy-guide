@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { CheckCircle2, Wallet } from "lucide-react";
+import { useState } from "react";
+import { CheckCircle2, Wallet, Send, Clock } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { useSurchargeStore, surchargeTotal } from "@/lib/surcharge-store";
 import { usePropertyConfig } from "@/lib/property-config";
@@ -13,7 +14,9 @@ export const Route = createFileRoute("/checkin/demo/surcharge/$id")({
 function SurchargePage() {
   const { id } = Route.useParams();
   const inv = useSurchargeStore((s) => s.invoices.find((x) => x.id === id));
+  const markReported = useSurchargeStore((s) => s.markReported);
   const { payment } = usePropertyConfig();
+  const [guestNote, setGuestNote] = useState("");
 
   if (!inv) {
     throw notFound();
@@ -21,6 +24,24 @@ function SurchargePage() {
 
   const total = surchargeTotal(inv);
   const paid = inv.status === "paid";
+  const reported = inv.status === "reported";
+  const cancelled = inv.status === "cancelled";
+  const pending = inv.status === "pending";
+
+  const statusLabel = paid
+    ? "已付款"
+    : reported
+      ? "已通知民宿，等待確認"
+      : cancelled
+        ? "已取消"
+        : "待付款";
+  const statusTone: "success" | "warning" | "muted" = paid
+    ? "success"
+    : reported
+      ? "muted"
+      : cancelled
+        ? "muted"
+        : "warning";
 
   return (
     <PhoneShell title="補款通知" subtitle="額外費用" backTo="/checkin/demo/home">
