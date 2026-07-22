@@ -266,14 +266,16 @@ function SubmittedPage() {
           </div>
         )}
 
-        <div className="mt-4 rounded-2xl bg-warning-soft p-4">
-          <div className="flex items-start gap-2">
-            <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
-            <p className="text-xs leading-relaxed text-foreground/80">
-              門鎖密碼將於審核通過後開放，請耐心等候。
-            </p>
+        {!isApproved && (
+          <div className="mt-4 rounded-2xl bg-warning-soft p-4">
+            <div className="flex items-start gap-2">
+              <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-[oklch(0.55_0.13_75)]" />
+              <p className="text-xs leading-relaxed text-foreground/80">
+                門鎖密碼將於審核通過後開放，請耐心等候。
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <Link
