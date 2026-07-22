@@ -46,6 +46,12 @@ function SubmittedPage() {
   const markGuestUpdate = useSubmissionUpdates((s) => s.markGuestUpdate);
   const resolveReissue = useSubmissionUpdates((s) => s.resolveReissue);
   const checkinStatus = useCheckinStore((s) => s.status);
+  const updateCheckin = useCheckinStore((s) => s.update);
+  const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
+  const invoices = useSurchargeStore((s) => s.bySubmission(currentSubmissionId));
+  const pendingInvoices = invoices.filter((i) => i.status === "pending");
+
+  const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
 
   const statusDisplay =
     checkinStatus === "approved"
@@ -64,11 +70,14 @@ function SubmittedPage() {
     }
   }, [record, acknowledge, currentSubmissionId]);
 
-  const activeReissue = reissue && !reissue.resolvedAt ? reissue : null;
+  const activeReissue = reissue && !reissue.resolvedAt && !isApproved ? reissue : null;
+  const canShowAccessInfo = isApproved && !!record;
   const simulateReupload = () => {
     if (!activeReissue) return;
     markGuestUpdate(currentSubmissionId, activeReissue.field, "旅客已重新上傳（模擬）");
     resolveReissue(currentSubmissionId);
+    updateLiveSubmission(currentSubmissionId, { status: "submitted" });
+    updateCheckin({ status: "submitted" });
   };
 
 
