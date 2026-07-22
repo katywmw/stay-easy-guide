@@ -149,6 +149,7 @@ function SubmissionDetail() {
   const [releasedRooms, setReleasedRooms] = useState<string[]>([]);
   const [note, setNote] = useState("");
   const [status, setStatus] = useState(submission.status);
+  useEffect(() => { setStatus(submission.status); }, [submission.status]);
   const [checks, setChecks] = useState({
     booking: false,
     id: false,
