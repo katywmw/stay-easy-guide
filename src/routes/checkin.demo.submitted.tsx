@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload, Receipt } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
@@ -48,7 +48,11 @@ function SubmittedPage() {
   const checkinStatus = useCheckinStore((s) => s.status);
   const updateCheckin = useCheckinStore((s) => s.update);
   const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
-  const invoices = useSurchargeStore((s) => s.bySubmission(currentSubmissionId));
+  const allInvoices = useSurchargeStore((s) => s.invoices);
+  const invoices = useMemo(
+    () => allInvoices.filter((x) => x.submissionId === currentSubmissionId),
+    [allInvoices, currentSubmissionId],
+  );
   const pendingInvoices = invoices.filter((i) => i.status === "pending");
 
   const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
