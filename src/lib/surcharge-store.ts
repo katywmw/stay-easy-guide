@@ -9,7 +9,7 @@ export interface SurchargeLine {
   unitAmount: number;
 }
 
-export type SurchargeStatus = "pending" | "paid" | "cancelled";
+export type SurchargeStatus = "pending" | "reported" | "paid" | "cancelled";
 
 export interface SurchargeInvoice {
   id: string;
@@ -19,6 +19,8 @@ export interface SurchargeInvoice {
   note: string;
   status: SurchargeStatus;
   createdAt: string;
+  reportedAt?: string;
+  guestNote?: string;
 }
 
 interface SurchargeStoreState {
