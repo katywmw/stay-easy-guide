@@ -162,7 +162,11 @@ function SubmissionDetail() {
   const dp = depositPill(submission.deposit);
 
   const surcharge = useSurchargeStore();
-  const invoices = surcharge.bySubmission(submission.id);
+  const allSurchargeInvoices = useSurchargeStore((s) => s.invoices);
+  const invoices = useMemo(
+    () => allSurchargeInvoices.filter((x) => x.submissionId === submission.id),
+    [allSurchargeInvoices, submission.id],
+  );
 
   // Reissue-request state (要求補件) — combined with surcharge notification
   const [reissueField, setReissueField] = useState<ReissueField | "">("");
