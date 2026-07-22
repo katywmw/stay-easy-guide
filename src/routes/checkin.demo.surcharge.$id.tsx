@@ -56,11 +56,25 @@ function SurchargePage() {
           民宿為您新增以下額外費用，請完成付款後聯繫民宿。
         </p>
         <div className="mt-3">
-          <StatusPill
-            label={paid ? "已付款" : "待付款"}
-            tone={paid ? "success" : "warning"}
-          />
+          <StatusPill label={statusLabel} tone={statusTone} />
         </div>
+        {reported && inv.reportedAt && (
+          <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            通知時間：
+            {new Date(inv.reportedAt).toLocaleString("zh-TW", {
+              month: "2-digit",
+              day: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </p>
+        )}
+        {reported && inv.guestNote && (
+          <p className="mt-2 rounded-lg bg-secondary/60 p-2 text-[11px] text-foreground/80 whitespace-pre-wrap">
+            您的備註：{inv.guestNote}
+          </p>
+        )}
       </div>
 
       <div className="card-soft mt-4 overflow-hidden">
