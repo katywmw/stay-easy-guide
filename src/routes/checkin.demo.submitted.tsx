@@ -53,7 +53,9 @@ function SubmittedPage() {
     () => allInvoices.filter((x) => x.submissionId === currentSubmissionId),
     [allInvoices, currentSubmissionId],
   );
-  const pendingInvoices = invoices.filter((i) => i.status === "pending");
+  const pendingInvoices = invoices.filter(
+    (i) => i.status === "pending" || i.status === "reported",
+  );
 
   const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
 
@@ -166,8 +168,14 @@ function SubmittedPage() {
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-xs font-bold text-foreground">#{inv.id}</p>
-                    <span className="ml-auto rounded-full bg-warning-soft px-2 py-0.5 text-[10px] font-bold text-[oklch(0.45_0.13_55)]">
-                      待付款
+                    <span
+                      className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                        inv.status === "reported"
+                          ? "bg-secondary text-foreground"
+                          : "bg-warning-soft text-[oklch(0.45_0.13_55)]"
+                      }`}
+                    >
+                      {inv.status === "reported" ? "已通知民宿，等待確認" : "待付款"}
                     </span>
                   </div>
                   <ul className="mt-2 space-y-0.5 text-[11px] text-foreground/80 [font-variant-numeric:tabular-nums]">

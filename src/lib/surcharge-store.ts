@@ -9,7 +9,7 @@ export interface SurchargeLine {
   unitAmount: number;
 }
 
-export type SurchargeStatus = "pending" | "paid" | "cancelled";
+export type SurchargeStatus = "pending" | "reported" | "paid" | "cancelled";
 
 export interface SurchargeInvoice {
   id: string;
@@ -19,6 +19,8 @@ export interface SurchargeInvoice {
   note: string;
   status: SurchargeStatus;
   createdAt: string;
+  reportedAt?: string;
+  guestNote?: string;
 }
 
 interface SurchargeStoreState {
@@ -27,6 +29,7 @@ interface SurchargeStoreState {
     inv: Omit<SurchargeInvoice, "id" | "createdAt" | "status">,
   ) => SurchargeInvoice;
   updateStatus: (id: string, status: SurchargeStatus) => void;
+  markReported: (id: string, guestNote?: string) => void;
   remove: (id: string) => void;
   byId: (id: string) => SurchargeInvoice | undefined;
   bySubmission: (submissionId: string) => SurchargeInvoice[];
@@ -51,6 +54,19 @@ export const useSurchargeStore = create<SurchargeStoreState>()(
       updateStatus: (id, status) =>
         set((s) => ({
           invoices: s.invoices.map((x) => (x.id === id ? { ...x, status } : x)),
+        })),
+      markReported: (id, guestNote) =>
+        set((s) => ({
+          invoices: s.invoices.map((x) =>
+            x.id === id
+              ? {
+                  ...x,
+                  status: "reported",
+                  reportedAt: new Date().toISOString(),
+                  ...(guestNote !== undefined ? { guestNote } : {}),
+                }
+              : x,
+          ),
         })),
       remove: (id) =>
         set((s) => ({ invoices: s.invoices.filter((x) => x.id !== id) })),

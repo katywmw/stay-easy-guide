@@ -162,7 +162,11 @@ function SubmissionDetail() {
   const dp = depositPill(submission.deposit);
 
   const surcharge = useSurchargeStore();
-  const invoices = surcharge.bySubmission(submission.id);
+  const allSurchargeInvoices = useSurchargeStore((s) => s.invoices);
+  const invoices = useMemo(
+    () => allSurchargeInvoices.filter((x) => x.submissionId === submission.id),
+    [allSurchargeInvoices, submission.id],
+  );
 
   // Reissue-request state (要求補件) — combined with surcharge notification
   const [reissueField, setReissueField] = useState<ReissueField | "">("");
@@ -576,10 +580,42 @@ function SubmissionDetail() {
                     </p>
                     <p className="mt-1">
                       <StatusPill
-                        label={inv.status === "paid" ? "已收款" : inv.status === "cancelled" ? "已取消" : "待付款"}
-                        tone={inv.status === "paid" ? "success" : inv.status === "cancelled" ? "muted" : "warning"}
+                        label={
+                          inv.status === "paid"
+                            ? "已收款"
+                            : inv.status === "cancelled"
+                              ? "已取消"
+                              : inv.status === "reported"
+                                ? "旅客已通知付款"
+                                : "待付款"
+                        }
+                        tone={
+                          inv.status === "paid"
+                            ? "success"
+                            : inv.status === "cancelled"
+                              ? "muted"
+                              : inv.status === "reported"
+                                ? "info"
+                                : "warning"
+                        }
                       />
                     </p>
+                    {inv.status === "reported" && inv.reportedAt && (
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        通知時間：
+                        {new Date(inv.reportedAt).toLocaleString("zh-TW", {
+                          month: "2-digit",
+                          day: "2-digit",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    )}
+                    {inv.status === "reported" && inv.guestNote && (
+                      <p className="mt-1 rounded bg-card px-2 py-1 text-[11px] text-foreground/80 whitespace-pre-wrap">
+                        旅客備註：{inv.guestNote}
+                      </p>
+                    )}
                   </div>
                   <div className="flex flex-col gap-1.5">
                     <Link
@@ -590,18 +626,30 @@ function SubmissionDetail() {
                     >
                       預覽旅客頁
                     </Link>
-                    {inv.status === "pending" && (
-                      <button
-                        onClick={() => {
-                          surcharge.updateStatus(inv.id, "paid");
-                          toast.success("已標記已收款");
-                        }}
-                        className="rounded-full bg-success px-3 py-1 text-[11px] font-bold text-success-foreground"
-                      >
-                        標記已收
-                      </button>
+                    {(inv.status === "pending" || inv.status === "reported") && (
+                      <>
+                        <button
+                          onClick={() => {
+                            surcharge.updateStatus(inv.id, "paid");
+                            toast.success("已確認收款");
+                          }}
+                          className="rounded-full bg-success px-3 py-1 text-[11px] font-bold text-success-foreground"
+                        >
+                          確認已收款
+                        </button>
+                        <button
+                          onClick={() => {
+                            surcharge.updateStatus(inv.id, "cancelled");
+                            toast.success("已取消此補款單");
+                          }}
+                          className="rounded-full border border-border bg-card px-3 py-1 text-[11px] font-semibold text-foreground hover:bg-secondary"
+                        >
+                          取消此單
+                        </button>
+                      </>
                     )}
                   </div>
+
                 </div>
               ))}
             </div>
