@@ -111,7 +111,7 @@ function SurchargePage() {
         </div>
       )}
 
-      {!paid && (
+      {pending && (
         <>
           <div className="card-soft mt-4 p-4">
             <p className="text-sm font-bold text-foreground">LINE Pay</p>
@@ -140,13 +140,55 @@ function SurchargePage() {
               <p className="mt-2 text-[11px] text-muted-foreground">{payment.notes}</p>
             )}
           </div>
+
+          <div className="card-soft mt-4 p-4">
+            <label className="text-sm font-bold text-foreground">
+              備註給民宿（選填）
+            </label>
+            <textarea
+              value={guestNote}
+              onChange={(e) => setGuestNote(e.target.value)}
+              rows={2}
+              placeholder="例如：末五碼 12345、已使用 LINE Pay 轉帳"
+              className="mt-2 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground"
+            />
+            <button
+              type="button"
+              onClick={() => markReported(inv.id, guestNote.trim() || undefined)}
+              className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary px-4 py-3 text-sm font-bold text-primary-foreground"
+            >
+              <Send className="h-4 w-4" />
+              我已完成付款，通知民宿
+            </button>
+          </div>
         </>
+      )}
+
+      {reported && (
+        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-border bg-secondary/60 p-4">
+          <Clock className="mt-0.5 h-5 w-5 text-[oklch(0.55_0.08_60)]" />
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-foreground">已通知民宿，等待確認</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              民宿確認收款後，此筆補款將標記為已付款。
+            </p>
+          </div>
+        </div>
       )}
 
       {paid && (
         <div className="mt-4 flex items-center gap-3 rounded-2xl bg-success-soft p-4">
           <CheckCircle2 className="h-6 w-6 text-success" />
           <p className="text-sm font-bold text-success">此筆補款已完成</p>
+        </div>
+      )}
+
+      {cancelled && (
+        <div className="mt-4 rounded-2xl border border-border bg-secondary/40 p-4">
+          <p className="text-sm font-bold text-foreground">此補款單已取消</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            如有疑問請直接聯繫民宿。
+          </p>
         </div>
       )}
 
