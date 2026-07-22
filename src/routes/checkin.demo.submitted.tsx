@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload } from "lucide-react";
+import { CheckCircle2, Clock, MessageCircle, BellRing, AlertTriangle, Upload, Receipt } from "lucide-react";
 import { PhoneShell } from "@/components/checkin/PhoneShell";
 import { StatusPill } from "@/components/checkin/StatusPill";
 import { usePropertyConfig } from "@/lib/property-config";
@@ -9,6 +9,8 @@ import {
   reissueFieldLabels,
 } from "@/lib/submission-updates";
 import { useCheckinStore } from "@/lib/checkin-store";
+import { useLiveSubmissions } from "@/lib/live-submissions";
+import { useSurchargeStore, surchargeTotal } from "@/lib/surcharge-store";
 import { channelIcon, channelHref } from "./owner.settings.contact";
 
 export const Route = createFileRoute("/checkin/demo/submitted")({
