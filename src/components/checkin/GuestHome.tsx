@@ -81,16 +81,17 @@ export function GuestHome() {
             <p className="mb-4 text-center text-sm text-foreground/70">
               歡迎回家，請點擊以下按鈕辦理入住
             </p>
-            <Link
-              to="/checkin/demo/start"
+            <button
+              type="button"
+              onClick={() => navigate({ to: startTarget })}
               className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[oklch(0.87_0.19_92)] px-6 py-5 text-xl font-black text-[oklch(0.24_0.04_55)] shadow-[0_10px_30px_-8px_oklch(0.87_0.19_92_/_0.7)] transition active:scale-[0.98]"
             >
-              開始線上入住
+              {hasActiveSubmission ? "查看入住狀態" : "開始線上入住"}
               <ArrowRight
                 className="h-5 w-5 transition-transform group-hover:translate-x-0.5"
                 strokeWidth={2.6}
               />
-            </Link>
+            </button>
             <p className="mt-3 text-[10px] font-medium tracking-widest text-foreground/40">
               預計 3 分鐘完成
             </p>
