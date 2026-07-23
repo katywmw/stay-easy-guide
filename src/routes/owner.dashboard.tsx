@@ -46,7 +46,7 @@ function OwnerDashboard() {
   const [scope, setScope] = useState<ViewScope>("current");
   const liveItems = useLiveSubmissions((s) => s.items);
 
-  const combined = useMemo(() => {
+  const combined = useMemo<OwnerSubmission[]>(() => {
     const activeLive = liveItems.filter((x) => !x.removedAt);
     // Live submissions first (newest), then demo data
     return [...activeLive, ...demoSubmissions];
