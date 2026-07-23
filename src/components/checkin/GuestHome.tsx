@@ -1,7 +1,9 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Star, MapPin, ShieldCheck, Wifi, Car, Coffee, Wind, ArrowRight } from "lucide-react";
 import heroImg from "@/assets/hero-minsu.jpg";
 import { usePropertyConfig } from "@/lib/property-config";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { channelIcon, channelHref } from "@/routes/owner.settings.contact";
 import { GuestChatBubble } from "@/components/chat/ChatPanel";
 
@@ -15,6 +17,21 @@ const AMENITIES = [
 export function GuestHome() {
   const { contactChannels } = usePropertyConfig();
   const active = contactChannels.filter((c) => c.enabled && c.value.trim());
+  const navigate = useNavigate();
+  const liveItems = useLiveSubmissions((s) => s.items);
+  const [currentId, setCurrentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      setCurrentId(localStorage.getItem("walnut-live-current-id"));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const currentLive = currentId ? liveItems.find((x) => x.id === currentId) : null;
+  const hasActiveSubmission = !!currentLive && !currentLive.removedAt;
+  const startTarget = hasActiveSubmission ? "/checkin/demo/submitted" : "/checkin/demo/start";
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.985_0.04_95)] flex items-start justify-center py-6 px-3 sm:py-10">
@@ -64,16 +81,17 @@ export function GuestHome() {
             <p className="mb-4 text-center text-sm text-foreground/70">
               歡迎回家，請點擊以下按鈕辦理入住
             </p>
-            <Link
-              to="/checkin/demo/start"
+            <button
+              type="button"
+              onClick={() => navigate({ to: startTarget })}
               className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-[oklch(0.87_0.19_92)] px-6 py-5 text-xl font-black text-[oklch(0.24_0.04_55)] shadow-[0_10px_30px_-8px_oklch(0.87_0.19_92_/_0.7)] transition active:scale-[0.98]"
             >
-              開始線上入住
+              {hasActiveSubmission ? "查看入住狀態" : "開始線上入住"}
               <ArrowRight
                 className="h-5 w-5 transition-transform group-hover:translate-x-0.5"
                 strokeWidth={2.6}
               />
-            </Link>
+            </button>
             <p className="mt-3 text-[10px] font-medium tracking-widest text-foreground/40">
               預計 3 分鐘完成
             </p>
