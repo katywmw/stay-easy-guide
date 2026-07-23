@@ -69,6 +69,8 @@ function SubmissionsList() {
 
   return (
     <OwnerShell title="入住申請" subtitle="Submissions">
+      <Toaster position="top-center" richColors />
+
       <OwnerCard
         title="搜尋與篩選"
         actions={
