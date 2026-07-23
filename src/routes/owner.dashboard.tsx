@@ -254,7 +254,7 @@ function CalendarPanel({
   submissions,
   properties,
 }: {
-  submissions: typeof demoSubmissions;
+  submissions: OwnerSubmission[];
   properties: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
