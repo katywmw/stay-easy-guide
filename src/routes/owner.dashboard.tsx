@@ -23,7 +23,8 @@ import {
   StatMini,
   StatPill,
 } from "@/components/owner/OwnerShell";
-import { demoSubmissions } from "@/lib/owner-demo";
+import { demoSubmissions, type OwnerSubmission } from "@/lib/owner-demo";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { platformLabels } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
