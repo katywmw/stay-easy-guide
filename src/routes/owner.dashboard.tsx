@@ -23,7 +23,8 @@ import {
   StatMini,
   StatPill,
 } from "@/components/owner/OwnerShell";
-import { demoSubmissions } from "@/lib/owner-demo";
+import { demoSubmissions, type OwnerSubmission } from "@/lib/owner-demo";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { platformLabels } from "@/lib/checkin-store";
 import {
   checkinStatusPill,
@@ -43,11 +44,18 @@ type ViewScope = "current" | "all";
 function OwnerDashboard() {
   const { properties, currentPropertyId } = usePropertyConfig();
   const [scope, setScope] = useState<ViewScope>("current");
+  const liveItems = useLiveSubmissions((s) => s.items);
+
+  const combined = useMemo<OwnerSubmission[]>(() => {
+    const activeLive = liveItems.filter((x) => !x.removedAt);
+    // Live submissions first (newest), then demo data
+    return [...activeLive, ...demoSubmissions];
+  }, [liveItems]);
 
   const filtered = useMemo(() => {
-    if (scope === "all") return demoSubmissions;
-    return demoSubmissions.filter((s) => s.propertyId === currentPropertyId);
-  }, [scope, currentPropertyId]);
+    if (scope === "all") return combined;
+    return combined.filter((s) => s.propertyId === currentPropertyId);
+  }, [scope, currentPropertyId, combined]);
 
   const stats = useMemo(() => {
     const today = filtered.filter((s) => s.status === "approved" || s.status === "completed").length;
@@ -246,7 +254,7 @@ function CalendarPanel({
   submissions,
   properties,
 }: {
-  submissions: typeof demoSubmissions;
+  submissions: OwnerSubmission[];
   properties: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
