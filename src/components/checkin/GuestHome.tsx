@@ -1,7 +1,9 @@
-import { Link } from "@tanstack/react-router";
+import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Star, MapPin, ShieldCheck, Wifi, Car, Coffee, Wind, ArrowRight } from "lucide-react";
 import heroImg from "@/assets/hero-minsu.jpg";
 import { usePropertyConfig } from "@/lib/property-config";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 import { channelIcon, channelHref } from "@/routes/owner.settings.contact";
 import { GuestChatBubble } from "@/components/chat/ChatPanel";
 
