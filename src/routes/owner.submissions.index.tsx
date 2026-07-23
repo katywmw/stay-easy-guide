@@ -207,7 +207,6 @@ function SubmissionsList() {
 
       <ul className="mt-3 space-y-3">
         {list.map((r) => {
-          const st = checkinStatusPill(r.status);
           const dp = depositPill(r.deposit);
           const c = propertyColors(r.propertyId);
           const propName = properties.find((p) => p.id === r.propertyId)?.name ?? "";
@@ -219,9 +218,31 @@ function SubmissionsList() {
             : null;
           const hasReissueSubmitted =
             !!latestGuestUpdate && (!lastSeen || lastSeen < latestGuestUpdate);
-          const surchargeReported = allInvoices.some(
-            (inv) => inv.submissionId === r.id && inv.status === "reported",
-          );
+          const submissionInvoices = allInvoices.filter((inv) => inv.submissionId === r.id);
+          const surchargeReported = submissionInvoices.some((inv) => inv.status === "reported");
+          const surchargePending = submissionInvoices.some((inv) => inv.status === "pending");
+          const reissueOpen = !!reissue && !reissue.resolvedAt && !hasReissueSubmitted;
+
+          // Priority-based primary status pills
+          type Pill = { label: string; tone: Parameters<typeof StatusPill>[0]["tone"] };
+          const primaryPills: Pill[] = [];
+          const needsOwnerConfirm = hasReissueSubmitted || surchargeReported;
+          const needsGuestAction = reissueOpen || surchargePending;
+
+          if (needsOwnerConfirm) {
+            if (hasReissueSubmitted) primaryPills.push({ label: "已補件，等待確認", tone: "primary" });
+            if (surchargeReported) primaryPills.push({ label: "已通知付款，等待確認收款", tone: "primary" });
+          } else if (needsGuestAction) {
+            if (reissueOpen) primaryPills.push({ label: "需補件", tone: "warning" });
+            if (surchargePending) primaryPills.push({ label: "待補款", tone: "warning" });
+          } else if (r.status === "approved" || r.status === "completed") {
+            const st = checkinStatusPill(r.status);
+            primaryPills.push({ label: st.label, tone: st.tone });
+          } else {
+            primaryPills.push({ label: "等待審核", tone: "warning" });
+          }
+
+          const primaryTone = primaryPills[0]?.tone ?? "neutral";
           const isLive = "removedAt" in r;
           const onRemove = (e: React.MouseEvent) => {
             e.preventDefault();
@@ -242,7 +263,7 @@ function SubmissionsList() {
                 params={{ id: r.id }}
                 className="relative flex items-center gap-3 overflow-hidden rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-4 pr-12 shadow-[0_1px_0_rgba(139,115,85,0.04),0_8px_24px_-16px_rgba(139,115,85,0.18)] transition hover:border-primary/40"
               >
-                <span className={`absolute left-0 top-0 h-full w-1 ${toneBar(st.tone)}`} />
+                <span className={`absolute left-0 top-0 h-full w-1 ${toneBar(primaryTone)}`} />
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary-soft text-sm font-black text-foreground">
                   {r.name.slice(0, 1)}
                 </div>
@@ -269,17 +290,10 @@ function SubmissionsList() {
                     {r.checkIn} → {r.checkOut} · {r.guests} 人 · {r.phone}
                   </p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <StatusPill label={st.label} tone={st.tone} />
+                    {primaryPills.map((p, i) => (
+                      <StatusPill key={i} label={p.label} tone={p.tone} />
+                    ))}
                     <StatusPill label={`押金 · ${dp.label}`} tone={dp.tone} />
-                    {hasReissueSubmitted && (
-                      <StatusPill label="已補件，等待確認" tone="primary" />
-                    )}
-                    {surchargeReported && (
-                      <StatusPill label="已通知付款，等待確認收款" tone="primary" />
-                    )}
-                    {reissue && !reissue.resolvedAt && !hasReissueSubmitted && (
-                      <StatusPill label="等待旅客補件" tone="warning" />
-                    )}
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
