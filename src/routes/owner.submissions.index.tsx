@@ -40,9 +40,15 @@ function SubmissionsList() {
   const [keyword, setKeyword] = useState("");
 
   const liveItems = useLiveSubmissions((s) => s.items);
+  const softRemove = useLiveSubmissions((s) => s.softRemove);
+  const guestUpdatesMap = useSubmissionUpdates((s) => s.guestUpdates);
+  const reissueMap = useSubmissionUpdates((s) => s.reissue);
+  const lastSeenMap = useSubmissionUpdates((s) => s.lastSeenGuestUpdate);
+  const allInvoices = useSurchargeStore((s) => s.invoices);
   const list = useMemo(() => {
     const kw = keyword.trim().toLowerCase();
-    const all = [...liveItems, ...demoSubmissions];
+    const activeLive = liveItems.filter((x) => !x.removedAt);
+    const all = [...activeLive, ...demoSubmissions];
     return all.filter((r) => {
       if (scope !== "all" && r.propertyId !== scope) return false;
       if (status !== "all" && r.status !== status) return false;
@@ -56,6 +62,7 @@ function SubmissionsList() {
       return true;
     });
   }, [scope, status, platform, dateFrom, dateTo, keyword, liveItems]);
+
 
   const anyFilter = status !== "all" || platform !== "all" || dateFrom || dateTo || keyword;
 
