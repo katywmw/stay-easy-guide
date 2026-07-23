@@ -1,15 +1,36 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Home, ClipboardList, HelpCircle, KeyRound } from "lucide-react";
+import { useCheckinStore } from "@/lib/checkin-store";
+import { useLiveSubmissions } from "@/lib/live-submissions";
 
 const items = [
   { to: "/checkin/demo/home", label: "首頁", icon: Home },
-  { to: "/checkin/demo/start", label: "入住", icon: ClipboardList },
+  { to: "/checkin/demo/start", label: "入住", icon: ClipboardList, key: "start" },
   { to: "/checkin/demo/faq", label: "FAQ", icon: HelpCircle },
   { to: "/checkin/demo/guide", label: "指引", icon: KeyRound },
 ] as const;
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const status = useCheckinStore((s) => s.status);
+  const liveItems = useLiveSubmissions((s) => s.items);
+  const [currentId, setCurrentId] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      setCurrentId(localStorage.getItem("walnut-live-current-id"));
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const currentLive = currentId ? liveItems.find((x) => x.id === currentId) : null;
+  const hasActiveSubmission =
+    status !== "draft" && (!currentId || (!!currentLive && !currentLive.removedAt));
+
+  const startTarget = hasActiveSubmission ? "/checkin/demo/submitted" : "/checkin/demo/start";
 
   return (
     <nav
@@ -17,32 +38,48 @@ export function BottomNav() {
       style={{ boxShadow: "var(--shadow-nav)" }}
     >
       <ul className="grid grid-cols-4 pb-[max(env(safe-area-inset-bottom),0.5rem)] pt-2">
-        {items.map(({ to, label, icon: Icon }) => {
-          const active = pathname === to;
+        {items.map(({ to, label, icon: Icon, ...rest }) => {
+          const isStart = "key" in rest && rest.key === "start";
+          const target = isStart ? startTarget : to;
+          const active = pathname === target || (isStart && pathname === to);
+          const cls =
+            "flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors";
+          const iconEl = (
+            <Icon
+              className={
+                active ? "h-5 w-5 text-foreground" : "h-5 w-5 text-muted-foreground"
+              }
+              strokeWidth={active ? 2.4 : 1.8}
+            />
+          );
+          const labelEl = (
+            <span
+              className={
+                active
+                  ? "text-[11px] font-semibold text-foreground"
+                  : "text-[11px] text-muted-foreground"
+              }
+            >
+              {label}
+            </span>
+          );
           return (
             <li key={to} className="flex justify-center">
-              <Link
-                to={to}
-                className="flex flex-col items-center gap-1 rounded-xl px-3 py-1.5 transition-colors"
-              >
-                <Icon
-                  className={
-                    active
-                      ? "h-5 w-5 text-foreground"
-                      : "h-5 w-5 text-muted-foreground"
-                  }
-                  strokeWidth={active ? 2.4 : 1.8}
-                />
-                <span
-                  className={
-                    active
-                      ? "text-[11px] font-semibold text-foreground"
-                      : "text-[11px] text-muted-foreground"
-                  }
+              {isStart ? (
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: startTarget })}
+                  className={cls}
                 >
-                  {label}
-                </span>
-              </Link>
+                  {iconEl}
+                  {labelEl}
+                </button>
+              ) : (
+                <Link to={to} className={cls}>
+                  {iconEl}
+                  {labelEl}
+                </Link>
+              )}
             </li>
           );
         })}
