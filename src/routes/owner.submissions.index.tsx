@@ -211,12 +211,36 @@ function SubmissionsList() {
           const dp = depositPill(r.deposit);
           const c = propertyColors(r.propertyId);
           const propName = properties.find((p) => p.id === r.propertyId)?.name ?? "";
+          const guestUpdates = guestUpdatesMap[r.id] ?? [];
+          const reissue = reissueMap[r.id];
+          const lastSeen = lastSeenMap[r.id];
+          const latestGuestUpdate = guestUpdates.length
+            ? guestUpdates[guestUpdates.length - 1].at
+            : null;
+          const hasReissueSubmitted =
+            !!latestGuestUpdate && (!lastSeen || lastSeen < latestGuestUpdate);
+          const surchargeReported = allInvoices.some(
+            (inv) => inv.submissionId === r.id && inv.status === "reported",
+          );
+          const isLive = "removedAt" in r;
+          const onRemove = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!isLive) {
+              toast.error("示範資料無法移除");
+              return;
+            }
+            if (window.confirm(`確定要移除 ${r.name} 的申請嗎？此動作可透過重新填寫恢復。`)) {
+              softRemove(r.id);
+              toast.success("已移除此申請");
+            }
+          };
           return (
-            <li key={r.id}>
+            <li key={r.id} className="relative">
               <Link
                 to="/owner/submissions/$id"
                 params={{ id: r.id }}
-                className="relative flex items-center gap-3 overflow-hidden rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-4 shadow-[0_1px_0_rgba(139,115,85,0.04),0_8px_24px_-16px_rgba(139,115,85,0.18)] transition hover:border-primary/40"
+                className="relative flex items-center gap-3 overflow-hidden rounded-xl border border-[oklch(0.92_0.02_80)] bg-card p-4 pr-12 shadow-[0_1px_0_rgba(139,115,85,0.04),0_8px_24px_-16px_rgba(139,115,85,0.18)] transition hover:border-primary/40"
               >
                 <span className={`absolute left-0 top-0 h-full w-1 ${toneBar(st.tone)}`} />
                 <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary-soft text-sm font-black text-foreground">
@@ -247,13 +271,34 @@ function SubmissionsList() {
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <StatusPill label={st.label} tone={st.tone} />
                     <StatusPill label={`押金 · ${dp.label}`} tone={dp.tone} />
+                    {hasReissueSubmitted && (
+                      <StatusPill label="已補件，等待確認" tone="primary" />
+                    )}
+                    {surchargeReported && (
+                      <StatusPill label="已通知付款，等待確認收款" tone="primary" />
+                    )}
+                    {reissue && !reissue.resolvedAt && !hasReissueSubmitted && (
+                      <StatusPill label="等待旅客補件" tone="warning" />
+                    )}
                   </div>
                 </div>
                 <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
               </Link>
+              {isLive && (
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  aria-label="移除申請"
+                  title="移除申請"
+                  className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-lg text-muted-foreground hover:bg-destructive-soft hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </li>
           );
         })}
+
         {list.length === 0 && (
           <li className="rounded-xl border border-dashed border-border bg-secondary/30 p-8 text-center text-sm text-muted-foreground">
             目前沒有符合條件的申請。
