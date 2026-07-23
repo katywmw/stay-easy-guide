@@ -48,6 +48,14 @@ function SubmittedPage() {
   const checkinStatus = useCheckinStore((s) => s.status);
   const updateCheckin = useCheckinStore((s) => s.update);
   const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
+  const liveItems = useLiveSubmissions((s) => s.items);
+  const liveRecord = useMemo(
+    () => liveItems.find((x) => x.id === currentSubmissionId),
+    [liveItems, currentSubmissionId],
+  );
+  const isRemoved =
+    currentSubmissionId.startsWith("live-") &&
+    (!liveRecord || !!liveRecord.removedAt);
   const allInvoices = useSurchargeStore((s) => s.invoices);
   const invoices = useMemo(
     () => allInvoices.filter((x) => x.submissionId === currentSubmissionId),
@@ -58,6 +66,7 @@ function SubmittedPage() {
   );
 
   const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
+
 
   const statusDisplay =
     checkinStatus === "approved"
