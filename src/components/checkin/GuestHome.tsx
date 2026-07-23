@@ -32,6 +32,9 @@ export function GuestHome() {
   const currentLive = currentId ? liveItems.find((x) => x.id === currentId) : null;
   const hasActiveSubmission = !!currentLive && !currentLive.removedAt;
   const startTarget = hasActiveSubmission ? "/checkin/demo/submitted" : "/checkin/demo/start";
+
+  return (
+    <div className="min-h-screen w-full bg-[oklch(0.985_0.04_95)] flex items-start justify-center py-6 px-3 sm:py-10">
       <div className="w-full max-w-md flex flex-col overflow-hidden rounded-[2.5rem] border border-[oklch(0.94_0.13_95)] bg-white shadow-[0_20px_60px_-20px_oklch(0.24_0.04_55_/_0.15)]">
         {/* Hero */}
         <div className="relative h-72 w-full">
