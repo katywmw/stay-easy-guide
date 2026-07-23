@@ -48,6 +48,14 @@ function SubmittedPage() {
   const checkinStatus = useCheckinStore((s) => s.status);
   const updateCheckin = useCheckinStore((s) => s.update);
   const updateLiveSubmission = useLiveSubmissions((s) => s.updateOne);
+  const liveItems = useLiveSubmissions((s) => s.items);
+  const liveRecord = useMemo(
+    () => liveItems.find((x) => x.id === currentSubmissionId),
+    [liveItems, currentSubmissionId],
+  );
+  const isRemoved =
+    currentSubmissionId.startsWith("live-") &&
+    (!liveRecord || !!liveRecord.removedAt);
   const allInvoices = useSurchargeStore((s) => s.invoices);
   const invoices = useMemo(
     () => allInvoices.filter((x) => x.submissionId === currentSubmissionId),
@@ -58,6 +66,7 @@ function SubmittedPage() {
   );
 
   const isApproved = checkinStatus === "approved" || checkinStatus === "completed";
+
 
   const statusDisplay =
     checkinStatus === "approved"
@@ -87,7 +96,37 @@ function SubmittedPage() {
   };
 
 
+  if (isRemoved) {
+    return (
+      <PhoneShell showBack={false} bare>
+        <div className="flex min-h-screen flex-col items-center justify-center px-6 pb-8 pt-[max(env(safe-area-inset-top),1.5rem)] text-center">
+          <div className="grid h-24 w-24 place-items-center rounded-full bg-destructive-soft">
+            <AlertTriangle className="h-12 w-12 text-destructive" strokeWidth={2.2} />
+          </div>
+          <h1 className="mt-6 text-xl font-black text-foreground">此入住資料已被移除</h1>
+          <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
+            此入住資料已由民宿移除，請重新聯絡民宿或重新填寫。
+          </p>
+          <Link
+            to="/checkin/demo/start"
+            onClick={() => {
+              try {
+                localStorage.removeItem("walnut-live-current-id");
+              } catch {
+                /* ignore */
+              }
+            }}
+            className="mt-6 rounded-2xl bg-primary px-5 py-3 text-sm font-bold text-primary-foreground"
+          >
+            重新填寫入住資料
+          </Link>
+        </div>
+      </PhoneShell>
+    );
+  }
+
   return (
+
     <PhoneShell showBack={false} bare>
       <div className="flex min-h-screen flex-col px-4 pb-8 pt-[max(env(safe-area-inset-top),1.5rem)]">
         <div className="flex flex-1 flex-col items-center justify-center text-center">
