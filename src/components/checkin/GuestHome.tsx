@@ -30,7 +30,11 @@ export function GuestHome() {
   }, []);
 
   const currentLive = currentId ? liveItems.find((x) => x.id === currentId) : null;
-  const hasActiveSubmission = !!currentLive && !currentLive.removedAt;
+  const hasActiveSubmission =
+    !!currentLive &&
+    !currentLive.removedAt &&
+    currentLive.status !== ("removed" as typeof currentLive.status) &&
+    currentLive.status !== ("cancelled" as typeof currentLive.status);
   const startTarget = hasActiveSubmission ? "/checkin/demo/submitted" : "/checkin/demo/start";
 
   return (
