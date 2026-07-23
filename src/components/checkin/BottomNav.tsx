@@ -27,8 +27,13 @@ export function BottomNav() {
   }, []);
 
   const currentLive = currentId ? liveItems.find((x) => x.id === currentId) : null;
+  const liveActive =
+    !!currentLive &&
+    !currentLive.removedAt &&
+    currentLive.status !== ("removed" as typeof currentLive.status) &&
+    currentLive.status !== ("cancelled" as typeof currentLive.status);
   const hasActiveSubmission =
-    status !== "draft" && (!currentId || (!!currentLive && !currentLive.removedAt));
+    status !== "draft" && (!currentId || liveActive);
 
   const startTarget = hasActiveSubmission ? "/checkin/demo/submitted" : "/checkin/demo/start";
 
