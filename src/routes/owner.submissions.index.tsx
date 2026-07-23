@@ -243,7 +243,7 @@ function SubmissionsList() {
           }
 
           const primaryTone = primaryPills[0]?.tone ?? "neutral";
-          const isLive = "removedAt" in r;
+          const isLive = (r as { source?: string }).source === "live";
           const onRemove = (e: React.MouseEvent) => {
             e.preventDefault();
             e.stopPropagation();
